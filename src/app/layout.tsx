@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         <ReactScanInit />
-        {children}
+        <main>{children}</main>
       </body>
     </html>
   );
