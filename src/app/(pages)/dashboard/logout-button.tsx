@@ -6,6 +6,8 @@ import { useState } from "react";
 import { AuthService } from "@/service/auth.service";
 import { useService } from "@/service-core";
 
+import styles from "./logout-button.module.scss";
+
 export function LogoutButton() {
   const auth = useService(AuthService);
   const router = useRouter();
@@ -25,7 +27,7 @@ export function LogoutButton() {
   }
 
   return (
-    <button onClick={handleLogout} disabled={loading} className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-red-300">
+    <button onClick={handleLogout} disabled={loading} className={styles.button}>
       {loading ? "Logging out..." : "Logout"}
     </button>
   );

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
 import { LogoutButton } from "./logout-button";
+import styles from "./page.module.scss";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -13,28 +14,28 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <h1 className="mb-6 text-3xl font-bold">Dashboard</h1>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Dashboard</h1>
 
-      <div className="rounded-lg bg-white p-6 shadow-md">
-        <h2 className="mb-4 text-xl font-semibold">Welcome, {user.name}!</h2>
+      <div className={styles.card}>
+        <h2 className={styles.cardTitle}>Welcome, {user.name}!</h2>
 
-        <div className="space-y-2 text-gray-600">
+        <div className={styles.info}>
           <p>
-            <span className="font-medium">Email:</span> {user.email}
+            <span className={styles.label}>Email:</span> {user.email}
           </p>
           <p>
-            <span className="font-medium">Joined:</span> {new Date(user.createdAt).toLocaleDateString("zh-CN")}
+            <span className={styles.label}>Joined:</span> {new Date(user.createdAt).toLocaleDateString("zh-CN")}
           </p>
         </div>
 
-        <div className="mt-6">
+        <div className={styles.actions}>
           <LogoutButton />
         </div>
       </div>
 
-      <div className="mt-8">
-        <Link href="/" className="text-blue-600 hover:underline">
+      <div className={styles.back}>
+        <Link href="/" className={styles.backLink}>
           &larr; Back to Home
         </Link>
       </div>

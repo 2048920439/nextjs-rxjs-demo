@@ -5,30 +5,32 @@ import Link from "next/link";
 import { AuthService } from "@/service/auth.service";
 import { useObservableState, useService } from "@/service-core";
 
+import styles from "./page.module.scss";
+
 export default function Home() {
   const auth = useService(AuthService);
   const user = useObservableState(auth.user$, () => auth.user);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-bold">Next.js + RxJS Demo</h1>
+    <div className={styles.wrapper}>
+      <h1 className={styles.title}>Next.js + RxJS Demo</h1>
 
-      <div className="flex items-center gap-4">
+      <div className={styles.actions}>
         {user === undefined ? (
-          <span className="text-gray-400">Loading...</span>
+          <span className={styles.loadingText}>Loading...</span>
         ) : user ? (
           <>
-            <Link href="/dashboard" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+            <Link href="/dashboard" className={styles.btnBlue}>
               Dashboard
             </Link>
-            <span className="text-gray-600">Hello, {user.name}</span>
+            <span className={styles.greeting}>Hello, {user.name}</span>
           </>
         ) : (
           <>
-            <Link href="/login" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+            <Link href="/login" className={styles.btnBlue}>
               Login
             </Link>
-            <Link href="/register" className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700">
+            <Link href="/register" className={styles.btnGreen}>
               Register
             </Link>
           </>
