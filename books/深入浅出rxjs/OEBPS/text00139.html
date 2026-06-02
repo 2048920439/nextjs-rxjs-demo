@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">9.3.4　finally</h3>
+<p class="ziti">在JavaScript中，除了try和catch两个关键字用来支持同步异常处理之外，还有一个finally，用于执行无论出错还是不出错都要做的事情。下面是一个使用finally的代码例子：</p>
+<hr/>
+<pre class="ziti1">let result;
+try {
+  result = JSON.parse(jsonString);
+} catch (error) {
+  result = {};
+} finally {
+  console.log(result);
+}
+</pre>
+<hr/>
+<p class="ziti">无论JSON.parse有没有抛出异常，finally区块中的代码都会被执行。</p>
+<p class="ziti">和JavaScript的功能对应，RxJS中既然有一个名为catch的操作符，所以同样有一个名为finally的操作符也就不奇怪了。下面是一个在RxJS中使用finally操作符的例子：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 10);
+const error$ = source$.map(throwOnUnluckyNumber);
+const final$= error$.retry(3)
+    .catch(err =&gt; Observable.of(8))
+    .finally((x) =&gt; console.log('finally'));
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，final$最后无论是寿终正寝正常完结，还是以抛出错误收场，finally传入的函数都会被执行。</p>
+<p class="ziti">finally和do操作符很像，它们传入的函数无法影响数据流，所以要做点事只能通过其他副作用，比如释放数据流之外的资源，输出一个日志信息之类。</p>
+<p class="ziti">finally和do也有很大的不同，finally的参数只在上游数据完结或者出错的时候才执行，一个数据流中finally只会发挥一次作用；而do是对上游吐出的每个数据均执行。</p>
+<p class="ziti">finally和do这二者配合使用可以覆盖数据流上可能发生的所有事件。</p>
+</body>
+</html>

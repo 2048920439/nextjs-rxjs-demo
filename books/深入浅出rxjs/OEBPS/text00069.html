@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">5.1.9　forkJoin</h3>
+<p class="ziti">forkJoin只有静态操作符的形式，可以接受多个Observable对象作为参数，forkJoin产生的Observable对象也很有特点，它只会产生一个数据，因为它会等待所有参数Observable对象的最后一个数据，也就是说，只有当所有Observable对象都完结，确定不会有新的数据产生的时候，forkJoin就会把所有输入Observable对象产生的最后一个数据合并成给下游唯一的数据。</p>
+<p class="ziti">所以说，forkJoin就是RxJS界的Promise.all，Promise.all等待所有输入的Promise对象成功之后把结果合并，forkJoin等待所有输入的Observable对象完结之后把最后一个数据合并。</p>
+<p class="ziti">下面是使用forkJoin的示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/observable/forkJoin';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/take';
+
+const source1$ = Observable.interval(1000).map(x =&gt; x + 'a').take(1);
+const source2$ = Observable.interval(1000).map(x =&gt; x + 'b').take(3);
+const concated$ = Observable.forkJoin(source1$, source2$);
+
+concated$.subscribe(
+  console.log,
+  err =&gt; console.log('Error: ', err),
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">上面的程序会在等待3秒钟之后输出以下结果：</p>
+<hr/>
+<pre class="ziti1">[ '0a', '2b' ]
+complete
+</pre>
+<hr/>
+<p class="ziti">虽然source1$在第1秒钟就产生了0a字符串，但是forkJoin依然会等到source2$完结才会产生数据，而且forkJoin抛弃了source2$产生的其他数据，只选取了最后一个数据字符串2b。</p>
+</body>
+</html>

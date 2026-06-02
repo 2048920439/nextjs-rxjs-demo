@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">13.1.2　React如何工作</h3>
+<p class="ziti">React致力于用户界面的构建，不仅可以用于网页应用开发，而且可以利用React Native开发移动设备上的应用，在本书中，我们只涉及网页应用开发的部分。自2013年首次发布以来，React已经发展得十分成熟，到本书编写时，已经发布到v16版本，可以非常方便地开发网页应用。</p>
+<p class="ziti">不过，如果你之前有jQuery之类工具的编程经历，要理解React需要一点思想转变。一定要明白以下几点特性：</p>
+<p class="ziti6">·React中一切皆为组件。</p>
+<p class="ziti6">·React的界面展示由数据驱动。</p>
+<p class="ziti6">·React是声明式编程。</p>
+<p class="ziti">接下来，我们就分别介绍这些方面。</p>
+<p class="ziti">
+<span class="yanse">1.构建React组件</span>
+</p>
+<p class="ziti">在React中，一切都是组件，组件就是React世界中的砖块，很多砖块砌在一起，可以构建一座大厦。同样，很多React组件配合也可以构建功能很庞大的应用。</p>
+<p class="ziti">组件思想的好处就是，把一个功能封装在一个模块中，对于外部来说，不需要知道这个功能是怎么实现的，只要模块暴露的是稳定而且一致的接口，那就只管用这个模块就好了。这个思想说起来很简单，但实践起来却不容易。</p>
+<p class="ziti">全世界的各种框架，没有哪个不推崇“组件化”的口号的，但是真正做到组件化的却寥寥无几，因为大部分框架并没有一种强制的方法明确组件的边界，而React却做到了这一点。</p>
+<p class="ziti">下面是一个最简单的React组件例子：</p>
+<hr/>
+<pre class="ziti1">const Greetings = () =&gt; {
+     return "Hello";
+};</pre>
+<hr/>
+<p class="ziti">这样一个组件的名称就是Greetings，表示“欢迎”。可以注意到，这个组件的形式就是一个函数，而且是一个纯函数，这也是React倾向于函数式编程的体现。</p>
+<p class="ziti">Greetings组件的运行效果就是在浏览器中渲染出下面的字符串：</p>
+<hr/>
+<pre class="ziti1">Hello</pre>
+<hr/>
+<p class="ziti">这个功能极其简单，按照React的原则，复杂的功能就是由各种简单的组件配合完成的。</p>
+<p class="p6">提示</p>
+<p class="ziti6">React组件从v16开始才可以直接渲染一个字符串，在此之前，任何一个组件要么返回一个React元素，要么返回null或者undefined，不能直接返回字符串。</p>
+<p class="ziti">使用这个组件也是用类似于HTML的标签语言方式，用尖括号把组件名包起来就行，如下所示：</p>
+<hr/>
+<pre class="ziti1">&lt;Greetings /&gt;</pre>
+<hr/>
+<p class="ziti">这种表现形式是JavaScript语法扩展，称为JSX（JavaScript Extension），最妙的是，JSX中除了可以包含div这样的HTML元素，还可以包含Greetings这样的React组件，而且两者在表现方式上是一模一样的，如下面的代码所示：</p>
+<hr/>
+<pre class="ziti1">const GreetingsToRxJS = () =&gt; {
+    return &lt;div&gt;&lt;Greetings/&gt; RxJS&lt;/div&gt;
+};</pre>
+<hr/>
+<p class="ziti">在GreetingsToRxJS这个React组件中，我们利用了之前定义的Greetings组件，Greetings的功能是渲染出一个欢迎词Hello，最终组合起来渲染出来的内容用HTML表示就是这样：</p>
+<hr/>
+<pre class="ziti1">&lt;div&gt;Hello RxJS&lt;/div&gt;</pre>
+<hr/>
+<p class="ziti">这里我们说的是“用HTML表示”，而不是说React渲染的最终结果就是HTML，因为浏览器中渲染的效果是通过操纵DOM结构来影响用户界面，并没有真正产生HTML文本。</p>
+<p class="ziti">上面的例子虽然简单，但是足够体现React组件思想的好处，对于Greetings这个组件，对于GreetingsToRxJS这个外部用户来说，只需要知道它有渲染欢迎词的功能，至于具体怎么实现，完全不需要知道。</p>
+<p class="ziti">如果Greetings修改定义，使用中文欢迎词，如下所示：</p>
+<hr/>
+<pre class="ziti1">const Greetings = () =&gt; "你好";</pre>
+<hr/>
+<p class="ziti">那么GreetingsToRxJS的渲染结果也就变成了中文，而GreetingsToRxJS不需要为此做出任何改变，就能渲染出下面的效果：</p>
+<hr/>
+<pre class="ziti1">&lt;div&gt;你好 RxJS&lt;/div&gt;</pre>
+<hr/>
+<p class="ziti">
+<span class="yanse">2.React的数据</span>
+</p>
+<p class="ziti">React的工作方式，可以抽象为下面的函数公式来表达：</p>
+<hr/>
+<pre class="ziti1">UI=f(data)</pre>
+<hr/>
+<p class="ziti">这个公式等号左边是用户界面UI，代表用户所看到的东西，这个东西可以认为是一个函数f的运行返回结果，而函数f的输入就是数据data。能够用函数来代表运行过程，这是函数式编程的风格。</p>
+<p class="ziti">在React中，函数f就是开发者写代码实现的组件，而data就是驱动组件渲染的数据，包括两种形态：</p>
+<p class="ziti6">·prop</p>
+<p class="ziti6">·state</p>
+<p class="ziti">所谓prop，指的是外界传递给组件的数据形式，是在使用组件的时候赋予组件一种“属性”，所以称为prop，是property的简写。</p>
+<p class="ziti">上面定义的GreetingsToRxJS组件只能对RxJS致欢迎辞，但是需要说Hello不只是RxJS，还有我们开发者最熟悉的World需要Hello，对正在阅读本书的读者说Hello，所以，我们希望有一个组件能够对任何事物都表示欢迎，到底对谁欢迎，这个决定权在于组件的使用者。下面就是满足这一需求的新组件源代码：</p>
+<hr/>
+<pre class="ziti1">const GreetingsTo = (props) =&gt; {
+    return &lt;div&gt;&lt;Greetings/&gt; {props.to}&lt;/div&gt;
+};</pre>
+<hr/>
+<p class="ziti">先来看如何使用GreetingsTo组件，代码如下：</p>
+<hr/>
+<pre class="ziti1">&lt;GreetingsTo to="读者" /&gt;</pre>
+<hr/>
+<p class="ziti">当使用GreetingsTo时，有一个像是HTML元素属性一样的to，这个to就是GreetingsTo的prop，to后面等号接着的就是prop的实际值，在上面的例子中，名为to的prop传入的实际值就是“读者”这个字符串。</p>
+<p class="ziti">在GreetingsTo组件的实现部分，函数现在多了一个参数，名为props，这个参数实际上是一个对象，对象的每一个属性代表一个传入的prop，所以，可以通过访问props.to得到使用这个组件时传入的to值。</p>
+<p class="ziti">JSX代码部分除了尖括号形式的标签，还可以包含任何形式的JavaScript表达式，只要用花括号包住就可以。在GreetingsTo组件的实现代码中，用花括号包住了对props.to的访问，这样props.to的实际值就会渲染在对应的位置。</p>
+<p class="ziti">上面的GreetingsTo使用代码会渲染出下面HTML形式的结果：</p>
+<hr/>
+<pre class="ziti1">&lt;div&gt;Hello 读者&lt;/div&gt;</pre>
+<hr/>
+<p class="ziti">prop可以是一切数据。在JavaScript中，函数是对象，也可以看作是一种数据，所以prop也可以是函数。通过prop把一个函数传递给一个React组件，这个组件就可以选择恰当的时机调用这个函数，把信息从组件内部传递给组件的使用者，这种用法在后面的部分会接触到。</p>
+<p class="ziti">一个React组件一定不能修改传入的prop，否则会产生意想不到的结果，就和对纯函数的要求一样，一个React组件函数应该不产生任何副作用效果。</p>
+<p class="ziti">总之，prop就是这样一种组件之间传递数据的方式，但是，有时候组件内部也需要管理一些数据，这些数据和外部无关，这数据叫做state。如果需要使用state，组件的形式就要发生一些变化，不能再用一个纯函数表示了，而要表示为一个包含状态的类。</p>
+<p class="ziti">假如我们要实现一个按钮，并且能够展示这个按钮被点击了多少次，把这些功能封装在一个叫CountButton的组件里，按钮的点击次数是一种状态，这个状态只能由这个组件自己来记录，这就是state。</p>
+<p class="ziti">下面是CountButton的示例代码：</p>
+<hr/>
+<pre class="ziti1">import React from 'react';
+
+class CountButton extends React.Component {
+  state = {count: 0}
+
+  onClick() {
+    this.setState({count: this.state.count + 1});
+  }
+
+  render() {
+    return (
+     &lt;button onClick={this.onClick.bind(this)}&gt;
+        {this.props.greeting}, Click Me {this.state.count} Times
+     &lt;/button&gt;
+    );
+  }
+}
+</pre>
+<hr/>
+<p class="ziti">相对于之前用一个纯函数就足够表达的方式，这个包含state的组件实现的确显得冗长了很多，但是没有办法，因为需要维护状态，我们只能把这个组件实现为ES6类的形式。</p>
+<p class="ziti">代码第一行用import导入React，其实，使用上面纯函数形式编写组件也免不了这一步，这是因为JSX代码需要babel转译成普通的JavaScript代码；转译成的普通代码需要使用React这个标示符，babel不会自动给我们导入React，所以手工导入React是必不可少的。</p>
+<p class="ziti">这个ES6类名为CountReact，作为React组件类，必须要继承自React.Component，这个父类包含一系列React组件类必须要实现的函数，但是有一个函数是必须要开发者自己来写的，那就是render。</p>
+<p class="ziti">render的写法几乎就是之前纯函数的React组件写法，同样都是返回一个JSX形式的组合，也可以返回null、undefined，在React v16之后还可以返回字符串或者数组。不过，说“几乎”一样，是因为还有一点区别：在纯函数形态下，props是通过函数的参数获得；在ES6类定义的形式下，不光是render函数，所有的函数获得props是通过this.props获得，也就是通过当前对象的数据成员获得。</p>
+<p class="ziti">在上面的render函数实现中，通过访问this.props.greeting可以获得外部使用CountButton时传入的prop，使用CountButton的实例代码如下：</p>
+<hr/>
+<pre class="ziti1">&lt;CountButton greeting="Hello" /&gt;</pre>
+<hr/>
+<p class="ziti">这样，网页中最初会渲染出如图13-2所示的按钮，带Hello的欢迎词。</p>
+<div class="pic"><img alt="" src="Image00115.jpg" />
+</div>
+<p class="middle-img">图13-2　按钮界面</p>
+<p class="ziti">不过我们不仅仅定制欢迎词，最重要的功能是点击这个按钮的时候，按钮上显示点击次数的数字要改变，这就需要state的支持。</p>
+<p class="ziti">state需要一个初始值，利用ES6的语法，可以在类中直接给state赋初始值，还有一种方法，可以在类的构造函数中初始化state，不过那就需要给this.state赋值，如下所示：</p>
+<hr/>
+<pre class="ziti1">constructor() {
+     super(...arguments);
+     this.state = {count: 0}
+}</pre>
+<hr/>
+<p class="ziti">组件的state必须是一个对象，不能只是一个数值，所以我们把点击次数的计数状态存放在state的count属性下，初始值为0。</p>
+<p class="ziti">不管state如何初始化，读取state都需要通过this.state，这和this.props一样，都属于组件实例的一部分。CountButton类的onClick函数实现的就是按钮被点击时的处理，要做的就是让count计数加一。在onClick的函数中，使用this.state读取当前count值，然后通过this.setState改变这个值：</p>
+<hr/>
+<pre class="ziti1">this.setState({count: this.state.count + 1});</pre>
+<hr/>
+<p class="ziti">改变组件的state一定要使用this.setState函数，而不是直接修改this.state，因为this.setState函数不仅能够改变组件的state，而且能够触发组件重新渲染。毕竟我们修改state就是要新的状态展现在用户界面上，单纯修改this.state改变的只是一个对象，并不会自动引起组件重新渲染，这也就失去了修改this.state的意义。</p>
+<p class="ziti">在render函数部分，给button也传递了一个prop，这个prop就是CountButton中的onClick函数，这个onClick函数需要先bind到this上才行，如下所示：</p>
+<hr/>
+<pre class="ziti1">onClick={this.onClick.bind(this)}</pre>
+<hr/>
+<p class="ziti">这是因为ES6的类中，每个函数的执行环境并不是自动绑定到所属对象的this上，如果不做bind操作，就像这么写的话，最终用户点击按钮的时候，onClick函数执行的时候this并不是组件对象：</p>
+<hr/>
+<pre class="ziti1">onClick={this.onClick}</pre>
+<hr/>
+<p class="ziti">如果觉得这不好理解，换一种写法可能看得更加清楚，上面的代码相当于下面的代码：</p>
+<hr/>
+<pre class="ziti1">const onClickFunc = this.onClick;
+
+onClick={onClickFunc}</pre>
+<hr/>
+<p class="ziti">当把this.onClick赋值给onClickFunc之后，再来调用onClickFunc的时候，就和this完全没有关系了，因为JavaScript对于函数中this的定义十分有趣，this是什么不是由函数定义决定的，而是由函数如何使用决定的，如果要强制一个函数定义按照某种this来执行，那就用bind。</p>
+<p class="ziti">有了state之后，CountButton就可以记录自己被点击的状态，当点击按钮一次之后，界面会如图13-3所示。</p>
+<div class="pic"><img alt="" src="Image00116.jpg" />
+</div>
+<p class="middle-img">图13-3　点击一次之后的按钮界面</p>
+<p class="ziti">图中显示的1，就是this.state.count的值。</p>
+<p class="ziti">
+<span class="yanse">3.声明式的React</span>
+</p>
+<p class="ziti">现在读者对React的用法应该有一个初步的认识，可以重新回顾一下我们前面提到的那个公式：</p>
+<hr/>
+<pre class="ziti1">UI=f(data)</pre>
+<hr/>
+<p class="ziti">这个公式中的f就是我们实现过的各种组件，包括纯函数的Greetings、Greetings-ToRxJS还有GreetingsTo，也包括ES6类形式的CountButton，而data就是prop和state。</p>
+<p class="ziti">如果读者对jQuery之类的框架有所了解，会感觉到React的独特之处。对于CountButton这个组件，如果要改变用户界面的值，就要用选择指令来找到某个网页元素，然后来修改这个元素的值，类似下面的代码：</p>
+<hr/>
+<pre class="ziti1">$(.button).click(() =&gt; {
+    $("#count").html(parseInt($("#count").html()) + 1);
+});</pre>
+<hr/>
+<p class="ziti">这种直接操纵DOM的方式虽然直观，但是代价就是开发人员不得不操心“如何去画”，因为要关注这些细节，所以开发成本更大，而且出现bug的概率也不小。</p>
+<p class="ziti">在React的世界中，组件的代码并不去描述“如何去画”，而是描述“画成什么样子”，根据prop和state的数据把结果画出来，只要prop和state发生改变，用户界面就会自动更新，按照代码的描述画成该有的样子。这种方式的改变是一个很大的进步，因为开发者只需要“声明”功能是怎样就可以，而不纠结于“怎样去做”，这种编程思维就叫“声明式编程”。</p>
+</body>
+</html>

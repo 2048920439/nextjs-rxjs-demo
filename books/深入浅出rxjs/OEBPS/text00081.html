@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">6.2.1　every</h3>
+<p class="ziti">every要求一个判定函数作为参数，上游Observable吐出的每一个数据都会被这个判定函数检验，如果所有数据的判定结果都是true，那么在上游Observable对象完结的时候，every产生的新Observable对象就会吐出一个而且是唯一的布尔值true；反之，只要上游吐出的数据中有一个数据检验为false，那么也不用等到上游Observable完结，every产生的Observable对象就会立刻吐出false。</p>
+<p class="ziti">无论最后吐出的是true或者false，every产生的Observable对象在吐出这个唯一结果之后立刻完结。</p>
+<p class="ziti">先看一个结果是吐出true的例子，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/operator/every';
+const source$ = Observable.of(3, 1, 4, 1, 5, 9);
+const every$ = source$.every(x =&gt; x &gt; 0);</pre>
+<hr/>
+<p class="ziti">因为上游source$吐出的每一个数都是大于0的，所以全部能通过every的判定函数检验，最后every$会吐出true，然后完结。</p>
+<p class="ziti">再来看一个吐出false的例子，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/operator/every';
+
+const source$ = Observable.interval(1000);
+const every$ = source$.every(x =&gt; x &lt; 3);</pre>
+<hr/>
+<p class="ziti">注意，source$实际上是一个永不完结的数据流，每一秒钟吐出一个递增的整数，在吐出3的时候，every就会发现source$吐出的数据不满足判定条件，也就没必要再检查其他吐出的数据了，所以立刻吐出false并且完结。</p>
+<p class="ziti">如果对上面的代码做一些调整，修改every的判定函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">const every$ = source$.every(x =&gt; x &gt;= 0);</pre>
+<hr/>
+<p class="ziti">那么，every$永远不会吐出数据，因为source$是一个永不完结的数据流，而且它吐出的每一个数据都满足大于等于0的判定条件，那么every$也就永远没有计算结束的机会。</p>
+<p class="ziti">由此可见，通常不要对一个永不完结的Observable对象使用every这个操作符，因为很可能产生的新Observable对象也是永不完结的，而我们使用every的语义往往是想要有一个明确结果，这就带来了麻烦。</p>
+</body>
+</html>

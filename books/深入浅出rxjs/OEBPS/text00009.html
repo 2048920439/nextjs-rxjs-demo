@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">1.4　Reactive Extension</h2>
+<p class="ziti">Reactive Extension，也叫ReactiveX，或者简称Rx，指的是实践响应式编程的一套工具，在Rx官网<a href="http://reactivex.io/">http://reactivex.io/</a>
+ 上，有这样一段介绍文字：</p>
+<p class="ziti6">An API for asynchronous programming with observable streams.</p>
+<p class="ziti">翻译过来就是：Rx是一套通过可监听流来做异步编程的API。说实话，这句描述真不怎么样，没把Rx这个概念解释清楚，反而又引入了一个新的词汇Observable。笔者觉得这句话无法很好地翻译成中文，所以我们不要管官网怎么解释了，就只用普通的语言来解释Rx。</p>
+<p class="ziti">Rx的概念最初由微软公司实现并开源，也就是Rx.NET，因为Rx带来的编程方式大大改进了异步编程模型，在.NET之后，众多开发者在其他平台和语言上也实现了Rx的类库。可见，Rx其实是一个大家族，在这个大家族中，还有用Java实现的RxJava，用C++实现的RxCpp，用Ruby实现的Rx.rb，用Python实现的RxPy，当然，还有这个大家族中最年长的Rx.NET。在本书中，我们介绍的是RxJS，也就是Rx的JavaScript语言实现。</p>
+<p class="ziti">所有这些语言并没有天生对响应式编程支持，简单来说就是，这些语言入门教程绝对不会用响应式编程的方法去写一个Hello World，所以，才需要引入Reactive Extension，等于是为这些语言增加一些功能扩展（Extension），让响应式编程方法成为开发者的第一选择。</p>
+<p class="ziti">JavaScript是为今世界上最广泛使用的语言，如今，每一个可以上网的浏览器上都必定安装了JavaScript引擎，在服务器端，因为Node.js的蓬勃发展，JavaScript也得到广泛应用。不夸张地说，任何可以用JavaScript来写的应用最终都会用JavaScript写出来<sup>
+<a id="ch1" href="text00009.html#ch1_back">[1]</a>
+</sup>
+ <span>。这个时代的JavaScript开发者，无疑是幸运的，我们不光可以尽情使用JavaScript来实现各种应用，还有机会使用RxJS这种带有纯正计算机科学精神的开发利器。</span>
+</p>
+<p class="ziti">Rx（包括RxJS）诞生的主要目的虽然是解决异步处理的问题，但并不表示Rx不适合同步的数据处理，实际上，使用RxJS之后大部分代码不需要关心自己是被同步执行还是异步执行，所以处理起来会更加简单。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00009.html#ch1">[1]</a>
+ https://blog.codinghorror.com/the-principle-of-least-power/。</p>
+</body>
+</html>

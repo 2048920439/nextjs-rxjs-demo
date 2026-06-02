@@ -1,0 +1,641 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><link href="flow0001.css" rel="stylesheet" type="text/css" />
+<title>&nbsp;</title>
+</head>
+<body>
+<div class="contents-title">目录</div>
+<div class="contents1">
+<a href="text00002.html">前言</a>
+</div>
+<div class="contents1">
+<a href="text00003.html">第1章　函数响应式编程</a>
+</div>
+<div class="contents2">
+<a href="text00004.html">1.1　一个简单的RxJS例子</a>
+</div>
+<div class="contents2">
+<a href="text00005.html#a1">1.2　函数式编程</a>
+</div>
+<div class="contents3">
+<a href="text00005.html#a1">1.2.1　什么是函数式编程</a>
+</div>
+<div class="contents3">
+<a href="text00006.html">1.2.2　为什么函数式编程最近才崛起</a>
+</div>
+<div class="contents3">
+<a href="text00007.html">1.2.3　函数式编程和面向对象编程的比较</a>
+</div>
+<div class="contents2">
+<a href="text00008.html">1.3　响应式编程</a>
+</div>
+<div class="contents2">
+<a href="text00009.html">1.4　Reactive　Extension</a>
+</div>
+<div class="contents2">
+<a href="text00010.html">1.5　RxJS是否是函数响应式编程</a>
+</div>
+<div class="contents2">
+<a href="text00011.html">1.6　函数响应式编程的优势</a>
+</div>
+<div class="contents2">
+<a href="text00012.html">1.7　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00013.html">第2章　RxJS入门</a>
+</div>
+<div class="contents2">
+<a href="text00014.html">2.1　RxJS的版本和运行环境</a>
+</div>
+<div class="contents2">
+<a href="text00015.html">2.2　Observable和Observer</a>
+</div>
+<div class="contents3">
+<a href="text00016.html">2.2.1　观察者模式</a>
+</div>
+<div class="contents3">
+<a href="text00017.html">2.2.2　迭代器模式</a>
+</div>
+<div class="contents3">
+<a href="text00018.html">2.2.3　创造Observable</a>
+</div>
+<div class="contents3">
+<a href="text00019.html">2.2.4　跨越时间的Observable</a>
+</div>
+<div class="contents3">
+<a href="text00020.html">2.2.5　永无止境的Observable</a>
+</div>
+<div class="contents3">
+<a href="text00021.html">2.2.6　Observable的完结</a>
+</div>
+<div class="contents3">
+<a href="text00022.html">2.2.7　Observable的出错处理</a>
+</div>
+<div class="contents3">
+<a href="text00023.html">2.2.8　Observer的简单形式</a>
+</div>
+<div class="contents2">
+<a href="text00024.html">2.3　退订Observable</a>
+</div>
+<div class="contents2">
+<a href="text00025.html">2.4　Hot　Observable和Cold　Observable</a>
+</div>
+<div class="contents2">
+<a href="text00026.html">2.5　操作符简介</a>
+</div>
+<div class="contents2">
+<a href="text00027.html">2.6　弹珠图</a>
+</div>
+<div class="contents2">
+<a href="text00028.html">2.7　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00029.html">第3章　操作符基础</a>
+</div>
+<div class="contents2">
+<a href="text00030.html">3.1　为什么要有操作符</a>
+</div>
+<div class="contents2">
+<a href="text00031.html">3.2　操作符的分类</a>
+</div>
+<div class="contents3">
+<a href="text00032.html">3.2.1　功能分类</a>
+</div>
+<div class="contents3">
+<a href="text00033.html">3.2.2　静态和实例分类</a>
+</div>
+<div class="contents2">
+<a href="text00034.html">3.3　如何实现操作符</a>
+</div>
+<div class="contents3">
+<a href="text00035.html">3.3.1　操作符函数的实现</a>
+</div>
+<div class="contents3">
+<a href="text00036.html">3.3.2　关联Observable</a>
+</div>
+<div class="contents3">
+<a href="text00037.html">3.3.3　改进的操作符定义</a>
+</div>
+<div class="contents3">
+<a href="text00038.html">3.3.4　lettable/pipeable操作符</a>
+</div>
+<div class="contents2">
+<a href="text00039.html">3.4　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00040.html">第4章　创建数据流</a>
+</div>
+<div class="contents2">
+<a href="text00041.html">4.1　创建类操作符</a>
+</div>
+<div class="contents2">
+<a href="text00042.html">4.2　创建同步数据流</a>
+</div>
+<div class="contents3">
+<a href="text00043.html">4.2.1　create：毫无神奇之处</a>
+</div>
+<div class="contents3">
+<a href="text00044.html">4.2.2　of：列举数据</a>
+</div>
+<div class="contents3">
+<a href="text00045.html">4.2.3　range：指定范围</a>
+</div>
+<div class="contents3">
+<a href="text00046.html">4.2.4　generate：循环创建</a>
+</div>
+<div class="contents3">
+<a href="text00047.html">4.2.5　repeat：重复数据的数据流</a>
+</div>
+<div class="contents3">
+<a href="text00048.html">4.2.6　三个极简的操作符：empty、never和throw</a>
+</div>
+<div class="contents2">
+<a href="text00049.html">4.3　创建异步数据的Observable对象</a>
+</div>
+<div class="contents3">
+<a href="text00050.html">4.3.1　interval和timer：定时产生数据</a>
+</div>
+<div class="contents3">
+<a href="text00051.html">4.3.2　from：可把一切转化为Observable</a>
+</div>
+<div class="contents3">
+<a href="text00052.html">4.3.3　fromPromise：异步处理的交接</a>
+</div>
+<div class="contents3">
+<a href="text00053.html">4.3.4　fromEvent</a>
+</div>
+<div class="contents3">
+<a href="text00054.html">4.3.5　fromEventPattern</a>
+</div>
+<div class="contents3">
+<a href="text00055.html">4.3.6　ajax</a>
+</div>
+<div class="contents3">
+<a href="text00056.html">4.3.7　repeatWhen</a>
+</div>
+<div class="contents3">
+<a href="text00057.html">4.3.8　defer</a>
+</div>
+<div class="contents2">
+<a href="text00058.html">4.4　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00059.html">第5章　合并数据流</a>
+</div>
+<div class="contents2">
+<a href="text00060.html">5.1　合并类操作符</a>
+</div>
+<div class="contents3">
+<a href="text00061.html">5.1.1　concat：首尾相连</a>
+</div>
+<div class="contents3">
+<a href="text00062.html">5.1.2　merge：先到先得快速通过</a>
+</div>
+<div class="contents3">
+<a href="text00063.html">5.1.3　zip：拉链式组合</a>
+</div>
+<div class="contents3">
+<a href="text00064.html">5.1.4　combineLatest：合并最后一个数据</a>
+</div>
+<div class="contents3">
+<a href="text00065.html">5.1.5　withLatestFrom</a>
+</div>
+<div class="contents3">
+<a href="text00066.html">5.1.6　解决glitch</a>
+</div>
+<div class="contents3">
+<a href="text00067.html">5.1.7　race：胜者通吃</a>
+</div>
+<div class="contents3">
+<a href="text00068.html">5.1.8　startWith</a>
+</div>
+<div class="contents3">
+<a href="text00069.html">5.1.9　forkJoin</a>
+</div>
+<div class="contents2">
+<a href="text00070.html">5.2　高阶Observable</a>
+</div>
+<div class="contents3">
+<a href="text00071.html">5.2.1　高阶Observable的意义</a>
+</div>
+<div class="contents3">
+<a href="text00072.html">5.2.2　操作高阶Observable的合并类操作符</a>
+</div>
+<div class="contents3">
+<a href="text00073.html">5.2.3　进化的高阶Observable处理</a>
+</div>
+<div class="contents2">
+<a href="text00074.html">5.3　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00075.html">第6章　辅助类操作符</a>
+</div>
+<div class="contents2">
+<a href="text00076.html">6.1　数学类操作符</a>
+</div>
+<div class="contents3">
+<a href="text00077.html">6.1.1　count：统计数据个数</a>
+</div>
+<div class="contents3">
+<a href="text00078.html">6.1.2　max和min：最大最小值</a>
+</div>
+<div class="contents3">
+<a href="text00079.html">6.1.3　reduce：规约统计</a>
+</div>
+<div class="contents2">
+<a href="text00080.html">6.2　条件布尔类操作符</a>
+</div>
+<div class="contents3">
+<a href="text00081.html">6.2.1　every</a>
+</div>
+<div class="contents3">
+<a href="text00082.html#ch1">6.2.2　find和findIndex</a>
+</div>
+<div class="contents3">
+<a href="text00083.html">6.2.3　isEmpty</a>
+</div>
+<div class="contents3">
+<a href="text00084.html">6.2.4　defaultIfEmpty</a>
+</div>
+<div class="contents2">
+<a href="text00085.html">6.3　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00086.html">第7章　过滤数据流</a>
+</div>
+<div class="contents2">
+<a href="text00087.html">7.1　过滤类操作符的模式</a>
+</div>
+<div class="contents3">
+<a href="text00088.html">7.1.1　filter</a>
+</div>
+<div class="contents3">
+<a href="text00089.html">7.1.2　first</a>
+</div>
+<div class="contents3">
+<a href="text00090.html">7.1.3　last</a>
+</div>
+<div class="contents3">
+<a href="text00091.html">7.1.4　take一族操作符</a>
+</div>
+<div class="contents3">
+<a href="text00092.html">7.1.5　计时的点击计数网页程序</a>
+</div>
+<div class="contents3">
+<a href="text00093.html">7.1.6　skip</a>
+</div>
+<div class="contents3">
+<a href="text00094.html">7.1.7　skipWhile和skipUntil</a>
+</div>
+<div class="contents2">
+<a href="text00095.html">7.2　回压控制</a>
+</div>
+<div class="contents3">
+<a href="text00096.html">7.2.1　throttle和debounce</a>
+</div>
+<div class="contents3">
+<a href="text00097.html">7.2.2　auditTime和audit</a>
+</div>
+<div class="contents3">
+<a href="text00098.html">7.2.3　sampleTime和sample</a>
+</div>
+<div class="contents3">
+<a href="text00099.html">7.2.4　根据数据序列做回压控制</a>
+</div>
+<div class="contents2">
+<a href="text00100.html">7.3　其他过滤方式</a>
+</div>
+<div class="contents3">
+<a href="text00101.html">7.3.1　ignoreElements</a>
+</div>
+<div class="contents3">
+<a href="text00102.html">7.3.2　elementAt</a>
+</div>
+<div class="contents3">
+<a href="text00103.html">7.3.3　single</a>
+</div>
+<div class="contents2">
+<a href="text00104.html">7.4　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00105.html">第8章　转化数据流</a>
+</div>
+<div class="contents2">
+<a href="text00106.html">8.1　转化类操作符</a>
+</div>
+<div class="contents2">
+<a href="text00107.html">8.2　映射数据</a>
+</div>
+<div class="contents3">
+<a href="text00108.html">8.2.1　map</a>
+</div>
+<div class="contents3">
+<a href="text00109.html">8.2.2　mapTo</a>
+</div>
+<div class="contents3">
+<a href="text00110.html">8.2.3　pluck</a>
+</div>
+<div class="contents2">
+<a href="text00111.html">8.3　缓存窗口：无损回压控制</a>
+</div>
+<div class="contents3">
+<a href="text00112.html">8.3.1　windowTime和bufferTime</a>
+</div>
+<div class="contents3">
+<a href="text00113.html">8.3.2　windowCount和bufferCount</a>
+</div>
+<div class="contents3">
+<a href="text00114.html">8.3.3　windowWhen和bufferWhen</a>
+</div>
+<div class="contents3">
+<a href="text00115.html">8.3.4　windowToggle和bufferToggle</a>
+</div>
+<div class="contents3">
+<a href="text00116.html">8.3.5　window和buffer</a>
+</div>
+<div class="contents2">
+<a href="text00117.html">8.4　高阶的map</a>
+</div>
+<div class="contents3">
+<a href="text00118.html">8.4.1　concatMap</a>
+</div>
+<div class="contents3">
+<a href="text00119.html">8.4.2　mergeMap</a>
+</div>
+<div class="contents3">
+<a href="text00120.html">8.4.3　switchMap</a>
+</div>
+<div class="contents3">
+<a href="text00121.html">8.4.4　exhaustMap</a>
+</div>
+<div class="contents3">
+<a href="text00122.html">8.4.5　高阶的MapTo</a>
+</div>
+<div class="contents3">
+<a href="text00123.html">8.4.6　expand</a>
+</div>
+<div class="contents2">
+<a href="text00124.html">8.5　数据分组</a>
+</div>
+<div class="contents2">
+<a href="text00125.html">8.6　累计数据</a>
+</div>
+<div class="contents3">
+<a href="text00126.html">8.6.1　scan</a>
+</div>
+<div class="contents3">
+<a href="text00127.html#ch1">8.6.2　mergeScan</a>
+</div>
+<div class="contents2">
+<a href="text00128.html">8.7　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00129.html">第9章　异常错误处理</a>
+</div>
+<div class="contents2">
+<a href="text00130.html">9.1　异常处理不可避免</a>
+</div>
+<div class="contents2">
+<a href="text00131.html">9.2　异常处理的难点</a>
+</div>
+<div class="contents3">
+<a href="text00132.html">9.2.1　try/catch只支持同步运算</a>
+</div>
+<div class="contents3">
+<a href="text00133.html">9.2.2　回调函数的局限</a>
+</div>
+<div class="contents3">
+<a href="text00134.html">9.2.3　Promise的异常处理</a>
+</div>
+<div class="contents2">
+<a href="text00135.html">9.3　RxJS的异常处理</a>
+</div>
+<div class="contents3">
+<a href="text00136.html">9.3.1　catch</a>
+</div>
+<div class="contents3">
+<a href="text00137.html">9.3.2　retry</a>
+</div>
+<div class="contents3">
+<a href="text00138.html">9.3.3　retryWhen</a>
+</div>
+<div class="contents3">
+<a href="text00139.html">9.3.4　finally</a>
+</div>
+<div class="contents2">
+<a href="text00140.html">9.4　重试的本质</a>
+</div>
+<div class="contents2">
+<a href="text00141.html">9.5　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00142.html">第10章　多播</a>
+</div>
+<div class="contents2">
+<a href="text00143.html">10.1　数据流的多播</a>
+</div>
+<div class="contents2">
+<a href="text00144.html">10.2　Hot和Cold数据流差异</a>
+</div>
+<div class="contents2">
+<a href="text00145.html">10.3　Subject</a>
+</div>
+<div class="contents3">
+<a href="text00146.html">10.3.1　两面神Subject</a>
+</div>
+<div class="contents3">
+<a href="text00147.html">10.3.2　用Subject实现多播</a>
+</div>
+<div class="contents3">
+<a href="text00148.html">10.3.3　makeHot操作符</a>
+</div>
+<div class="contents3">
+<a href="text00149.html">10.3.4　Subject不能重复使用</a>
+</div>
+<div class="contents3">
+<a href="text00150.html">10.3.5　Subject可以有多个上游</a>
+</div>
+<div class="contents3">
+<a href="text00151.html">10.3.6　Subject的错误处理</a>
+</div>
+<div class="contents2">
+<a href="text00152.html">10.4　支持多播的操作符</a>
+</div>
+<div class="contents3">
+<a href="text00153.html">10.4.1　multicast</a>
+</div>
+<div class="contents3">
+<a href="text00154.html">10.4.2　publish</a>
+</div>
+<div class="contents3">
+<a href="text00155.html">10.4.3　share</a>
+</div>
+<div class="contents2">
+<a href="text00156.html">10.5　高级多播功能</a>
+</div>
+<div class="contents3">
+<a href="text00157.html">10.5.1　publishLast和AsyncSubject</a>
+</div>
+<div class="contents3">
+<a href="text00158.html">10.5.2　pubishReplay和ReplaySubject</a>
+</div>
+<div class="contents3">
+<a href="text00159.html">10.5.3　publishBehavior和BehaviorSubject</a>
+</div>
+<div class="contents2">
+<a href="text00160.html">10.6　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00161.html">第11章　掌握时间的Scheduler</a>
+</div>
+<div class="contents2">
+<a href="text00162.html">11.1　Scheduler的调度作用</a>
+</div>
+<div class="contents2">
+<a href="text00163.html">11.2　RxJS提供的Scheduler</a>
+</div>
+<div class="contents2">
+<a href="text00164.html">11.3　Scheduler的工作原理</a>
+</div>
+<div class="contents3">
+<a href="text00165.html">11.3.1　单线程的JavaScript</a>
+</div>
+<div class="contents3">
+<a href="text00166.html#ch1">11.3.2　调用栈和事件循环</a>
+</div>
+<div class="contents3">
+<a href="text00167.html">11.3.3　Scheduler如何工作</a>
+</div>
+<div class="contents2">
+<a href="text00168.html">11.4　支持Scheduler的操作符</a>
+</div>
+<div class="contents3">
+<a href="text00169.html">11.4.1　创造类和合并类操作符</a>
+</div>
+<div class="contents3">
+<a href="text00170.html">11.4.2　observeOn</a>
+</div>
+<div class="contents3">
+<a href="text00171.html">11.4.3　subscribeOn</a>
+</div>
+<div class="contents2">
+<a href="text00172.html">11.5　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00173.html">第12章　RxJS的调试和测试</a>
+</div>
+<div class="contents2">
+<a href="text00174.html#ch1">12.1　调试方法</a>
+</div>
+<div class="contents3">
+<a href="text00175.html">12.1.1　无用武之地的Debugger</a>
+</div>
+<div class="contents3">
+<a href="text00176.html#ch1">12.1.2　利用日志来调试</a>
+</div>
+<div class="contents3">
+<a href="text00177.html">12.1.3　利用do来插入调试代码</a>
+</div>
+<div class="contents3">
+<a href="text00178.html">12.1.4　改进的日志调试方法</a>
+</div>
+<div class="contents3">
+<a href="text00179.html">12.1.5　数据流依赖图</a>
+</div>
+<div class="contents3">
+<a href="text00180.html">12.1.6　弹珠图</a>
+</div>
+<div class="contents2">
+<a href="text00181.html">12.2　单元测试</a>
+</div>
+<div class="contents3">
+<a href="text00182.html">12.2.1　单元测试的作用</a>
+</div>
+<div class="contents3">
+<a href="text00183.html">12.2.2　RxJS天生适合单元测试</a>
+</div>
+<div class="contents3">
+<a href="text00184.html">12.2.3　单元测试的结构</a>
+</div>
+<div class="contents3">
+<a href="text00185.html">12.2.4　RxJS单元测试中的时间</a>
+</div>
+<div class="contents3">
+<a href="text00186.html">12.2.5　操纵时间的TestScheduler</a>
+</div>
+<div class="contents3">
+<a href="text00187.html">12.2.6　可测试性代码</a>
+</div>
+<div class="contents2">
+<a href="text00188.html">12.3　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00189.html">第13章　用RxJS驱动React</a>
+</div>
+<div class="contents2">
+<a href="text00190.html#a2">13.1　React简介</a>
+</div>
+<div class="contents3">
+<a href="text00190.html#a2">13.1.1　为什么选择React</a>
+</div>
+<div class="contents3">
+<a href="text00191.html">13.1.2　React如何工作</a>
+</div>
+<div class="contents2">
+<a href="text00192.html">13.2　简单的React应用Counter</a>
+</div>
+<div class="contents2">
+<a href="text00193.html">13.3　利用RxJS管理React状态</a>
+</div>
+<div class="contents3">
+<a href="text00194.html">13.3.1　利用Subject作为桥梁</a>
+</div>
+<div class="contents3">
+<a href="text00195.html">13.3.2　用高阶组件连接RxJS</a>
+</div>
+<div class="contents2">
+<a href="text00196.html">13.4　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00197.html">第14章　Redux和RxJS结合</a>
+</div>
+<div class="contents2">
+<a href="text00198.html">14.1　Redux简介</a>
+</div>
+<div class="contents3">
+<a href="text00199.html">14.1.1　Redux的工作方式</a>
+</div>
+<div class="contents3">
+<a href="text00200.html">14.1.2　构建Redux应用</a>
+</div>
+<div class="contents2">
+<a href="text00201.html">14.2　用RxJS实现Redux</a>
+</div>
+<div class="contents2">
+<a href="text00202.html">14.3　Redux和RxJS比较</a>
+</div>
+<div class="contents2">
+<a href="text00203.html#ch1">14.4　Redux-Observable：Redux和RxJS的结合</a>
+</div>
+<div class="contents2">
+<a href="text00204.html">14.5　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00205.html">第15章　RxJS游戏开发</a>
+</div>
+<div class="contents2">
+<a href="text00206.html">15.1　breakout的历史</a>
+</div>
+<div class="contents2">
+<a href="text00207.html">15.2　程序设计</a>
+</div>
+<div class="contents2">
+<a href="text00208.html">15.3　用RxJS实现breakout</a>
+</div>
+<div class="contents2">
+<a href="text00209.html">15.4　本章小结</a>
+</div>
+<div class="contents1">
+<a href="text00210.html">结语</a>
+</div>
+</body>
+</html>

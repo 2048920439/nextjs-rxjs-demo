@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">2.2.3　创造Observable</h3>
+<p class="ziti">学习RxJS一定要了解核心概念Observable，每个Observable对象，代表的就是在一段时间范围内发生的一系列事件。</p>
+<p class="ziti">RxJS结合了观察者模式和迭代者模式，其中的Observable可以用下面这种公式表示：</p>
+<hr/>
+<pre class="ziti1">Observable=Publisher+Iterator</pre>
+<hr/>
+<p class="ziti">我们已经讲了很多理论，是时候看看真正的代码了，下面的代码创造和使用了一个简单的Observable对象：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+const onSubscribe = observer =&gt; {
+  observer.next(1);
+  observer.next(2);
+  observer.next(3);
+};
+const source$ = new Observable(onSubscribe);
+const theObserver = {
+  next: item =&gt; console.log(item)
+}
+source$.subscribe(theObserver);
+</pre>
+<hr/>
+<p class="middle-img">代码2-1　简单的Observable用例</p>
+<p class="ziti">这段代码依次输出最小的三个正整数，结果如下：</p>
+<hr/>
+<pre class="ziti1">1
+2
+3</pre>
+<hr/>
+<p class="ziti">让我们来分析这段代码：</p>
+<p class="ziti">第一步，我们用deep link的方式导入了Observable类。</p>
+<p class="ziti">第二步，创造一个函数onSubscribe，这个函数会被用作Observable构造函数的参数，这个函数参数完全决定了Observable对象的行为。onSubscribe函数接受一个名为observer的参数，函数体内，调用参数observer的next函数，把数据“推”给observer。</p>
+<p class="ziti">第三步，调用Observable构造函数，产生一个名为source$的数据流对象。</p>
+<p class="ziti">第四步，创造观察者theObserver。</p>
+<p class="ziti">第五步，通过subscribe函数将theObserver和source$关联起来。</p>
+<p class="ziti">创建Observable对象也就是创建一个“发布者”，一个“观察者”调用某个Observable对象的subscribe函数，对应的onSubscribe函数就会被调用，参数就是“观察者”对象，onSubscribe函数中可以任意操作“观察者”对象。这个过程，就等于在这个Observable对象上挂了号，以后当这个Observable对象产生数据时，观察者就会获得通知。</p>
+<p class="ziti">在上面的代码中，“观察者”就是theObserver。</p>
+<p class="ziti">在RxJS中，Observable是一个特殊类，它接受一个处理Observer的函数，而Observer就是一个普通的对象，没有什么神奇之处，对Observer对象的要求只有它必须包含一个名为next的属性，这个属性的值是一个函数，用于接收被“推”过来的数据。</p>
+<p class="ziti">走一遍这段代码，就更能了解Observable和Observer的交互过程，如下所示：</p>
+<p class="ziti">1）定义了onSubscribe函数，这个函数作为参数传递给Observable构造函数，创建了一个对象source$，这时候，onSubscribe并没有被调用，它只是在等待source$的subscribe被调用。</p>
+<p class="ziti">2）theObserver对象被产生了，这时候onSubscribe依然没有被调用，因为到目前为止，source$和theObserver还毫无关系。</p>
+<p class="ziti">3）调用source$.subscribe，theObserver成为了source$的“观察者”。就在subscribe函数被调用的过程中，onSubscribe被调用，这时候，onSubscribe函数的参数observer所代表的就是观察者theObserver，但并不是theObserver对象本身，RxJS会对观察者做一个包装，在这里，observer对象实际上是theObserver的一个包装，所以二者并不完全一样，可以把observer理解为观察者的一个代理，对observer的所有函数调用都会转移到theObserver的同名函数上去。</p>
+<p class="ziti">4）在onSubscribe函数中，连续调用observer.next函数三次，实际上也就是调用了theObserver的next函数三次，而theObserver的next函数所做的就是把传入参数通过console.log输出，所以，最后产生了连续的三个正整数输出。</p>
+<p class="ziti">从上面的程序执行过程可以看出，单独一个Observable对象，或者单独一个Observer对象，都完成不了什么任务。Observable对象就像一台只会产生数据的机器，Observer则是一台只会处理数据的机器，不把这两台机器连接起来，什么都不会发生，Observable的逻辑和Observer的逻辑都不会执行，只有两者通过subscribe连接起来之后，才能让这两台机器运转起来。</p>
+<p class="ziti">只为输出一串正整数，写了这么多代码，显得有点高射炮打蚊子，接下来，就让RxJS来解决更加复杂一点的问题。</p>
+</body>
+</html>

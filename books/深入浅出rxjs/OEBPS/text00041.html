@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">4.1　创建类操作符</h2>
+<p class="ziti">在前面章节的代码中，大多都是通过new关键词来创建Observable对象，这种创建方法的定制性很高，通过传递一个函数给Observable构造函数，可以完全控制一个Observable的行为，不过，就像任何一个领域的问题都有模式，Observable对象的创建也有固定的若干种模式，如果把这些模式抽象出来，那就可以重复利用，根据这些可以重复利用的创建模式，RxJS提供了很多创建类操作符。</p>
+<p class="ziti">所谓创建类操作符，就是一些能够创造出一个Observable对象的方法，所谓“创造”，并不只是说返回一个Observable对象，因为任何一个操作符都会返回Observable对象，这里所说的创造，是指这些操作符不依赖于其他Observable对象，这些操作符可以凭空或者根据其他数据源创造出一个Observable对象。</p>
+<p class="ziti">创建类操作符并不是不需要任何输入，很多创建型的操作符都接受输入参数，有的还需要其他的数据源，比如浏览器的DOM结构或者WebSocket。重要的是，创建类操作符往往不会从其他Observable对象获取数据，在数据管道中，创建类操作符就是数据流的源头。</p>
+<p class="ziti">正因为创建类操作符的这个特性，创建类操作符大部分（并不是全部）都是静态操作符。</p>
+<p class="ziti">对于应用开发工程师，应该尽量使用创建类操作符，避免直接利用Observable的构造函数来创造Observable对象，RxJS提供的创建类操作符覆盖了几乎所有的数据流创建模式，没有必要重复发明轮子。在很多场景下，开发者自己用构造函数创造Observable对象可能需要写很多代码，使用RxJS提供的创建类操作符可能只需要一行就能搞定。</p>
+<p class="ziti">接下来，让我们来熟悉各种创建类操作符，从同步数据流和异步数据流两个方面分别介绍。</p>
+<p class="p6">提示</p>
+<p class="ziti6">本章中出现的所有示例代码，都可以在配套GitHub代码库的chapter-04/creation目录下找到。</p>
+</body>
+</html>

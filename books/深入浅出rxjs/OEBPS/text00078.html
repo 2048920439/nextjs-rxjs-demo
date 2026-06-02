@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">6.1.2　max和min：最大最小值</h3>
+<p class="ziti">max和min的用法相同，唯一区别就是max是取得上游Observable吐出所有数据的“最大值”，而min是取得“最小值”。</p>
+<p class="ziti">要取得“最大值”或者“最小值”，需要能够判断任意两个值的大小关系。如果Observable吐出的数据类型为数值类型，“最大值”或者“最小值”的定义很清楚，就是通过数值比较判断出最大的那一个数，但是，如果Observable吐出的数据类型是复杂数据类型，比如一个对象，那必须指定一个比较这种复杂类型大小的方法，所以，max和min这两个操作符都可以接受一个比较函数作为参数。</p>
+<p class="ziti">在所有语言中，几乎都使用同样的比较大小函数的样式，像下面这样：</p>
+<hr/>
+<pre class="ziti1">function(a, b) {
+        //如果a和b相同返回0；如果a&gt;b返回正数；如果a&lt;b返回负数
+}
+</pre>
+<hr/>
+<p class="ziti">所以，可以利用max和min的函数参数获得任何一个Observable对象中的“最大值”或者“最小值”。</p>
+<p class="ziti">利用min来找到三个著名前端框架RxJS、React和Redux诞生最早的那一个，代码如下：</p>
+<hr/>
+<pre class="ziti1">const intialReleaseS$ = Observable.of(
+  {name: 'RxJS', year: 2011},
+  {name: 'React', year: 2013},
+  {name: 'Redux', year: 2015}
+);
+const min$ = intialRelease$.min((a, b) =&gt; a.year - b.year);
+</pre>
+<hr/>
+<p class="ziti">上面代码中的min$会吐出唯一的一个数据，也就是根据对象中year字段的数字大小比对出的“最小值”，发布年份最小的那一个框架就是最早发布的框架。胜者就是——RxJS：</p>
+<hr/>
+<pre class="ziti1">{ name: 'RxJS', year: 2011 }
+</pre>
+<hr/>
+<p class="ziti">RxJS的第一版在2011年年终发布<sup>
+<a id="ch1" href="text00078.html#ch1_back">[1]</a>
+</sup>
+ <span>，早于React和Redux。如今再来看当年第一版RxJS，可以发现虽然代码有差别，主要的API模式依然类似，让人感叹。</span>
+</p>
+<p class="ziti">和count在上游Observable完结之前不知道数据总个数一样，max和min也只有等到上游的Observable对象完结才能产生结果，因为不走到最后，谁也不知道是不是会有更大或者更小的数据产生。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00078.html#ch1">[1]</a>
+ RxJS v1 的发布公告https://social.msdn.microsoft.com/Forums/en-US/b4c6511d-132d-430e-9a5c-b345465bad83/reactive-extensions-for-javascript-v1010621-sp1-available-now。</p>
+</body>
+</html>

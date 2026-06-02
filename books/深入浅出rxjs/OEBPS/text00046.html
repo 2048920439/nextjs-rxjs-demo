@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.2.4　generate：循环创建</h3>
+<p class="ziti">利用range能够很方便地产生连续的数字序列，但是，现实中很多问题没这么简单，有时候需要的是不连续的数字序列，甚至需要的序列不局限于数字，对于这种需要能够更方便定制的数据流，就可以利用generate这个操作符。</p>
+<p class="ziti">generate类似一个for循环，设定一个初始值，每次递增这个值，直到满足某个条件的时候才中止循环，同时，循环体内可以根据当前值产生数据。比如，想要产生一个比10小的所有偶数的平方，用for循环实现的代码如下：</p>
+<hr/>
+<pre class="ziti1">const result = [];
+for (let i=2; i&lt;10; i+=2) {
+  result.push(i*i);
+}
+</pre>
+<hr/>
+<p class="ziti">最后的结果就在result变量中，在这里，因为需要不断修改循环变量i的值，所以i不能用const定义，而只能用let或者var。</p>
+<p class="ziti">使用generate产生类似的数据系列，代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.generate(
+  2, // 初始值，相当于for循环中的i=2
+  value =&gt; value &lt; 10, //继续的条件，相当于for中的条件判断
+  value =&gt; value + 2, //每次值的递增
+  value =&gt; value * value // 产生的结果
+);
+</pre>
+<hr/>
+<p class="ziti">使用generate，四个参数分别对应了for循环中的不同表达式，其中，除了第一个参数是一个值之外，其余三个参数都是函数，应该保持这三个参数都是纯函数，这样才符合函数式编程的原则。</p>
+<p class="ziti">用generate可以有很大的自由度，可以通过generate产生需求复杂的数据，实际上，可以通过generate来实现range的功能，代码如下：</p>
+<hr/>
+<pre class="ziti1">const range = (start, count) =&gt; {
+  const max = start + count;
+  return Observable.generate(
+    start,
+    value =&gt; value &lt; max,
+    value =&gt; value + 1,
+    value =&gt; value
+  );
+};
+</pre>
+<hr/>
+<p class="ziti">也可以用generate产生不限于数值序列的数据流，这一点range是望尘莫及的。</p>
+<p class="ziti">在下面的代码中，我们产生的Observable对象产生的数据不是数字，而是字符串，依次产生x、xx和xxx字符串：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.generate(
+  'x',
+  value =&gt; value.length &lt;= 3,
+  value =&gt; value + 'x',
+  value =&gt; value
+);
+</pre>
+<hr/>
+<p class="ziti">在传统的JavaScript编程中，如果某个问题的解决方法是用一个for循环产生的数据集合，那么搬到RxJS的世界，就适合于使用generate来产生一个Observable对象。</p>
+</body>
+</html>

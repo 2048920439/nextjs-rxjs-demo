@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">2.2.6　Observable的完结</h3>
+<p class="ziti">调用Observer的next只能表达“这是现在要推送的数据”，next没法表达“已经没有更多数据了”，所以，为了让Observable有机会告诉Observer“已经没有更多数据了”，需要有另外一种通信机制，在RxJS中，实现这种通信机制用的就是Observer的complete函数。</p>
+<p class="ziti">我们修改上面代码中的theObserver变量定义，如下所示：</p>
+<hr/>
+<pre class="ziti1">const theObserver = {
+  next: item =&gt; console.log(item),
+  complete: () =&gt; console.log('No More Data')
+}
+</pre>
+<hr/>
+<p class="ziti">增加了complete这样一个字段，这个字段的值是一个函数，这个函数没有传入参数，函数的工作是在命令行上输出一个No More Data字符串，代表我们希望在数据流里没有更多内容时所作的动作。</p>
+<p class="ziti">运行程序，并没有看到No More Data字符串输出，因为Observable对象并没有去显示调用complete函数，所以，接下来我们修改onSubscribe函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">const onSubscribe = observer =&gt; {
+  let number = 1;
+  const handle = setInterval(() =&gt; {
+    observer.next(number++);
+    if (number &gt; 3) {
+      clearInterval(handle);
+      observer.complete();
+    }
+  }, 1000);
+};
+</pre>
+<hr/>
+<p class="ziti">在取消掉setInterval的效果之后，立刻调用了参数observer的complete函数，和next函数一样，对observer的complete函数调用最终会触发观察者的complete函数调用。</p>
+<p class="ziti">运行这个程序，可以看到输出结果为。</p>
+<hr/>
+<pre class="ziti1">1
+2
+3
+No More Data
+</pre>
+<hr/>
+<p class="ziti">如上面的代码可见，Observer对象的complete何时被调用，完全看Observable的行为，如果Observable不主动调用complete，Observer即使准备好了complete函数，也不会发生任何事情，和数据一样，完结信号也是由Observable“推”给Observer的。</p>
+</body>
+</html>

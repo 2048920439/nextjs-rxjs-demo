@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">6.2　条件布尔类操作符</h2>
+<p class="ziti">这一类操作符根据上游Observable对象的某些条件产生一个新的Observable对象，涉及一个概念“判定函数”（predicate function）。</p>
+<p class="ziti">一个判定函数有一个参数，返回一个布尔类型的结果，所以，实际上一个判定函数的功能就是判定输入参数是否满足某个条件，比如下面的isEven函数：</p>
+<hr/>
+<pre class="ziti1">function isEven(value) {
+  return value % 2 === 0;
+}</pre>
+<hr/>
+<p class="ziti">isEven就是一个判定函数，通过模2运算，判断参数value是否是一个偶数。</p>
+<p class="ziti">在RxJS中，应用于操作符的“判定函数”还有一些特殊性，因为每一个被判定的值都是上游Observable传下来的，所以还有一个序号属性，也就是这个数据是上游Observable吐出的第几个数；另外，有时候判定的功能还需要依赖于上游Observable本身的属性，所以，在RxJS中的“判定函数”实际上有三个参数，除了第一个参数代表被判定的数据，还有序号参数和上游Observable参数。</p>
+<p class="ziti">还是以isEven函数为例，代码如下：</p>
+<hr/>
+<pre class="ziti1">function isEven(value, index, source$) {
+   return value % 2 === 0;
+}</pre>
+<hr/>
+<p class="ziti">当然，isEven这个简单功能，还用不上index和source$这两个参数。</p>
+<p class="ziti">接下来看一看条件布尔类的各种操作符，包括：</p>
+<p class="ziti6">·every</p>
+<p class="ziti6">·find</p>
+<p class="ziti6">·findIndex</p>
+<p class="ziti6">·defaultIfEnpty</p>
+</body>
+</html>

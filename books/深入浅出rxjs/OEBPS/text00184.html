@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">12.2.3　单元测试的结构</h3>
+<p class="ziti">构建单元测试的工具很多，在本书中，我们使用最常见的一个单元测试框架Mocha。</p>
+<p class="ziti">在Mocha的官方网站<a href="https://mochajs.org/">https://mochajs.org/</a>
+ 上可以获得详细的安装和使用文档，就和上面提到的一样，文档依然有很重要的作用，一个单元测试框架的使用方法也不能完全靠代码来展示。</p>
+<p class="ziti">虽然各个测试框架都各有特点，但是对于开发者来说，编写单元测试的原则都是一样的，单元测试代码的形式也是类似的，接下来就通过Mocha来展示单元测试的结构。</p>
+<p class="ziti">
+<span class="yanse">1.多个单元测试的组织</span>
+</p>
+<p class="ziti">任何测试中有下面两个重要概念：</p>
+<p class="ziti6">·测试套件（Test Suite）</p>
+<p class="ziti6">·测试用例（Test Case）</p>
+<p class="ziti">单元测试也不例外，一样涉及这两个概念，其中测试用例是对一个功能点的测试过程，而测试套件则包含多个测试用例，用于把相关测试用例组织到一起，而且，测试套件还可以包含其他的测试套件，用这种方式，所有的单元测试可以被组织成一个树形的结构。</p>
+<p class="ziti">在Mocha中，通常用describe来描述一个测试套件，用it来描述一个测试用例，下面是一个利用Mocha来编写的单元测试例子：</p>
+<hr/>
+<pre class="ziti1">describe('sample suite', () =&gt; {
+  it('should work', () =&gt; {
+  });
+
+  it('should work as well', () =&gt; {
+  });
+
+  context('another suite', () =&gt; {
+    it('should do something', () =&gt; {
+    });
+  });
+});
+</pre>
+<hr/>
+<p class="ziti">最外层是一个describe函数调用，创建一个测试套件。</p>
+<p class="ziti">describe第一个参数是这个测试套件的名字，理论上这个参数可以是任何参数，甚至不同describe函数调用可以用同样的套件名字，但是还是建议尽量使用有意义的名字，能够概括从属的测试用例的共性，比如，在这里只是一个代码演示，所以命名为sample suite。</p>
+<p class="ziti">describe的第二个参数是一个函数，这是真正测试代码存在的地方，在上面的sample suite这个测试套件中，包含两个it调用，一个context调用。</p>
+<p class="ziti">it函数的作用是创建测试用例，和describe一样，第一个参数代表名字，第二个参数是一个函数，包含真正的测试过程。</p>
+<p class="p6">提示</p>
+<p class="ziti6">在有的测试框架中，测试用例使用test函数而不是it函数创建，相对而言，test看起来更像是一个“测试用例”的感觉，但是通常用Mocha写得单元测试都用it，因为it就是“它”，后面接上一个测试用例的描述，就像是“它应该怎样怎样”这样一句话。</p>
+<p class="ziti">context只不过是describe的一个别名（alias）而已，功能和describe一模一样，区别只是字面上的可读性，有的开发者用describe来描述被测的目标，用context来描述测试的不同条件和环境，这是个人倾向，读者只需要作为参考即可。</p>
+<p class="ziti">利用Mocha来执行上面的单元测试，可以看到如下的测试结果报告：</p>
+<hr/>
+<pre class="ziti1">  sample suite
+    ✔ should work
+    ✔ should work as well
+    another suite
+      ✔ should do something</pre>
+<hr/>
+<p class="ziti">因为每个测试用例其实也没有填充任何内容，所有的单元测试都通过了。在开发过程中，应该时刻保持所有的单元测试都绿色对勾通过。</p>
+<p class="ziti">
+<span class="yanse">2.单个测试用例的组成</span>
+</p>
+<p class="ziti">测试套件和测试用例，只是构成了单元测试的框架，但是最终完成测试的，是具体的每个单元测试用例中的内容。</p>
+<p class="ziti">怎么把一只大象关进冰箱？分为三个步骤：打开冰箱门，把大象放到冰箱里，关上冰箱门。单元测试用例也一样，遵从三个步骤的模式：</p>
+<p class="ziti">
+<span class="yanse">步骤一</span>
+ ：准备测试环境；</p>
+<p class="ziti">
+<span class="yanse">步骤二</span>
+ ：调用被测试的函数；</p>
+<p class="ziti">
+<span class="yanse">步骤三</span>
+ ：验证被测试函数的执行结果是否正确。</p>
+<p class="ziti">实际情况中，可能因为被测对象过于简单，步骤一和步骤二可以合二为一，步骤三是无论如何省略不掉的，没有结果验证的指令，谈不上一个单元测试。</p>
+<p class="ziti">在本书中接下来的部分，可以看到单元测试用例都是按照这三个步骤来组织代码，为了清晰易懂，三个步骤相关的代码之间最好用空行分割。</p>
+<p class="ziti">我们拿一个简单的功能来展示三个步骤的单元测试用例编写，被测试对象是一个pipeable操作符，功能是将输入Observable对象中所有的数据作为整数累加起来，产生只有一个数据的新的Observable对象。</p>
+<p class="ziti">根据测试驱动开发的原则，应该先写单元测试用例，然后再来实现功能，这样，开发者在写单元测试的时候，可以清空思路，完全不受功能实现细节的影响。</p>
+<p class="ziti">我们遵照测试驱动开发的思想，先写单元测试，代码如下：</p>
+<hr/>
+<pre class="ziti1">const Rx = require('rxjs');
+const chai = require('chai');
+const assert = chai.assert;
+
+import {sum} from '../src/sum.js';
+
+describe('operator sum', () =&gt; {
+  it('should sum up range of value', () =&gt; {
+    //步骤一: 准备测试的环境
+    const source$ = Rx.Observable.range(1, 5);
+
+    //步骤二： 执行被测试的函数
+    const result$ = source$.pipe(sum);
+
+    //步骤三： 验证结果
+    result$.subscribe(
+      value =&gt; assert.equal(15, value)
+    );
+  });
+});
+</pre>
+<hr/>
+<p class="ziti">代码中导入了Rx和chai，这个chai是一个具有判定功能的库，在这里使用chai的assert功能集来做判定。</p>
+<p class="p6">提示</p>
+<p class="ziti6">chai其实就是“茶”，Mocha是一种咖啡“摩卡”，都是可以喝的东西，开发者实践单元测试之后，工作应该就像是咖啡配茶，轻松很多。</p>
+<p class="ziti">在上面代码中，注释已经清晰表明了三个步骤，被测对象是一个pipeable操作符名叫sum，我们需要一个Observable对象来作为sum的上游，准备的测试环境就是用range创造一个Cold Observable对象。</p>
+<p class="ziti">在步骤二中，使用pipe方法来调用被测对象sum，会产生一个新的Observable对象，赋值给result$，这就是执行结果，在步骤三中我们会验证这个结果是否满足预期要求。</p>
+<p class="ziti">最后，在步骤三中，我们订阅result$，因为我们预期result$只会吐出一个上游source$中所有数据的累加总和，所以只需要判定一个值就够了。</p>
+<p class="ziti">range会产生从1到5的整数，所以预期的结果就是1+2+3+4+5=15。</p>
+<p class="ziti">不过，执行这个单元测试会失败，产生这样的出错输出：</p>
+<hr/>
+<pre class="ziti1">Error: Cannot find module '../src/sum.js'</pre>
+<hr/>
+<p class="ziti">这是因为我们根本还没有创建sum.js文件呢，不用担心，接下来就来实现这个sum，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/operator/reduce';
+
+const sum = (source$) =&gt; {
+  return source$.reduce((a, b) =&gt; a + b, 0);
+};
+
+export {sum};
+</pre>
+<hr/>
+<p class="ziti">我们利用了reduce这个操作符，通过规约的方式累积上游Observable对象中的所有数据，最后产生的Observable对象中就包含一个上游所有数据总和的元素。</p>
+<p class="ziti">在这里，代码直接被展示出来，但实际上我并不是一次把代码写成功的，期间多次犯错，多写一个分号，少写一个参数，我犯了所有开发者都会犯的错，但是没关系，我只要持续地运行单元测试，见招拆招，根据出错提示来调整功能代码，直到单元测试通过，就说明功能完成了：</p>
+<hr/>
+<pre class="ziti1">operator sum
+  ✔ should sum up range of value
+</pre>
+<hr/>
+<p class="ziti">上面是最终单元测试通过时，Mocha的输出结果。</p>
+<p class="ziti">不过，一个测试用例只能考验被测试函数的一个方面，即使对于这样一个简单的需求，也不要轻易以为只要一个单元测试用例就足够了。</p>
+<p class="ziti">目前的单元测试用例只考虑了上游Observable产生的数据都是整数的情况，但是却没有考虑数据不是整数的情况，所以，很自然想到添加一个新的单元测试用例来考验一下，代码如下：</p>
+<hr/>
+<pre class="ziti1">it('should sum up string value', () =&gt; {
+  const source$ = Rx.Observable.of('1', '2', '3');
+
+  const result$ = source$.pipe(sum);
+
+  result$.subscribe(
+    value =&gt; assert.equal(6, value)
+  );
+});
+</pre>
+<hr/>
+<p class="ziti">和之前的单元测试用例相比，这个新的测试用例有一个新的名字，然后步骤一的准备环境阶段和步骤三验证部分有区别，步骤二阶段没有任何变化。</p>
+<p class="ziti">在步骤一中，通过of来产生一个包含三个数据Observable对象，虽然每个数据都代表一个数字，但是却是以字符串方式表示，分别是1、2、3，如果把他们理解为整数，那么它们合并的结果就应该是1+2+3=6，在步骤三中我们预期result$的唯一数据就是6。</p>
+<p class="ziti">添加新的单元测试用例之后，运行Mocha得到这样的结果：</p>
+<hr/>
+<pre class="ziti1">  operator sum
+    ✔ should sum up range of value
+    should sum up string value
+  1) operator sum should sum up string value:
+     AssertionError: expected 6 to equal '0123</pre>
+<hr/>
+<p class="ziti">之前创造的测试用例依然通过，但是新创建的测试用例失败了，预期结果是6，实际结果是字符串0123，显然，sum的实现存在问题，没有处理好字符串的情况。</p>
+<p class="ziti">接下来的工作，就是继续修改sum的实现，让第二个单元测试用例通过，同时，也不要让之前的测试失败。</p>
+<p class="ziti">我们重新审视sum的实现，会发现问题，虽然sum是一个pipeable操作符，但是它的实现方式却直接导入了改变Observable.prototype的模块rxjs/add/operator/reduce，这看起来可不好，所以我们也有必要重构这个实现，最终的实现代码如下：</p>
+<hr/>
+<pre class="ziti1">import {reduce} from 'rxjs/operators/reduce';
+import {map} from 'rxjs/operators/map';
+
+const sum = (source$) =&gt; {
+  return source$.pipe(
+    map(x =&gt; parseInt(x, 10)),
+    reduce((a, b) =&gt; a + b, 0)
+  );
+};
+
+export {sum};
+</pre>
+<hr/>
+<p class="ziti">这一次，我们让两个单元测试用例全部通过：</p>
+<hr/>
+<pre class="ziti1">  operator sum
+    ✔ should sum up range of value
+    ✔ should sum up string value
+</pre>
+<hr/>
+<p class="ziti">这就是终点吗？</p>
+<p class="ziti">并不是，如果继续深究，我们还可以想出更多的单元测试用例来考验这个sum，这些单元测试用例一开始往往是失败的，然后开发者要做的事情就是修改sum函数实现，让这些单元测试通过，这就是测试驱动开发的做法。</p>
+<p class="ziti">读者朋友是否注意到，在现有的测试用例中，使用的创造类操作符，无论是range还是of，产生的都是Cold Observable，而且是同步产生数据的Cold Observable，然而，如果测试需要异步产生数据的Observable，该怎么做呢？</p>
+<p class="ziti">这就是接下来要讨论的问题，在RxJS相关的单元测试中如何处理异步操作。</p>
+</body>
+</html>

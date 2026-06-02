@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">6.2.2　find和findIndex</h3>
+<p class="ziti">有人说，RxJS就是异步处理世界的lodash<sup>
+<a id="ch1" href="text00082.html#ch1_back">[1]</a>
+</sup>
+ <span>，lodash是一个具有一致接口、模块化、高性能等特性的JavaScript工具库，lodash中有很多方法，在RxJS中都有对应的操作符，比如find和findIndex。RxJS和lodash的不同之处是，lodash处理的都是一个内容确定的数据集合，比如一个数组或者一个对象，既然数据集合已经有了，所以对应的函数都是同步操作；对于RxJS，数据可能随着时间的推移才产生，所以更适合于异步数据处理。</span>
+</p>
+<p class="ziti">find和findIndex的功能都是找到上游Observable对象中满足判定条件的第一个数据，产生的Observable对象在吐出数据之后会立刻完结，两者不同之处是，find会吐出找到的上游数据，而findIndex会吐出满足判定条件的数据序号。</p>
+<p class="ziti">在下面的代码中，就是通过find来找到source$中的第一个偶数：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/find';
+
+const source$ = Observable.of(3, 1, 4, 1, 5, 9);
+const find$ = source$.find(x =&gt; x % 2 === 0);</pre>
+<hr/>
+<p class="ziti">最后，find$会吐出4，然后完结。</p>
+<p class="ziti">如果我们更关心的是source$吐出的第几个元素是偶数，就用下面的代码：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/findIndex';
+
+const source$ = Observable.of(3, 1, 4, 1, 5, 9);
+const findIndex$ = source$.findIndex(x =&gt; x % 2 === 0);</pre>
+<hr/>
+<p class="ziti">这样，find$吐出的数字是2，因为序号（Index）是从0开始，第三个数字的序号是2。</p>
+<p class="ziti">如果在上游Observable中始终没有出现满足判定条件的数据，find会吐出undefined后完结，findIndex则会吐出-1后完结。</p>
+<p class="ziti">当然，如果上游Observable始终不完结，而且没有吐出满足判定条件的数据，那么find和findIndex产生的Observable对象也就永远不会完结。</p>
+<p class="ziti">在某些情况下，如果既希望获得满足判定条件的数据，同时也获得这个数据的序号，也就是把find和findIndex的功能合在一起，该怎么做呢？</p>
+<p class="ziti">最简单粗暴的方法就是对同一个上游Observable对象同时使用find和findIndex，当然要用一样的判定函数参数。比如对于找到第一个偶数的例子，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/find';
+import 'rxjs/add/operator/findIndex';
+import 'rxjs/add/operator/zip';
+
+const source$ = Observable.of(3, 1, 4, 1, 5, 9);
+const isEven = x =&gt; x % 2 === 0;
+const find$ = source$.find(isEven);
+const findIndex$ = source$.findIndex(isEven);
+const zipped$ = find$.zip(findIndex$);</pre>
+<hr/>
+<p class="ziti">其中，find和findIndex有共同的上游source$，产生不同的find$和findIndex$，因为使用了同样的判定函数isEven作为参数，所以这两个数据流肯定是同时吐出数据，也就是source$吐出第一个偶数的时候，我们用zip来合并find$和findIndex$，这样zipped$中吐出的数据就包含满足判定条件的数据和序号。</p>
+<p class="ziti">最终，zipped$中吐出唯一的一个数据，值为数组[4，2]，然后立刻完结。</p>
+<p class="ziti">上面说的方法虽然可行，但是动用了find、findIndex和zip三个操作符，感觉还是有些笨拙，在后面7.1节介绍first这个操作符的时候，我们会介绍一种更简单的方法。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00082.html#ch1">[1]</a>
+ 参见http://lodashjs.com/docs/。</p>
+</body>
+</html>

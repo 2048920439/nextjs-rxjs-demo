@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">12.1.3　利用do来插入调试代码</h3>
+<p class="ziti">在RxJS中，对于一个数据管道进行调试的时候，其实也就是对一串操作符的链式调用进行调试，对于简单的链式调用，开发者也许还能够用肉眼和脑力来跟踪数据的流转，但是对于比较复杂的链式调用，就难以只靠人肉的方法来知晓数据管道里数据的流转情况了。</p>
+<p class="ziti">通常，我们可以利用do这个操作符来帮助调试数据管道，在本书前面的章节中，其实已经使用过do来做调试的招数。</p>
+<p class="ziti">假如原本的代码是下面这样。</p>
+<hr/>
+<pre class="ziti1">source$.subscribe(observer);
+</pre>
+<hr/>
+<p class="ziti">为了知道到底什么样的数据会流入observer，我们可以在subscribe之前插入一个do，代码如下：</p>
+<hr/>
+<pre class="ziti1">source$.do(
+  value =&gt; console('source$ data = ', value)
+).subscribe(observer);
+</pre>
+<hr/>
+<p class="ziti">do这个操作符既不属于转化类，也不属于过滤类，do是一个很特殊的操作符，它不会改变数据管道中流过的任何数据，数据只不过经它手走一遍而已，上游和下游都感觉不到do的存在。</p>
+<p class="ziti">虽然do对数据的操作没有什么贡献，但是这一特性正好被利用来帮助调试，因为do的存在对于数据管道的数据流转毫无影响。</p>
+<p class="ziti">读者可能会想，为什么要利用do呢？直接subscribe上游数据流source$来触发调试代码不也一样吗？就像下面这样：</p>
+<hr/>
+<pre class="ziti1">source$.subscribe(value =&gt; console('source$ data = ', value));
+source$.subscribe(observer);
+</pre>
+<hr/>
+<p class="ziti">如果像上面这样添加调试代码，那就给source$多增加了一个Observer，这改变了原有代码的逻辑，原本source$只有一个Observer，现在多出来一个Observer，可能改变代码原有的执行结果。</p>
+<p class="ziti">调试的过程，应该不改变被调试代码的执行逻辑，不然，开发者看到的就不是代码真正执行的结果，也就不可能做正确的Debug。</p>
+<p class="ziti">增加Observer这个动作可能产生副作用，比如，source$可能是下面这样：</p>
+<hr/>
+<pre class="ziti1">const source$ = $orginalSource.publish().refCount();
+</pre>
+<hr/>
+<p class="ziti">在前面的关于RxJS多播的章节中，我们已经了解到，publish和refCount组合产生的Hot数据流，在第一次被订阅的时候会去订阅上游的数据流。如果直接给source$增加一个输出调试信息的Observer，引发source$订阅上游的Observer从一个变成了两个，而且触发source$订阅上游的时机可能被打乱。</p>
+<p class="ziti">即使source$是一个Cold Observable，即使source$有多少个Observer都不会有副作用，依然不应该给source$添加一个专门输出log信息的Observer，因为对于Cold Observable，每一次订阅都会产生一个新的数据序列，输出log的Observer所接受到的数据序列，也未必就是真正工作的Observer所接受到的数据序列。比如，增加调试代码之后也许是这样：</p>
+<hr/>
+<pre class="ziti1">source$.subscribe(value =&gt; console('source$ data = ', value));
+if (someCondition) {
+  source$.subscribe(observer);
+}
+</pre>
+<hr/>
+<p class="ziti">虽然有一个Observer专门输出log，但是不巧someConidtion是false，真正有逻辑功能的那个Observer反而没有订阅上source$，最后从log上看到一串log输出，让开发者以为一切工作正常，其实这些数据序列根本没有被真正有逻辑功能的Observer接收到。</p>
+<p class="ziti">总之，不要用subscribe方法来增加输出log的调试代码，如果要增加调试代码，就一定要在数据管道中利用do这个操作符来增加。</p>
+<p class="ziti">需要注意，do也只是数据管道中的一个环节，通过do也只能看到这个环节上流过的数据，如果数据在上游就被过滤掉或者被转化，那do中的调试代码并不能输出相关数据。下面的代码展示了do的局限：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 10)
+  .filter(x =&gt; x % 2 === 0)
+  .map(x =&gt; x*x);
+
+source$.do(
+  value =&gt; console.log('source$ data = ', value)
+).subscribe(observer);
+</pre>
+<hr/>
+<p class="ziti">source$通过range产生从1到10的正整数序列，经过filter过滤掉所有的偶数，然后再通过map来产生数据的平方，最后经过do来输出的数据是4、16、36、64、100，可是，这个数据序列如何产生的，从log中我们无从得知了。</p>
+<p class="ziti">这就是利用log来调试代码的局限，只能看到执行到调试代码位置时的状态缩影，而看不到这个状态如何产生的。</p>
+<p class="ziti">假如我们想要知道数据管道中其他环节，就需要在对应的位置插入其他的do，比如，我们想要知道filter之后的数据是怎样，代码就要改成下面这样：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 10)
+  .filter(x =&gt; x % 2 === 0)
+  .do(x =&gt; console.log('source$ after filter data = ', x)
+  .map(x =&gt; x*x);
+</pre>
+<hr/>
+<p class="ziti">这个do所能截获的数据是2、4、6、8、10，很明显和直接对source$应用do截获的数据不同。</p>
+</body>
+</html>

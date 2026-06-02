@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">2.3　退订Observable</h2>
+<p class="ziti">现在已经了解了Observable和Observer之间如何建立关系，两者之间除了要通过subscribe建立关系，有时候还需要断开两者的关系，例如，Observer只需要监听一个Observable对象三秒钟时间，三秒钟之后就不关心这个Observable对象的任何事件了，这时候怎么办呢？</p>
+<p class="ziti">这就涉及一个“退订”（unsubscribe）的概念。</p>
+<p class="ziti">在上面的例子中，onSubscribe函数并没有返回任何结果，其实，onSubscribe函数可以返回一个对象，对象上可以有一个unsubscribe函数，顾名思义，代表的就是和subscribe“订阅”相反的动作，也就是退订。</p>
+<p class="ziti">修改onSubscribe的函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">const onSubscribe = observer =&gt; {
+  let number = 1;
+  const handle = setInterval(() =&gt; {
+    observer.next(number++);
+  }, 1000);
+  return {
+    unsubscribe: () =&gt; {
+      clearInterval(handle);
+    }
+  };
+};
+</pre>
+<hr/>
+<p class="ziti">这次，onSubscribe函数有返回结果，返回结果是一个对象，其中包含一个unsubscibe字段，这个unsubscribe字段的值是另一个函数，调用了clearInterval来清除setInterval产生的效果。</p>
+<p class="ziti">接下来看怎样使用unsubscibe，代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = new Observable(onSubscribe);
+const subscription = source$.subscribe(item =&gt; console.log(item));
+
+setTimeout(() =&gt; {
+  subscription.unsubscribe();
+}, 3500);
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，subscribe函数的返回结果存为变量subscription，在完成subscribe的3.5秒钟之后，调用了subscription上的unsubscribe函数，也就是在3.5秒之后做退订的动作。</p>
+<p class="ziti">程序的执行结果是每隔一秒钟输出一个递增的正整数，在输出了1、2、3之后，unsubcribe函数被调用，Observable对象source$就再也不会产生新的数据了，输出结束，这是一个完整的“订阅”和“退订”过程。</p>
+<p class="ziti">值得注意的是，在上面的例子中，虽然unsubscribe函数调用之后，作为Observer不再接受到被推送的数据，但是作为Observable的source$并没有终结，因为始终没有调用complete，只不过它再也不会调用next函数了。</p>
+<p class="ziti">为了便于体会这其中的差异，我们对onSubscribe做一点小的修改，代码如下：</p>
+<hr/>
+<pre class="ziti1">const onSubscribe = observer =&gt; {
+  let number = 1;
+  const handle = setInterval(() =&gt; {
+    console.log('in onSubscribe ', number);
+    observer.next(number++);
+  }, 1000);
+  return {
+    unsubscribe: () =&gt; {
+      //clearInterval(handle);
+    }
+  };
+};
+</pre>
+<hr/>
+<p class="ziti">现在unsubcribe函数中的clearInterval调用被注释掉了，也就是让setInterval产生的效果持续，不去打断它，同时，我们在setInterval的函数参数中输出当前number，修改之后的程序运行输出会是这样。</p>
+<hr/>
+<pre class="ziti1">in onSubscribe  1
+1
+in onSubscribe  2
+2
+in onSubscribe  3
+3
+in onSubscribe  4
+in onSubscribe  5
+in onSubscribe  6
+</pre>
+<hr/>
+<p class="ziti">上面只是程序运行前几秒钟的结果，如果不终止程序，会持续运行，每隔一秒钟输出一行“in onSubscribe X”，其中X会是递增的正整数，而Observer的输出在3秒钟之后就不再产生了。由此可见，Observable对象source$在unsubscribe函数调用之后依然在不断调用next函数，但是，unsubscribe已经断开了source$对象和Observer的连接，所以，之后无论onSubscribe中如何调用next，Observer都不会作出任何响应。</p>
+<p class="ziti">这是RxJS中很重要的一点：Observable产生的事件，只有Observer通过subscribe订阅之后才会收到，在unsubscribe之后就不会再收到。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在RxJS v4中，“退订”的函数不是unsubscribe，同样功能的函数名为dispose，unsubscribe从语义上更容易理解为“退订”，而dispose听起来像是“清理回收资源”。在RxJS v4中，也没有next、complete、error这些函数，对应的函数名为onNext、onComplete和onError。实际上，有一个在JavaScript中实现Observable类型的提案<sup>
+<a id="ch1" href="text00024.html#ch1_back">[1]</a>
+</sup>
+ <span>，提案中使用的函数名也是next、complete、error和unsubscribe，RxJS v5对API进行这样的修改也是为了和未来的JavaScript标准保持一致。</span>
+</p>
+<p class="fnote">
+<a id="ch1_back" href="text00024.html#ch1">[1]</a>
+ TC39 Observable https://github.com/tc39/proposal-observable。</p>
+</body>
+</html>

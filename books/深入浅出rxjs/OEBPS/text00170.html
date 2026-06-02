@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">11.4.2　observeOn</h3>
+<p class="ziti">上面我们介绍的使用Scheduler的场景都是在创造或者组合Observable对象的时候，不过，有些时候我们没有机会或者不想去修改Observable对象的生成代码，拿到了一个Observable对象，只想在这个Observable对象上应用某个特定的Scheduler，怎么做到呢？</p>
+<p class="ziti">按照函数式编程的原则，当然不应该在函数中去修改上游的Observable对象，但是可以根据这个Observable对象产生出一个新的Observable对象出来，让这个新的Observable对象吐出的数据由指定的Scheduler来控制。</p>
+<p class="ziti">在RxJS中，支持上述功能的操作符叫做observeOn。下面是使用observeOn的代码示例：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+import 'rxjs/add/operator/observeOn';
+import {asap} from 'rxjs/scheduler/asap';
+
+const source$ = Observable.range(1, 3);
+const asapSource$ = source$.observeOn(asap);
+
+console.log('before subscribe');
+asapSource$.subscribe(
+  value =&gt; console.log('data: ', value),
+  error =&gt; console.log('error: ', error),
+  () =&gt; console.log('complete')
+);
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">在用range创建source$的时候，并没有使用scheduler，但是我们用链式调用的方法调用observeOn，传入asap参数，这样新产生的asapSource$也就由asap这个Scheduler控制。</p>
+<p class="ziti">和合并类操作符一样，observeOn只控制新产生的Observable对象的数据推送节奏，并不能改变上游Observable对象所使用的Scheduler。</p>
+<p class="ziti">一般来说，observeOn在数据流管道接近末尾的位置使用，最好就是在调用subscribe之前，因为通常RxJS默认的Scheduler已经足够合理，如果我们要修改Scheduler，在整个数据管道中只需要修改一处就足够，既然数据管道中的数据是被Observer使用，当然应该在添加Observer的subscribe调用之前使用observeOn调整Scheduler最合适。</p>
+</body>
+</html>

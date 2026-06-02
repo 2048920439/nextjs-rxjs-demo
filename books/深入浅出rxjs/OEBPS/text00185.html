@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">12.2.4　RxJS单元测试中的时间</h3>
+<p class="ziti">RxJS最擅长的是异步数据处理，因为异步数据的产生会分布在一段时间上，这就给单元测试带来了新的挑战。</p>
+<p class="ziti">我们先尝试用最直观的方式来尝试对Observable对象进行单元测试，从中可以看出难度。</p>
+<p class="ziti">比如，利用interval产生的Observable对象，会根据interval的第一个参数来每隔指定时间产生一个递增的整数序列，如果我们就是要测试interval这个操作符的功能，因为时间的因素，就会带来不小的麻烦。</p>
+<p class="ziti">例如下面代码中，interval产生数据的间隔是100毫秒，总共产生4个数据：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.interval(100).take(4);</pre>
+<hr/>
+<p class="ziti">现在要对source$这个数据流进行单元测试，那么这个单元测试的执行时间需要大约400毫秒，幸好还只是间隔100毫秒，如果间隔1000毫秒，那单元测试的执行时间就是4秒，如果间隔10000毫秒，那这个单元测试的执行时间就是40秒。</p>
+<p class="ziti">Mocha默认要求一个单元测试要在2秒钟之内结束，不然，这个单元测试就超时出错，输出类似下面的错误提示：</p>
+<hr/>
+<pre class="ziti1">Error: Timeout of 2000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.
+</pre>
+<hr/>
+<p class="ziti">在Mocha中，可以通过this.timeout函数修改某个测试用例的超时时间，也可以用来修改一个测试套件下所有测试用例的超时时间，像下面这样：</p>
+<hr/>
+<pre class="ziti1">describe('a suite of tests', function() {
+  this.timeout(500); // 让这个测试套件下所有测试用例超时时间为500毫秒
+  it('should take less than 500ms', functon(done) {
+      this.timeout(1500); // 让这个测试用例超时时间为1500毫秒
+  });
+  it('should take less than 500ms as well', (done) =&gt; {
+    // 这个测试套件的超时时间为500毫秒
+  })
+});
+</pre>
+<hr/>
+<p class="ziti">注意到上面使用了this.timeout的describe和it第二个参数都是普通的函数表达式，而不是ES6的箭头函数方式，因为在箭头函数中，this的值绑定为箭头函数所在作用域的this，比如，如果describe第二个参数使用箭头函数，那其中的this就会是全局this，在JavaScript的严格（strict）运行模式下就是undefined。</p>
+<p class="ziti">不过，修改超时时间不是被鼓励的行为，因为单元测试就应该尽快运行结束。</p>
+<p class="ziti">即使我们给单元测试更长的timeout时间，这样的单元测试显然也很没有道理，单独这一个单元测试就消耗400毫秒，两个这样的测试用例就要800毫秒，十个就要4秒钟，照这样下去，如果有很多这样耗时的单元测试用例，执行全部单元测试的时间就太长了，完全不能能满足测试驱动开发快速反馈的要求。</p>
+<p class="ziti">不过，我们姑且暂时接受400毫秒执行时间这一现实，接着考虑如何编写对应的单元测试，会发现有更麻烦的事情。</p>
+<p class="ziti">我们用Mocha来编写单元测试，默认情况下，单元测试是同步执行结束的，也就是说，单元测试的执行不会去等待interval，不等interval产生第一个数据，单元测试就已经结束了，哪里还有机会去验证interval产生的数据流？如下面的代码所示，it是Mocha提供的代表一个单元测试用例的函数，它的第一个参数是用例名，第二个参数就是包含测试过程的函数：</p>
+<hr/>
+<pre class="ziti1">it('interval and take should work', () =&gt; {
+  const source$ = Rx.Observable.interval(100).take(4);
+  // 在source$产生数据之前，这个单元测试已经同步结束了
+});
+</pre>
+<hr/>
+<p class="ziti">好在Mocha还是提供了异步操作的测试方法，如果代表测试过程的函数增加一个参数，那么Mocha认为这是一个包含异步操作的单元测试，通常这个参数叫做done，测试用例中必须显示调用done来告诉Mocha这个用例执行结束，当然，对于异步操作，我们肯定不会同步执行done，如下面代码所示：</p>
+<hr/>
+<pre class="ziti1">  it('interval and take should work', (done) =&gt; {
+    const source$ = Rx.Observable.interval(100).take(4);
+    source$.subscribe({
+      complete: () =&gt; {
+         done(); //告诉Mocha这个单元测试结束了
+      }
+    });
+  });
+</pre>
+<hr/>
+<p class="ziti">其中，Mocha虽然会同步执行完这个单元测试中的语句，但是却并不会立刻结束这个测试过程，因为同步执行过程中，参数done并没有被执行，所以这就给了source$随时间产生数据的机会，400毫秒之后，source$会调用Observer的complete方法，在complete方法中调用了done，这时候这个单元测试才真的结束，Mocha也才会去继续执行其他单元测试或者产生测试结果报告。</p>
+<p class="ziti">除了使用done，还有对异步操作进行单元测试的方式，就是在测试函数中返回一个Promise对象，这种情况下，Mocha会在返回的Promise对象成功结束的时候，才认为这个单元测试结束。利用这一功能，也可以像下面这样来编写对RxJS的单元测试：</p>
+<hr/>
+<pre class="ziti1">it('interval and take should work', (done) =&gt; {
+  const source$ = Rx.Observable.interval(100).take(4);
+  return source$.toPromise();
+});
+</pre>
+<hr/>
+<p class="ziti">利用Observable的toPromise函数，测试函数返回了一个Promise对象，当source$还在产生数据的时候，这个Promise对象还没有结束，Mocha也不会认为这个单元测试过程结束；当source$这个Observable对象完结的时候，由toPromise产生的Promise对象也就成功结束了，从而通知Mocha这个单元测试结束。</p>
+<p class="ziti">到现在为止，我们忍受了400毫秒的测试时间，也解决了异步处理的延时问题，但是还没有对source$的内容做任何验证呢，没有验证语句的单元测试是没有意义的。</p>
+<p class="ziti">chai是一个常用的判定库，在这里就使用chai的assert功能对运算结果进行判断，最终的单元测试代码如下：</p>
+<hr/>
+<pre class="ziti1">it('interval and take should work', (done) =&gt; {
+  const source$ = Rx.Observable.interval(100).take(4);
+
+  const result = [];
+  source$.subscribe({
+    next: value =&gt; result.push(value),
+    complete: () =&gt; {
+      assert.deepEqual([0, 1, 2, 3], result);
+      done();
+    }
+  });
+});
+</pre>
+<hr/>
+<p class="ziti">我们预期source$会依次产生从0开始的4个递增整数序列，也就是0、1、2、3，为了验证结果是否正确，我们给source$增加了Observer，在next函数中把结果push到一个数组result中，这样，如果一切顺利的话，当complete函数被调用的时候，result数组中就应该包含4个元素，这就是下面这个判定语句的工作：</p>
+<hr/>
+<pre class="ziti1">assert.deepEqual([0, 1, 2, 3], result);
+</pre>
+<hr/>
+<p class="ziti">至此，我们终于验证了interval和take这一对操作符组合的数据流功能，但是，上面的单元测试代码只检查了数据序列的内容，却没有验证数据序列的产生时间。</p>
+<p class="ziti">“时间”在这里没有被考虑，该怎么测试时间呢？</p>
+<p class="ziti">直观上，可以在result数组中不仅push数据流产生的数据，也push产生数据的时间，例如像下面的代码这样：</p>
+<hr/>
+<pre class="ziti1">next: value =&gt; result.push({
+  value: value,
+  time: new Date()
+}),
+</pre>
+<hr/>
+<p class="ziti">看起来，既然记录下来了数据的值和产生时间，在判定阶段，我们就可以不仅验证数据的值，还可以根据记录下来的时间之差来验证时间，可是，这种方法并不可行。</p>
+<p class="ziti">在前面的章节中也介绍过，在JavaScript运行环境中，时钟并不精准，interval的参数是1000，也只能以近似1000毫秒的间隔产生数据，做不到精确的1000毫秒，最后记录下来的时间差，可能是995，可能是1018，从这些有偏差的数据上，又怎么能够精确认定interval是以1000毫秒的间隔来产生数据呢？</p>
+<p class="ziti">至此，可以看出用传统方法来测试RxJS的数据流，不光耗时而且麻烦，而且对时间无法进行验证。</p>
+<p class="ziti">归根到底，因为RxJS异步的特性，“时间”这个概念无法被把握，所以带来这些困难，所以，要对RxJS进行真正有效的单元测试，就需要控制“时间”，在RxJS中，能够控制时间的就是TestScheduler。</p>
+</body>
+</html>

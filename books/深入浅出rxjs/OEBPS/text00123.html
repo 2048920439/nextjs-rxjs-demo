@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.4.6　expand</h3>
+<p class="ziti">RxJS还提供一个叫expand的操作符，这个操作符类似于mergeMap，但是，所有expand传递给下游的数据，同时也会传递给自己，就像是逐层“展开”所有的数据。</p>
+<p class="ziti">很明显，expand构成了一个逻辑死循环，除非发生异常，或者expand的函数参数project代码中限定在某些情况下不再产生数据，否则expand产生的绝对是一个永远不会完结的Observable对象，而且产生的数据量也很容易产生爆炸性增长。</p>
+<p class="ziti">下面代码通过expand产生2的N次方序列：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/delay';
+import 'rxjs/add/operator/expand';
+
+const source$ = Observable.of(1);
+const result$ = source$.expand(
+  (value, index) =&gt; Observable.of(value * 2).delay(10)
+);</pre>
+<hr/>
+<p class="ziti">看看result$的结果很快就产生天文数字，就可以体会expand造成的“爆炸性”数据增长。</p>
+</body>
+</html>

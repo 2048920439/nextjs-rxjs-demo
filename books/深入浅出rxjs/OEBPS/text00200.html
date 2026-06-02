@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">14.1.2　构建Redux应用</h3>
+<p class="ziti">在上一章13.2节，用create-react-app创建的网页应用的基础上，只需要安装几个新的npm包，就可以进一步让这个应用的状态由Redux来管理。</p>
+<p class="ziti">在项目目录下的命令行中运行下列命令：</p>
+<hr/>
+<pre class="ziti1">npm install --save redux react-redux</pre>
+<hr/>
+<p class="ziti">这个命令安装了redux和react-redux，redux就是Redux的npm安装包，而react-redux是辅助结合React和Redux的安装包，使用了react-redux会省去很多工作。</p>
+<p class="p6">注意</p>
+<p class="ziti6">Redux并不是只能和React配合工作，Redux本身也是非常中立的一个框架，只是承上启下我们使用React而已。</p>
+<p class="ziti">我们用Redux来实现Counter应用，代码需要做一些修改。</p>
+<p class="p6">提示</p>
+<p class="ziti6">对应的应用在本书配套的GitHub代码库的chapter-14/redux-rxjs/simple目录下可以找到。</p>
+<p class="ziti">程序的入口是src/index.js文件，如下所示：</p>
+<hr/>
+<pre class="ziti1">import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import {Provider} from 'react-redux';
+import store from './Store.js';
+
+ReactDOM.render(
+  &lt;Provider store={store}&gt;
+    &lt;App /&gt;
+  &lt;/Provider&gt;,
+  document.getElementById('root')
+);
+</pre>
+<hr/>
+<p class="ziti">这段代码不再是简单地给ReactDOM.render传一个App组件，App组件由Provider包了起来，成为了子组件。</p>
+<p class="ziti">Provider是react-redux提供的一个组件，用于给组件树上处于它之下的所有组件提供一个Redux的Store实例，所以它的prop就有store，也就是说，App组件还有App组件的任何一层子组件，都可以访问到这个store。毫无疑问，一般就应该把Provider放在应用组件树的最顶层，这样所有的组件都访问唯一的store。</p>
+<p class="ziti">上面store的来源是src/Store.js文件，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {createStore} from 'redux';
+import reducer from './Reducer.js';
+
+const initValues = {
+  count: 0
+};
+const store = createStore(reducer, initValues);
+
+export default store;
+</pre>
+<hr/>
+<p class="ziti">这是一个非常简单的Store实现，调用了redux提供的createStore产生一个Store实例，initValues是Store的初始值，因为我们的应用中只有一个Counter组件，所以也只有一个初始值为0的count字段。</p>
+<p class="ziti">createStore还需要一个reducer参数，从src/Reducer.js文件导入，代码如下：</p>
+<hr/>
+<pre class="ziti1">import * as ActionTypes from './ActionTypes.js';
+
+const reducer = (state, action) =&gt; {
+  switch (action.type) {
+    case ActionTypes.INCREMENT:
+      return {...state, count: state.count + 1};
+    case ActionTypes.DECREMENT:
+      return {...state, count: state.count - 1};
+    default:
+      return state
+  }
+};
+
+export default reducer;
+</pre>
+<hr/>
+<p class="ziti">每当一个action被发送到Store的时候，Redux就会调用Store的getState函数，获得当前的state，然后把这个state和action对象作为参数调用这个文件中定义的reducer函数。</p>
+<p class="ziti">reducer函数中通常都包含一个switch语句，因为要根据action对象的type字段来区分处理，这个reducer函数只需要考虑INCRMENT和DECREMENT两种action类型，实际应用中需要考虑的action类型会更多，不过可以把多个reducer函数组合在一起处理复杂情况。</p>
+<p class="ziti">如果一个reducer函数发现给定的action.type自己不知道怎么处理，那也一定要把参数state返回，因为Redux总是把返回值看作reducer指定的下一个状态，正因为如此，switch的default条件总是直接返回参数state。</p>
+<p class="ziti">在src/Reducer.js中应用到了ActionTypes，也就是action对象的类型，因为这些类型常量值会在多个文件中被用到，所以它们被定义在src/Actionypes.js文件中，如下所示：</p>
+<hr/>
+<pre class="ziti1">export const INCREMENT = 'increment';
+export const DECREMENT = 'decrement';
+</pre>
+<hr/>
+<p class="ziti">除了reducer因为要消费action对象需要用到ActionTypes，还有一个必定会用到ActionTypes的地方就是产生action对象的函数，这些函数称为action creator，定义在src/Actions.js中，如下所示：</p>
+<hr/>
+<pre class="ziti1">import * as ActionTypes from './ActionTypes.js';
+
+export const increment = () =&gt; ({
+  type: ActionTypes.INCREMENT
+});
+
+export const decrement = () =&gt; ({
+  type: ActionTypes.DECREMENT
+});
+</pre>
+<hr/>
+<p class="ziti">为了支持Counter的加1和减1功能，需要两个action creator：increment和decrement，它们返回的只是普通的JavaScript对象，唯一的特殊之处是都有type字段，用于让reducer来区分操作类型。</p>
+<p class="ziti">理论上，只要action creator和reducer达成统一，action对象可以不用type作为类型区分的字段，可以用t，也可以用foo，可以用任何一个名称的字段，但是使用type已经是业界普遍接受的方式，实在没有必要搞得特立独行换一个字段名称。</p>
+<p class="ziti">到这里，使用Redux的准备工作结束了，Redux的Store上会保存着Counter需要用到的计数值，初始值为0。当我们想要让这个计数值增加1的时候，就向Store派送一个increment函数的返回结果；当我们想让这个计数值减1的时候，就派送给它一个decrement函数的返回结果。</p>
+<p class="ziti">接下来要做的就是，把React和Redux链接起来，对应的代码在src/Counter.js中。</p>
+<p class="ziti">作为傻瓜组件的React组件没有变化，还是下面这个样子：</p>
+<hr/>
+<pre class="ziti1">const CounterView = ({count, onIncrement, onDecrement}) =&gt; (
+  &lt;div&gt;
+    &lt;h1&gt;Count: {count}&lt;/h1&gt;
+    &lt;button onClick={onIncrement}&gt;+&lt;/button&gt;
+    &lt;button onClick={onDecrement}&gt;-&lt;/button&gt;
+  &lt;/div&gt;
+);
+</pre>
+<hr/>
+<p class="ziti">然后，利用react-redux提供的connect函数，把React傻瓜组件和Redux Store链接起来，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {connect} from 'react-redux';
+import * as Actions from './Actions.js';
+
+
+function mapStateToProps(state, ownProps) {
+  return {
+    count: state.count
+  }
+}
+
+function mapDispatchToProps(dispatch, ownProps) {
+  return {
+    onIncrement: () =&gt; {
+    onIncrement: () =&gt; dispatch(Actions.increment()),
+    onDecrement: () =&gt; dispatch(Actions.decrement()),
+  }
+}
+
+const Counter= connect(mapStateToProps, mapDispatchToProps)(CounterView);
+export default Counter;
+</pre>
+<hr/>
+<p class="ziti">connect接受两个参数，第一个mapStateToProps，是把Store上的状态映射为传给React组件的prop，对于Counter这个例子，唯一需要映射的就是count字段，mapStateToProps返回的对象中每一个字段和对应值都会被作为prop传给CounterView；第二个参数是mapDispatchToProp，也是给CounterView提供prop，不过提供的是回调函数类型的prop，这些回调函数被调用的时候，实际上调用的是dispatch函数，通过dispatch函数给Store派发action对象，在这个例子中，传给CounterView的onIncrement和onDecrement两个prop就是这样的回调函数。</p>
+<p class="ziti">react-redux的connect利用mapStateToProps和mapDispatchProps两个函数，一个建立Store向React组件传输数据的通路，另一个建立React组件向Store派发action对象的通路，以此建立了两者的双向桥梁。</p>
+<p class="ziti">读者可能感觉到了，使用Redux来管理状态有一点啰嗦，为了实现Counter这样的一个功能，需要构建Store，需要编写reducer函数，还需要写action creator，看起来实现一个简单功能需要编写的代码太多了，不过，虽然这个过程代码的确有点多，但是并不乱，这也是使用Redux的最大好处，利用显得冗余的过程控制，让应用的状态处于可控之中。</p>
+<p class="ziti">在Counter这个例子中，功能太简单，我们只是为了展示Redux的功能而使用Redux，实际工作中对于十分复杂的功能，才能显示出Redux的威力。</p>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.3.8　defer</h3>
+<p class="ziti">数据源头的Observable需要占用资源，像fromEvent和ajax这样的操作符，还需要外部资源，所以在RxJS中，有时候创建一个Observable的代价不小，所以，我们肯定希望能够尽量延迟对应Observable的创建，但是从方便代码的角度，我们又希望有一个Observable预先存在，这样能够方便订阅。</p>
+<p class="ziti">一方面我们希望Observable不要太早创建，另一方面我们又希望Observable尽早创建，这是一个矛盾的需求，解决这个矛盾需求的方式，就是依然创建一个Observable。但这个Observable只是一个代理（Proxy），在创建之时并不会做分配资源的工作，只有当被订阅的时候，才会去创建真正占用资源的Observable，之前产生的代理Observable会把所有工作都转交给真正占用资源的Observable。</p>
+<p class="ziti">这种推迟占用资源的方法是一个惯用的模式，在RxJS中，defer这个操作符实现的就是这种模式。</p>
+<p class="ziti">defer接受一个函数作为参数，当defer产生的Observable对象被订阅的时候，defer的函数参数就会被调用，预期这个函数会返回另一个Observable对象，也就是defer转嫁所有工作的对象。因为Promise和Observable的关系，defer也很贴心地支持返回Promise对象的函数参数，当参数函数返回Promise对象的时候，省去了应用层开发者使用fromPromise转化一次的劳动。</p>
+<p class="ziti">下面是使用defer的代码示例：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/defer';
+import 'rxjs/add/observable/of';
+
+const observableFactory = () =&gt; Observable.of(1, 2, 3);
+const source$ = Observable.defer(observableFactory);</pre>
+<hr/>
+<p class="ziti">source$被创建出来的时候，并没有任何有实际数据的Observable产生，只有当它被订阅的时候，observableFactory就会被调用，这时候通过of产生的数据流才被创造出来作为真正的数据源。</p>
+<p class="ziti">因为of本身也不占用多少内存资源，上面的例子并不能看出defer带来的好处，当需要从外部资源获得数据的时候，defer就有了用武之地。</p>
+<p class="ziti">比如，我们希望通过AJAX来获取服务器端的数据，可是并不想在程序启动阶段就把AJAX请求发送出去，就可以利用defer产生一个Observable对象，当这个Observable对象被订阅的时候才发送AJAX请求，代码如下：</p>
+<hr/>
+<pre class="ziti1">const observableFactory = () =&gt; Observable.ajax(ajaxUrl);
+const source$ = Observable.defer(observableFactory);</pre>
+<hr/>
+<p class="ziti">上面的代码执行完之后产生了source$，但是AJAX请去并没有发送出去，只有当source$订阅的时候才发送AJAX请求，这归功于defer产生了source$这样一个代理Observable对象。</p>
+</body>
+</html>

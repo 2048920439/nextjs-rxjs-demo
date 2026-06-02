@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">5.1.7　race：胜者通吃</h3>
+<p class="ziti">race就是“竞争”，多个Observable对象在一起，看谁最先产生数据，不过这种竞争是十分残酷的，胜者通吃，败者则失去所有机会。</p>
+<p class="ziti">第一个吐出数据的Observable对象就是胜者，race产生的Observable就会完全采用胜者Observable对象的数据，其余的输入Observable对象则会被退订而抛弃。不过，竞争还是公平的，所有的输入Observable对象地位都是平等的，所以参数的顺序没有关系，也因为这个原因，race既有静态操作符的形式，也有实例操作符的形式。</p>
+<p class="ziti">下面是使用race的实例操作符的代码示例：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/timer';
+import 'rxjs/add/operator/race';
+import 'rxjs/add/operator/map';
+
+const source1$ = Observable.timer(0, 2000).map(x =&gt; x+'a');
+const source2$ = Observable.timer(500, 1000).map(x =&gt; x+'b');
+const winner$ = source1$.race(source2$);
+
+winner$.subscribe(
+  console.log,
+  null,
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">其中source1$以2秒钟的间隔产生包含a的字符串，source2$以1秒种的间隔产生包含b的字符串，从产生数据的频率上看，source2$似乎更“快”一些，不过，race看的可不是产生数据的频率快慢，而是看哪一个Observable对象最先产生第一个数据。虽然source2$产生数据的频率快，但是它产生第一个数据要比source1$晚500毫秒，就因为这500毫秒，source2$失去了先机，race就会退订source2$，完全从source1$中拿数据。</p>
+<p class="ziti">图5-10中的弹珠图展示了这个过程。</p>
+<p class="ziti">可见，source2$中吐出数据比较晚，所以输掉了比赛。实际上，source2$都没有机会吐出数据，因为race一旦确定了胜者，就会退订其他输入的Observable对象。</p>
+</body>
+</html>

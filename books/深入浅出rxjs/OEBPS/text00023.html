@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">2.2.8　Observer的简单形式</h3>
+<p class="ziti">在上面的代码实例中，Observer对象都是一个对象，可以包含next、complete和error三个方法，用于接受Observable的三种不同事件，如果我们根本不关心某种事件的话，也可以不实现对应的方法。</p>
+<p class="ziti">如果，对于complete事件不需要做任何特殊操作，那么就不用提供Observer的complete方法，实际上，对于一个永远不会结束的Observable，真的没有必要提供complete方法，因为它永远不会被调用到。</p>
+<p class="ziti">如果，某个Observable对象根本不会产生异常，比如只是简单地产生递增正整数序列，那么也没有必要让Observer提供error方法。但是，如果Observable对象产生了异常，而Observer没有用error来接受异常，那么这个异常会被系统接住，而系统接住异常的做法就是输出这个异常，然后程序退出。从Observer角度出发，无法预料上游的Observable是不是会产生异常，所以，实际工作的代码中，往往还是让Observer包含异常处理的error，这样让程序更加健壮。</p>
+<p class="ziti">关于RxJS的异常处理，在第9章会详细介绍。</p>
+<p class="ziti">为了让代码更加简洁，没有必要创造一个Observer对象，subscribe也可以直接接受函数作为参数，第一个参数如果是函数类型，就被认为是next，第二个函数参数被认为是error，第三个函数参数被认为是complete，下面是示例代码。</p>
+<hr/>
+<pre class="ziti1">source$.subscribe(
+  item =&gt; console.log(item),
+  err =&gt; console.log(err),
+  () =&gt; console.log('No More Data')
+);
+</pre>
+<hr/>
+<p class="ziti">在上面的函数中，因为直接将匿名函数定义作为参数，所以看不见三个事件处理函数的函数名。</p>
+<p class="ziti">如果不关心对异常的处理，但是关心Observable的终止事件，那依然要传递第二个参数来占位置，在下面的代码中，用null来作为第二个参数，表示不处理异常事件。</p>
+<hr/>
+<pre class="ziti1">source$.subscribe(
+  item =&gt; console.log(item),
+  null,
+  complete: () =&gt; console.log('No More Data')
+);
+</pre>
+<hr/>
+<p class="ziti">使用哪种方式的subscribe调用，完全看个人和团队喜好，在本书的其他代码例子中，除非特殊说明，都是让subscribe接受函数参数。</p>
+</body>
+</html>

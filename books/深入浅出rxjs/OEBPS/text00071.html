@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">5.2.1　高阶Observable的意义</h3>
+<p class="ziti">高阶Observable打开了一扇大门，用Observable来管理多个Observable对象。</p>
+<p class="ziti">RxJS擅长处理复杂的数据操作问题，这些问题往往需要涉及多个数据流，对于数据流内中流动的数据，使用RxJS提供的各种操作符配合处理当然得心应手，但是，怎么操作协调多个数据流呢？</p>
+<p class="ziti">当然，我们可以用最土的办法，把这些数据流赋值给不同的变量名，然后操作这些变量名，如果这么做，多处理几个问题之后，你就会发现这些问题都有共同之处，会有一些重复的工作，这些重复的工作完全可以抽象出来，如何抽象呢？</p>
+<p class="ziti">不用再发明新的抽象方法了，RxJS的数据流概念本身就可以用来管理数据流。</p>
+<p class="ziti">数据流虽然管理的是数据，数据流自身也可以认为是一种数据，既然数据可以用Observable来管理，那么数据流本身也可以用Observable来管理，让需要被管理的Observable对象成为其他Observable对象的数据，用现成的管理Observable对象的方法来管理Observable对象，这就是高阶Observable的意义。</p>
+<p class="ziti">高阶Observable并不是什么玄幻的概念，但是一下子接受可能会有点困难，所以，我们最好采用循序渐进的方式。在这一章中，我们介绍处理高阶Observable的合并类操作符，这一类操作符最好理解，在后面的章节，我们会介绍其他类型处理高阶Observable的操作符。</p>
+<p class="ziti">最重要的是要明白，高阶Observable的本质是用管理数据的方式来管理多个Observable对象，它的存在意义就在于此。</p>
+<p class="ziti">让我们先来了解合并类操作符如何管理多个Observable吧。</p>
+</body>
+</html>

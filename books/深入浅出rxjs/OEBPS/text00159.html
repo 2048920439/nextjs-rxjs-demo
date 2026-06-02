@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.5.3　publishBehavior和BehaviorSubject</h3>
+<p class="ziti">了解了publishLast和publishReplay的本质之后，不难猜出publishBehavior是如何实现的，下面的代码展示的就是publishBehavior的实现方式：</p>
+<hr/>
+<pre class="ziti1">function publishBehavior(value) {
+  return multicast.call(this, new BehaviorSubject(value));
+}
+</pre>
+<hr/>
+<p class="ziti">同样是使用multicast，不同的是使用了另外一个BehaviorSubject对象作为“中间人”而已。</p>
+<p class="ziti">不过，这个名字publishBehavior和BehaviorSubject第一眼真看不出来具体含义，Behavior就是“行为”，这个opeartor和Subject的特殊子类有什么“行为”呢？</p>
+<p class="ziti">BehaviorSubject的行为，就是可以提供一个“默认数据”，当添加Observer的时候，即使上游还没有吐出数据Observer也会立即获得这个“默认数据”；而且，这个“默认数据”总是会被上游吐出的最新数据替代，也就是说，任何新添加的Observer都有一个大礼包在等着他，这个大礼包要么是指定的“默认数据”，要么就是上游吐出的最新数据。</p>
+<p class="ziti">下面的代码展示了publishBehavior的功能特性：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/publishBehavior';
+import 'rxjs/add/operator/take';
+
+const tick$ = Observable.interval(1000).take(3);
+const sharedTick$ = tick$.publishBehavior(-1).refCount();
+
+sharedTick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  sharedTick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 2500);
+setTimeout(() =&gt; {
+  sharedTick$.subscribe(value =&gt; console.log('observer 3: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">上面代码的执行步骤如下：</p>
+<p class="ziti">1）当1号Observer被添加到tick$的时候，会立刻被推送“默认数据”，这时候“默认数据”是publish的参数-1。</p>
+<p class="ziti">2）在1秒钟的时候，tick$吐出数据0，1号Observer被推送0，“默认数据”改变为0。</p>
+<p class="ziti">3）在2秒钟的时候，tick$吐出数据1，1号Observer被推送1，“默认数据”改变为1。</p>
+<p class="ziti">4）在2.5秒的时候，2号Observer被添加，它会立刻被推送当前的“默认数据”1。</p>
+<p class="ziti">5）在3秒钟的时候，tick$吐出数据2，1号和2号Observer会被推送2，“默认数据”更改为2。</p>
+<p class="ziti">6）在4秒中的时候，tick$完结。</p>
+<p class="ziti">7）在第5秒钟时，3号Observer被添加，它不会被推送任何数据，因为tick$完结时publishBehavior使用的BehaviorSubject的生命终结了。</p>
+<p class="ziti">最终程序输出是这样：</p>
+<hr/>
+<pre class="ziti1">observer 1: -1
+observer 1: 0
+observer 1: 1
+observer 2: 1
+observer 1: 2
+observer 2: 2</pre>
+<hr/>
+</body>
+</html>

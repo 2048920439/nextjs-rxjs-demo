@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">2.1　RxJS的版本和运行环境</h2>
+<p class="ziti">目前被广泛使用的RxJS版本有两个：v4和v5，这两个版本的API很相似，但是也有巨大的差别。</p>
+<p class="ziti">很多软件还在使用RxJS v4，截至本书写作时为止，在GitHub上v4版本代码库获得的Star数量仍然远高于v5版本的Star数量，如需要把原有使用v4版本的代码升级为使用v5，可以参照https://github.com/ReactiveX/rxjs/blob/master/MIGRATION.md，这个官方文档介绍了v4到v5的所有不兼容差别。RxJS v5无论性能还是可维护性都优于v4，新项目应该尽量使用v5版本。在本书中，如无特殊说明，所有代码都按照v5来讲解，如果涉及v4和v5的API差别，也会单独标注。</p>
+<p class="ziti">在软件项目中引入RxJS，有两种常用方法：第一种方法是使用npm包，适合于使用npm管理库的项目，这样不光让RxJS可以用于网页，还可应用于服务器端代码；第二个方法，直接用script标签导入包含RxJS的JavaScript资源文件，这种方法只适用于网页。</p>
+<p class="ziti">
+<span class="yanse">1.npm安装</span>
+</p>
+<p class="ziti">如果使用npm管理软件项目，导入RxJS直接通过npm install命令就可以完成，在项目代码目录下运行下面的命令：</p>
+<hr/>
+<pre class="ziti1">npm install rxjs</pre>
+<hr/>
+<p class="ziti">这个指令安装的是RxJS v5的npm包，如果要安装v4的npm包，则应该执行下面的命令行指令：</p>
+<hr/>
+<pre class="ziti1">npm install rx</pre>
+<hr/>
+<p class="ziti">为什么不同版本的RxJS的npm包名都会不同呢？这是因为在开发v5的时候，考虑到架构的巨大差别，另起炉灶重写的，原本RxJS的库是<a href="https://github.com/Reactive-Extensions/RxJS">https://github.com/Reactive-Extensions/RxJS</a>
+ ，包含了v4的代码，而开发v5版本的RxJS，使用的是另外一个代码库<a href="https://github.com/ReactiveX/rxjs">https://github.com/ReactiveX/rxjs</a>
+ ，这种代码库的分离，也就导致了发布的npm包名不同。</p>
+<p class="ziti">这种不同倒是带来一个意外之喜，因为这是两个完全不同的npm包，互相不会干扰，所以在一个项目中可以同时安装v4和v5版，同一个源代码文件中可以同时使用v4和v5的API。当然，真正的项目中，应该尽量只使用某一个特定版本的RxJS，使用两个版本的RxJS会导致打包文件更大，混杂两种API的代码也更不容易维护。</p>
+<p class="ziti">安装了RxJS的npm包之后，就可以在对应的项目代码中导入相应功能，可以使用ES6的import语法，也可以使用CommonJS的require函数。</p>
+<p class="ziti">使用ES6的import语法导入v5版的Rx对象，代码如下：</p>
+<hr/>
+<pre class="ziti1">import Rx from "rxjs";</pre>
+<hr/>
+<p class="ziti">或者像下面这样写。</p>
+<hr/>
+<pre class="ziti1">import Rx from 'rxjs/Rx';</pre>
+<hr/>
+<p class="ziti">上面两种写法是一样的效果，如果你检查项目目录中安装的node_modules/rxjs/package.json文件，可以看到有这样一行代码：</p>
+<hr/>
+<pre class="ziti1">"main": "Rx.js",</pre>
+<hr/>
+<p class="ziti">这代表rxjs这个npm库的默认导出文件就是Rx.js，所以从"rxjs"导入和从"rxjs/Rx"导入是一样的效果。</p>
+<p class="ziti">也可以使用CommonJS风格的require函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">const Rx = require('rxjs');</pre>
+<hr/>
+<p class="ziti">值得注意的是，上面的导入写法是将整个RxJS库都导入进来，而实际上项目代码未必会用上RxJS的全部功能。对于使用Webpack等工具产生打包文件的项目，把RxJS整个库都导入，会让打包文件变得比较大，因为包含了根本没用上的功能。</p>
+<p class="ziti">解决这个问题，可以使用深链（deep link）的方式，只导入用得上的功能，比如我们要使用Observable类（不要着急，我们很快会介绍什么是Observable），代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';</pre>
+<hr/>
+<p class="ziti">或者使用CommonJS风格的require函数：</p>
+<hr/>
+<pre class="ziti1">const Observable = require('rxjs/Observable').Observable;</pre>
+<hr/>
+<p class="ziti">只导入应用中真正使用上的模块功能，可以减少不必要的依赖，不光可以优化最终打包文件的大小，还有利于代码的稳定性，因为任何被依赖的模块改变都可能改变代码行为。</p>
+<p class="ziti">如今的JavaScript打包工具，有一个功能叫做Tree-Shaking，指的是在打包过程中发现根本没有用上的函数，然后最终的打包文件也就不需要包含这些没被使用的函数代码。Tree-Shaking这个概念最早由打包工具rollup.js提出，现在已经被广泛接受，业界常用的打包工具webpack从v2版本开始也支持Tree-Shaking。</p>
+<p class="ziti">Tree-Shaking这个名字十分生动，代码中的函数调用结构就像是一个树的枝杈，有的函数虽然被导入，但是根本没有被调用，也就失去了养分，形成枯死的枝叶，这时候，用力去摇晃树干，那些枯死的枝叶就都被摇掉了，剩下来的枝杈才是有活力的部分。</p>
+<p class="ziti">比如，有一个文件utils.js，代码如下：</p>
+<hr/>
+<pre class="ziti1">export const foo = () =&gt; "foo";
+export const bar = () =&gt; "bar";</pre>
+<hr/>
+<p class="ziti">然后有另一个文件main.js要从utils.js中导入并使用foo函数：</p>
+<hr/>
+<pre class="ziti1">import {foo} from "utils";
+foo();</pre>
+<hr/>
+<p class="ziti">在有Tree-Shaking之前，打包文件会把utils.js文件中所有内容都放到打包文件中，因为main.js使用了utils.js中定义的函数，很自然要把文件内容添加进来；有了Tree-Shaking之后，打包工具可以很聪明地发现bar函数定义虽然出现在utils.js中，但是从来没有被调用过，于是就会在最终的打包文件中删除bar的函数定义，从而减少了打包文件的大小。</p>
+<p class="ziti">Tree-Shaking只对import语句导入产生作用，对于CommonJS的require函数导入方式不产生作用，因为Tree-Shaking的工作方式是对代码进行静态分析，import只能出现在代码的第一层，不能出现在if分支中，而且被导入的模块以字符串常量出现，所以import完全可以满足静态分析的需要；而require可以出现在if条件分支中，参数也可以是动态产生的字符串，所以只有在动态执行时才知道require函数如何执行，这样Tree-Shaking也就爱莫能助了。</p>
+<p class="ziti">乍看起来，Tree-Shaking似乎能够让我们无拘无束地导入整个Rx，有了Tree-Shaking，没有被使用的函数就不会被编译入打包文件了，不是吗？</p>
+<p class="ziti">很可惜，事实不是这样的，Tree-Shaking根本帮不上RxJS什么忙，也就是说，要避免打包文件中包含无用的功能代码，还是要和上一节介绍一样，使用深链的方式，让代码只导入用得上的模块。</p>
+<p class="ziti">为什么Tree-Shaking对RxJS不起作用呢？这是由RxJS的架构设计决定的，RxJS的大部分功能都是围绕Observable类而创建的，而且这些功能都体现为Observable这个类的一个函数，有的是类函数，有的是成员函数，这些函数都是要“挂”到Observable这个类上去。换句话说，这些函数不管我们的应用代码用还是不用，在RxJS内部都已经被Observable这个类“引用”了，被引用之后，Tree-Shaking就不会觉得这些函数是“枯枝”，也就会在打包文件中保留下来。</p>
+<p class="ziti">我们可以打开项目目录下的node_modules/rxjs/Rx.js文件看一看，你会发现类似下面的代码：</p>
+<hr/>
+<pre class="ziti1">...
+require('./add/observable/never');
+require('./add/observable/of');
+require('./add/observable/onErrorResumeNext');
+require('./add/observable/pairs');
+...</pre>
+<hr/>
+<p class="ziti">上面每一行都是一个功能模块，因为require函数调用是不会被Tree-Shaking处理的，所以被require的这些文件模块一定会被包含到最终的打包文件中。</p>
+<p class="ziti">再看某一个被require的文件内容是怎样，比如node_modules/add/observable/of.js文件，代码如下：</p>
+<hr/>
+<pre class="ziti1">"use strict";
+var Observable_1 = require('../../Observable');
+var of_1 = require('../../observable/of');
+Observable_1.Observable.of = of_1.of;</pre>
+<hr/>
+<p class="ziti">这个of.js文件中，首先获得RxJS的Observable类，然后在Observable类上添加一个类函数of，如此一来，Observable.of就成为了一个函数。但是，Tree-Shaking也就会认为of函数已经被使用，在最终打包文件中肯定会包含of函数的。</p>
+<p class="ziti">由此可见，如果你不想使用所有的RxJS功能，最好是按需要去导入模块，比如，我们需要使用Observable.of函数，那么这样导入：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';</pre>
+<hr/>
+<p class="ziti">实际项目中，按需导入当然是一个好的实践方式，但是如果每一个代码文件都写这么多import语句，那就实在太麻烦了。所以，更好的方式是用一个代码文件专门导入RxJS相关功能，其他的代码文件再导入这个文件，这样就是把RxJS导入的工作集中管理。</p>
+<p class="ziti">
+<span class="yanse">2.引用RxJS URL</span>
+</p>
+<p class="ziti">在网页应用中，还可以通过script标签直接导入RxJS，通常script标签的src属性为一个内容分发网络（Content Delivery Network，CDN）上的URL，CDN通过在互联网中分布很多节点，让最终用户的浏览器能够从最近的节点获取资源，从而提供快速的内容访问。CDN通常用来提供静态数据，比如JavaScript文件和图片资源，所以适合RxJS这种纯JavaScript静态资源的发布。</p>
+<p class="ziti">使用CDN也是提高网站性能的必备措施，很幸运的是，有一些免费的公共CDN可以使用，在本书中，我们使用<a href="https://unpkg.com">https://unpkg.com</a>
+ 这个CDN中的内容，这个CDN包含npm官方主站上发布资源的静态资源，每个静态资源文件的URL模式如下：</p>
+<hr/>
+<pre class="ziti1">http(s)://unpkg.com/:包名称@:版本名称/:文件路径名</pre>
+<hr/>
+<p class="ziti">所以，在网页的HTML中，可以直接使用各种版本的RxJS，下面引用的就是第5.5.2版本的RxJS：</p>
+<hr/>
+<pre class="ziti1">&lt;script src="https://unpkg.com/rxjs@5.5.2/bundles/Rx.min.js"&gt;&lt;/script&gt;</pre>
+<hr/>
+<p class="ziti">或者像下面这样引用，对应URL总是会跳转到最新版本的RxJS内容。</p>
+<hr/>
+<pre class="ziti1">&lt;script src="https://unpkg.com/rxjs/bundles/Rx.min.js"&gt;&lt;/script&gt;</pre>
+<hr/>
+<p class="ziti">使用公共CDN还有一个好处，就是可以充分利用浏览器的缓存机制，如果用户在访问你的网页应用之前访问过其他网站，而且那些网站也使用了一样的CDN静态资源，那么浏览器可以直接从本地缓存中获取这些资源，省去了下载时间。</p>
+<p class="ziti">不过，从CDN获取RxJS也有缺点，那就是RxJS要下载就要全部下载，没办法根据应用的需要定制。</p>
+<p class="ziti">实际项目中，如果不会使用很多RxJS的功能，建议还是避免导入全部RxJS的做法，使用npm导入然后用打包工具来组合，这样更加容易控制。</p>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">2.2.4　跨越时间的Observable</h3>
+<p class="ziti">在上一节的代码例子中，Observable是不间断地推送出一串正整数，也可以让推送每个正整数之间有一定的时间间隔。需要考虑的是，如何增加类似“一秒钟间隔”逻辑，或者说，这个逻辑放在哪一部分更合适？</p>
+<p class="ziti">根据观察者模式，代码分成Observable和Observer两个部分，这个“时间间隔”放在哪个部分更合适？</p>
+<p class="ziti">Observer是被“推”数据的，在执行过程中处于被动地位，所以，控制节奏的事情，还是应该交给Observable来做，Observable既然能够“推”数据，那同时负责推送数据的节奏，天经地义，完全合理。</p>
+<p class="ziti">RxJS的Observable也完全支持这样的功能，我们只需要修改onSubscribe的函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">const onSubscribe = observer =&gt; {
+  let number = 1;
+  const handle = setInterval(() =&gt; {
+    observer.next(number++);
+    if (number &gt; 3) {
+      clearInterval(handle);
+    }
+  }, 1000);
+};
+</pre>
+<hr/>
+<p class="ziti">我们重新运行代码，依然是输出1、2、3三个正整数，但是每次输出之间都间隔一秒钟。</p>
+<p class="ziti">能够实现这种效果，是因为onSubscribe可以完全控制何时调用observer参数的next函数，我们利用setInterval每隔一秒钟调用一次next，同时让number变量递增，当增加超过3时，就取消掉setInterval，于是就达到了在每个推送数据之间有时间间隔的目的。</p>
+<p class="ziti">这个例子虽然简单，但是展现了Observable的一个重要功能：推送数据可以有时间间隔。</p>
+<p class="ziti">Observable这样的时间特性使得异步操作十分容易，因为对于观察者Observer，只需要被动接受推送数据来处理，而不用关心数据何时产生。</p>
+</body>
+</html>

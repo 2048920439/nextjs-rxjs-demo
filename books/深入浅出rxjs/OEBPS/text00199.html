@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">14.1.1　Redux的工作方式</h3>
+<p class="ziti">Redux维持一个全局的Store，这个Store存储的就是应用的状态，因为这个Store是全局可见的，所以，当一个组件A修改Store上的状态的时候，与之相对的组件B自然可以读取到这个变化，这样就实现了组件之间的通信。</p>
+<p class="ziti">为了完成这样一个功能，一个使用Redux的系统需要如下这些元素：</p>
+<p class="ziti6">·Store</p>
+<p class="ziti6">·action</p>
+<p class="ziti6">·reducer</p>
+<p class="ziti6">·view</p>
+<p class="ziti">首先，使用Redux的功能创建一个Store，这个Store是一个对象，提供一个getState函数，可以获得当前Store上存储的状态，不过，Store并不提供setState方法，也就是说，没有办法直接去修改Store上的状态。</p>
+<p class="ziti">然后，当需要修改某个状态的时候，不能够直接去修改Store上的值，而是通过向Store发送一个action来完成，Store这个对象支持dispatch函数来接受action，类似这样：</p>
+<hr/>
+<pre class="ziti1">store.dispatch(action);</pre>
+<hr/>
+<p class="ziti">这个action就是一个普通的JavaScript对象，包含了修改状态所需要的相关信息，为了能够处理action，创建Store的时候提供对应的reducer函数，所谓reducer函数，就和我们在介绍reduce操作符说过的“规约函数”是一个意思，唯一的不同是，reducer的两个参数分别是state和action，类似下面这样：</p>
+<hr/>
+<pre class="ziti1">function reducer (state, action) =&gt; {
+    //返回一个新的state
+}</pre>
+<hr/>
+<p class="ziti">reducer返回的数据会用于替换Store上存储的状态，这样，下次getState调用的时候，就会是一个新的值。如果把state看作所有action引起的变化累积之后的状态，那就和accumulation没有区别，而action就是引起数据变化累积的数据。</p>
+<p class="ziti">使用Redux来管理应用的状态，好处就是对状态的变化流程会非常清晰，因为每一个状态都需要有一个对应的action对象，所以很容易跟踪状态变化的过程，浏览器插件Redux Dev Tools<sup>
+<a id="ch1" href="text00199.html#ch1_back">[1]</a>
+</sup>
+ <span>能够用可视化的方式看到Redux的Store上发生的所有事情。</span>
+</p>
+<p class="ziti">最后，应用中需要有View，也就是视图的部分，视图部分根据Store上的状态来渲染用户界面，在本书的例子中，我们选择用React来实现View，但是View也可以不用React，可以用任何一种用户界面库来实现，甚至直接操作DOM来实现。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00199.html#ch1">[1]</a>
+ https://github.com/gaearon/redux-devtools。</p>
+</body>
+</html>

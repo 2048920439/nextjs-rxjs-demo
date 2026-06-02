@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">7.3.2　elementAt</h3>
+<p class="ziti">elementAt把上游数据当数组，只获取指定下标的那一个数据，就这个简单功能，使用first配合函数参数也一样能够实现。不过elementAt还有一个附加功能体现了自己的存在价值，它的第二个参数可以指定没有对应下标数据时的默认值。</p>
+<p class="ziti">下面是使用elementAt第二个参数的示例代码：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(3, 1, 2);
+const result$ = source$.elementAt(3, null);</pre>
+<hr/>
+<p class="ziti">其中，上游source$只有三个数据，elementAt想要获得下标为3的数据，因为下标从0开始，实际上是要获得第4个数据。</p>
+<p class="ziti">如果不使用elementAt的第二个参数，那么因为找不到第4个数据，result$会产生一个出错事件；如果elementAt有第二个参数，那么在找不到对应数据的情况下，就把第二个参数当做默认数据传递给下游。</p>
+</body>
+</html>

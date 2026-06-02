@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">11.2　RxJS提供的Scheduler</h2>
+<p class="ziti">对于Rx一族的其他框架，比如Rx.Net和RxJava，Scheduler的作用非常重要，因为Rx的实现只用一个线程，如果要发挥多线程的威力，就必须要使用Scheduler。不过，在RxJS中，Scheduler相对于其他Rx实现就不起眼得多，为什么呢？</p>
+<p class="ziti">因为JavaScript是单线程的语言，根本没得选，所以RxJS中提供的Scheduler种类也没有其他Rx实现那么丰富多彩。</p>
+<p class="ziti">在RxJS中，Scheduler几乎是透明的，绝大部分场景下，使用RxJS默认选择的Scheduler就足够了，一般不需要指定其他的Scheduler。</p>
+<p class="ziti">比如，在前面的例子中可以看到，range使用的默认Scheduler是同步产生数据，这很适合range这个操作符的特性，对于绝大部分场景，range的责任就只是同步产生一个范围内的整数，没必要异步产生数据，因为range这个函数的语义就没有异步的概念。</p>
+<p class="ziti">不过，也不是说RxJS对于所有场景都默认使用同步的Scheduler，不同的场景有各自的特点，比如，interval这个操作符也支持可选的Scheduler类型参数，如果不指定，那RxJS也绝对不可能使用同步的Scheduler，不然根本无法达到异步产生数据的效果。</p>
+<p class="ziti">在RxJS中，提供了下列Scheduler实例。</p>
+<p class="ziti6">·undefined/null，也就是不指定Scheduler，代表同步执行的Scheduler。</p>
+<p class="ziti6">·asap，尽快执行的Scheduler。</p>
+<p class="ziti6">·async，利用setInterval实现的Scheduler，用于基于时间吐出数据的场景。</p>
+<p class="ziti6">·queue，利用队列实现的Scheduler，用于迭代一个大的集合的场景。</p>
+<p class="ziti6">·animationFrame，用于动画场景的Scheduler。</p>
+<p class="ziti">RxJS默认选择Scheduler的原则是：尽量减少并发运行。所以，对于range，就选择undefined；对于很大的数据，就选择queue；对于时间相关的操作符比如interval，就选择async。</p>
+<p class="ziti">其中，undefined指的就是同步执行的Scheduler，range默认使用的就是这种Scheduler。</p>
+<p class="ziti">无论asap、async、queue还是animationFrame，都是一种Scheduler的一个实例对象，以asap为例，如果代码中导入整个Rx，那么通过这种方式访问：</p>
+<hr/>
+<pre class="ziti1">Rx.Scheduler.asap</pre>
+<hr/>
+<p class="ziti">显然，这些Scheduler都以Rx.Scheduler对象的一个属性存在。</p>
+<p class="ziti">在Node.js环境下，如果不想整个导入Rx，只想导入单个Scheduler对象，那么可以用下面这种方法：</p>
+<hr/>
+<pre class="ziti1">import {asap} from 'rxjs/scheduler/asap';</pre>
+<hr/>
+<p class="ziti">单个Scheduler实例存在于node_modules/rxjs/scheduler/目录下，asap、async、queue和animationFrame都有对应的模块文件。</p>
+<p class="p6">注意</p>
+<p class="ziti6">RxJS的v4版和v5版在Scheduler上有重大差异，无论是实现方式还是命名都差别巨大。在v4中存在着一个默认的Scheduler实例Rx.Scheduler.default，功能上等同于v5的Rx.Scheduler.asap，在v5中完全没有default这个Scheduler名称，所谓默认就用undefined代表。</p>
+<p class="ziti6">在v4中还有一个叫Rx.Scheduler.currentThread的实例，这个命名很有误导性，因为JavaScript是单线程运行环境，既然只有一个线程，“当前线程”本身就毫无意义，所以，在v5中，这个名字不恰当的Scheduler被改名为Rx.Scheduler.queue。</p>
+<p class="ziti">值得一提还有一个特殊类型的Scheduler叫TestScheduler，可能这个Scheduler会是使用RxJS的开发者接触最多的一个Scheduler，因为写RxJS相关单元测试会经常用到它。</p>
+<p class="ziti">TestScheduler是一个类，所以使用时要创建实例：</p>
+<hr/>
+<pre class="ziti1">new Rx.TestScheduler()</pre>
+<hr/>
+<p class="ziti">在下一章，我们会介绍如何使用这个TestScheduler来给RxJS写单元测试。</p>
+</body>
+</html>

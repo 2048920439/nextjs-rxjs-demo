@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.4.2　publish</h3>
+<p class="ziti">publish英文就是“发布”的意思，从字面意义看就是一个多播效果，其实，publish也是完全通过使用multicast来实现的。</p>
+<p class="ziti">下面是publish的实现方法：</p>
+<hr/>
+<pre class="ziti1">function publish(selector) {
+  if (selector) {
+    return this.multicast(() =&gt; new Subject(), selector);
+  } else {
+    return this.multicast(new Subject());
+  }
+}
+</pre>
+<hr/>
+<p class="ziti">可以看到publish的实现极其简单，也有一个可选的selector参数，根据是否有selector方法，决定调用multicast的时候是使用一个Subject对象，还是使用一个产生Subject对象的工厂方法。</p>
+<p class="p6">注意</p>
+<p class="ziti6">RxJS的源代码是TypeScript编写的，在转译为纯JavaScript之后，代码也和上面的publish不完全一样，为了让代码更清晰，对转译产生的publish代码进行了一些修改，但是最终的语义和RxJS中的源代码是完全一样的。</p>
+<p class="ziti">当publish不使用任何参数的时候，简单说publish就相当于下面这样一个简单调用：</p>
+<hr/>
+<pre class="ziti1">multicast(new Subject())</pre>
+<hr/>
+<p class="ziti">publish相当于封装了multicast和创建一个新Subject对象这两个动作，让代码更加简洁，最终返回的是一个ConnectableObservable对象。</p>
+<p class="ziti">我们已经介绍过，Subject对象是不能重用的，而且，pubish的简单用法中只提供了一个Subject对象，一旦上游的Observable对象完结，会调用这个Subject对象的complete函数，这个Subject就不可能再接受新的数据，所以，使用publish产生的Observable对象是不能重用的。</p>
+<p class="ziti">下面的代码示例展示了这一点：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/publish';
+import 'rxjs/add/operator/take';
+
+const tick$ = Observable.interval(1000).take(3);
+const sharedTick$ = tick$.publish().refCount();
+
+sharedTick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  sharedTick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">因为publish在不带参数情况下返回的是一个ConnectableObservable对象，所以我们在后面链式调用refCount来让它根据下游Observer的个数决定对上游的连接。</p>
+<p class="ziti">上面的代码执行结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 1: 2
+</pre>
+<hr/>
+<p class="ziti">1号Observer能够获得tick$吐出的所有数据，但是2号Observer什么都获得不了，因为虽然tick$是一个Cold Observable可以重复subscribe，但是2号Observer在5秒之后才添加，在4秒钟的时候tick$已经完结过一次，把publish中使用的那个唯一Subject对象终结了，当2号Observer添加的时候，自然不可能再从这个Subject获得什么。</p>
+<p class="ziti">如果想要利用publish来解决数据流的“三角关系”问题，那就可以使用selector参数，如果读者还是不理解什么是“三角关系”，就需要回头去看multicast那一节。</p>
+<p class="ziti">当使用selector参数之后，publish可以看作是下面代码的简写：</p>
+<hr/>
+<pre class="ziti1">multicast(() =&gt; new Subject(), selector)</pre>
+<hr/>
+<p class="ziti">在multicast部分介绍过一个defaultObservableIfEmpty的操作符实现，也完全可以用publish来实现：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.defaultObservableIfEmpty = function(default$) {
+  const selector = shared =&gt; {
+    return shared.merge(
+      shared.isEmpty().mergeMap(
+        empty =&gt; empty ? default$: Observable.empty()
+      )
+    );
+  };
+  return this.publish(selector);
+};
+</pre>
+<hr/>
+<p class="ziti">其实，这个实现和最初的实现有一点不一样，最初的实现中，multicast第一个参数就是一个Subject对象，但是用了publish，传给multicast的第一个参数是一个产生Subject对象的工厂方法，这样的好处是如果上游Cold Observable完结之后有新的Observer添加，那么这个Observer就会使用一个新的Subject对象，依然能够获得数据。</p>
+<p class="ziti">综上所述，publish没有什么神秘之处，完全就是为了简化multicast的使用而创造的操作符。</p>
+</body>
+</html>

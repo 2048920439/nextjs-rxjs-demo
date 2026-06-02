@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.2.3　pluck</h3>
+<p class="ziti">pluck的含义是“拔”，可以这么理解，pluck就是把上游数据中特定字段的值“拔”出来，所以pluck的参数就是字段的名字，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/pluck';
+
+const source$ = Observable.of(
+  {name: 'RxJS', version: 'v4'},
+  {name: 'React', version: 'v15'},
+  {name: 'React', version: 'v16'},
+  {name: 'RxJS', version: 'v5'}
+);
+const result$ = source$.pluck('name');
+result$.subscribe(
+  console.log,
+  null,
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">这段代码的功能就是把source$中每个数据的name值取出来，传给result$，代码的执行结果如下：</p>
+<hr/>
+<pre class="ziti1">RxJS
+React
+React
+RxJS
+complete
+</pre>
+<hr/>
+<p class="ziti">pluck的一个常用场景是在网页应用中获取DOM事件中的值，比如，想要获得网页中被点击元素名称的数据流，代码如下：</p>
+<hr/>
+<pre class="ziti1">const click$ = Rx.Observable.fromEvent(document, 'click'); 
+const clickedTagName$ = click$.pluck('target', 'tagName');
+</pre>
+<hr/>
+<p class="ziti">可以看到，pluck可以包含多个参数，用于访问嵌套的属性，比如上面的参数是target和tagName，那么对于每一个数据event，“拔”出来的值就是event.target.tagName。</p>
+<p class="ziti">pluck的缺点就是只能“拔”出一个值，如果想要获得event.target.tagName同时也要获得event.type，那用pluck就做不到了，只能用map。</p>
+<p class="ziti">pluck也有优点，就是能够自动处理字段不存在的情况，比如，如果访问并不存在的嵌套属性，如下所示：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.pluck('nosuchfield', 'foo');
+</pre>
+<hr/>
+<p class="ziti">每一个上游数据并没有nosuchfield这个字段，直接访问nosuchfield.foo的话肯定会出错，如果用map来实现就必须要考虑到nosuchfield为空的情况，但是如果使用pluck则不用考虑，pluck发现某一层字段为空，对应就会给下游传递undefined，不会出错。</p>
+</body>
+</html>

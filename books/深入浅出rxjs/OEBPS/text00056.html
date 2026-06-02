@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.3.7　repeatWhen</h3>
+<p class="ziti">repeat能够反复订阅上游的Observable，但是并不能控制订阅的时间，比如希望在接收到上游完结事件的时候等待一段时间再重新订阅，这样的功能repeat无法做，但是repeatWhen可以满足上面描述的需求。</p>
+<p class="ziti">repeatWhen接受一个函数作为参数，这个函数在上游第一次产生异常时被调用，然后这个函数应该返回一个Observable对象，这个对象就是一个控制器，作用就是控制repeatWhen何时重新订阅上游，当控制器Observable吐出一个数据的时候，repeatWhen就会做退订上游并重新订阅的动作。</p>
+<p class="ziti">用一个Observable对象来控制另一个Observable对象中数据的产生，这是RxJS中的一个常见模式，在后面的章节中我们会看到其他使用这种模式的操作符。</p>
+<p class="ziti">下面是一个利用repeatWhen的代码示例：</p>
+<hr/>
+<pre class="ziti1">const notifier = () =&gt; {
+  return Observable.interval(1000);
+};
+
+const source$ = Observable.of(1, 2, 3);
+const repeated$ = source$.repeatWhen(notifier);
+</pre>
+<hr/>
+<p class="ziti">虽然of是同步吐出数据，但是repeatWhen的参数notifer返回的是interval产生的Observable对象，所以每隔1秒钟，repeat$会重复订阅上游source$，吐出的数据虽然是1、2、3序列的循环，但是每次循环之间间隔1秒钟。</p>
+<p class="ziti">如果repeatWhen的上游并不是同步产生数据，完结的时机也完全不能确定，如果想要每次在上游完结之后重新订阅，那使用interval来控制重新订阅的节奏就无法做到准确了，这时候就需要用到notifier函数的参数，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const notifier = (notification$) =&gt; {
+  return notification$.delay(2000);
+};
+
+const repeated$ = source$.repeatWhen(notifier);
+</pre>
+<hr/>
+<p class="ziti">如上所示，repeatWhen的函数参数notifier，实际上被调用的时候有一个参数，在代码中我们把这个参数命名为notification$，这个参数也是一个Observable对象，每当repeatWhen上游完结的时候，这个notificaton$就会吐出一个数据。</p>
+<p class="p6">提示</p>
+<p class="ziti6">notifier的参数实际上一种特殊的Observable对象，它既是Observable也是Observer，在RxJS中被称为Subject，在第10章会详细介绍Subject，目前，读者只要知道这个参数是一个Observable对象就足够了。</p>
+<p class="ziti">利用notification$，就可以做精确的延时重新订阅，在上面的代码中，我们使用了delay这个操作符，顾名思义，delay的作用就是把上游传下来的数据延时一段时间再转手给下游，在上面的代码中delay的参数是2000，代表2000毫秒，最终效果就是，每次repeatWhen的上游完结的时候，2000毫秒之后再重新订阅上游。</p>
+<p class="ziti">有意思的是，repeatWhen中我们用notifier返回的Observable对象来控制节奏，但是，其实这个Observable里每次吐出来的数据是什么值没什么关系，因为这个Observable控制的是时间节奏，吐出来的值是什么不重要，什么时候吐出值来才重要。</p>
+</body>
+</html>

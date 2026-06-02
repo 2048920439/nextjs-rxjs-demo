@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">12.1.4　改进的日志调试方法</h3>
+<p class="ziti">现在我们知道do一定程度上能够帮助调试RxJS代码，但是do有一个大问题，就是一旦添加do来产生输出日志的代码，那只要有数据在管道中流动，这些输出日志的代码肯定会被执行，于是程序执行总会看到这些日志。</p>
+<p class="ziti">如果不想让正式发布的代码包含太多调试信息输出，一个做法就在调试结束之后，把这些do的使用删除掉，可是，谁知道会不会有新的bug出现呢，到时候再把这些调试代码加回来吗？肯定又费事又容易出错。</p>
+<p class="ziti">当然，还有一个做法就是在调试结束之后，把这些do的使用注释掉，再次调试的时候再解注释这些代码，就像下面这样：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 10)
+  .filter(x =&gt; x % 2 === 0)
+  //.do(x =&gt; console.log('source$ after filter data = ', x)
+  .map(x =&gt; x*x);
+</pre>
+<hr/>
+<p class="ziti">我相信，不少读者都在实际工作中使用了上面这样的方法，这样的方法虽然粗糙，但是简单易用，作者我也曾经使用这样的方法，不过，随着应用代码越来越多，再使用这种方法就显得很不恰当了。</p>
+<p class="ziti">使用日志来跟踪程序执行状态这种方法并没有问题，问题在于不对日志进行控制，理想情况下，利用日志来调试应该能够做到这样几点：</p>
+<p class="ziti6">·不影响应用的逻辑。</p>
+<p class="ziti6">·不需要反复修改应用代码。</p>
+<p class="ziti6">·可以控制日志是否输出。</p>
+<p class="ziti">如果能够做到上面这几点，那就真正减少了调试代码的“侵入性”。</p>
+<p class="ziti">一个很简单的技巧就可以实现上面的要求，代码如下，我们创造一个叫debug的操作符：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.debug = function(fn) {
+  if (global.debug) {
+    return this.do(fn);
+  } else {
+    return this;
+  }
+};
+</pre>
+<hr/>
+<p class="ziti">debug接受一个函数作为参数，当global.debug为true时，就直接调用do传入函数参数，行为就和do这个操作符一模一样；如果global.debug为false，那么debug只是返回this，这就等于什么都不做。</p>
+<p class="ziti">这样一来，就可以在数据管道中不用do而是用debug来增加调试代码，代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = original$.debug(x =&gt; console.log('source$ data = ', x));
+</pre>
+<hr/>
+<p class="ziti">因为global.debug默认是不存在的，作为布尔值来判断相当于false，所以debug默认情况下就是什么都不做，但是，当需要调试代码时，在一个位置赋值global.debug为true，这样就会让所有的debug输出想要的日志信息。</p>
+<p class="ziti">通过一个布尔值来控制调试信息的输出只是第一步，更进一步，可以用一个枚举性质的值来控制，一个惯常的做法，是将日志信息分为多个层级，例如这样：</p>
+<p class="ziti6">·debug</p>
+<p class="ziti6">·info</p>
+<p class="ziti6">·warn</p>
+<p class="ziti6">·error</p>
+<p class="ziti">这样，输出日志的函数可以指定当前日志的级别，然后在不同环境中控制什么级别以上的log可以输出，这样对产生日志的控制就更加精细。</p>
+</body>
+</html>

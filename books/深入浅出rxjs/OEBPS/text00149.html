@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.3.4　Subject不能重复使用</h3>
+<p class="ziti">Subject对象也是一个Observable对象，但是因为它有自己的状态，所以不像Cold Observable对象一样每次被subscribe都是一个新的开始，正因为如此，Subject对象是不能重复使用的，所谓不能重复使用，指的是一个Subject对象一旦被调用了complete或者error函数，那么，它作为Observable的生命周期也就结束了，后续还想调用这个Subject对象的next函数传递数据给下游，就如同泥牛入大海，一去不回，没有任何反应。示例代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
+
+const subject = new Subject();
+
+subject.subscribe(
+  value =&gt; console.log('on observer 1 data: ' + value),
+  err =&gt; console.log('on observer 1 error: ' + err.message),
+  () =&gt; console.log('on observer 1 complete')
+);
+
+subject.next(1);
+subject.next(2);
+subject.complete();
+
+subject.subscribe(
+  value =&gt; console.log('on observer 2 data: ' + value),
+  err =&gt; console.log('on observer 2 error: ' + err.message),
+  () =&gt; console.log('on observer 2 complete')
+);
+
+subject.next(3);
+</pre>
+<hr/>
+<p class="ziti">其中，首先1号Observer成为subject的下游，然后通过subject的next函数传递了1和2，紧接着调用了subject的complete函数，结束了subject的生命周期。2号Observer也成为subject的下游，但是，这时候subject已经等于“死”了，所以后续通过next传递参数3的调用，不会传递给2号Observer，也不会传递给1号Observer。</p>
+<p class="ziti">上面代码的运行结果如下：</p>
+<hr/>
+<pre class="ziti1">on observer 1 data: 1
+on observer 1 data: 2
+on observer 1 complete
+on observer 2 complete</pre>
+<hr/>
+<p class="ziti">值得一提的是，2号Observer虽然没有机会从subject中获得任何数据，但是却可以获得subject的complete通知，可以这样认为，当一个Subject对象的complete函数被调用之后，它暴露给下游的Observable对象就是一个由empty操作符产生的直接完结的Observable对象。</p>
+<p class="ziti">在上面代码中，如果把调用subject.complete改成调用subject.error函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">subject.error(new Error('something wrong'));</pre>
+<hr/>
+<p class="ziti">那么，程序的运行输出就是下面这样：</p>
+<hr/>
+<pre class="ziti1">on observer 1 data: 1
+on observer 1 data: 2
+on observer 1 error: something wrong
+on observer 2 error: something wrong</pre>
+<hr/>
+<p class="ziti">显然，当一个Subject对象的error函数被调用之后，它暴露给下游的Observable对象就是一个由empty throw产生的直接完结的Observable对象，后续的订阅虽然获得不了任何数据，但是可以立即获得一个出错通知。</p>
+<p class="ziti">在Subject对象生命周期结束之后，调用其next函数没有任何反应，也不抛出任何错误，这种闷声不响的结果，很多时候不是我们想要的，我们更希望如果调用一个函数无效的时候出一个错误，这样能够起到警醒的作用，不然上游还以为所有的数据都传递成功了。</p>
+<p class="ziti">在前面介绍过，一个Observable对象的subscribe函数返回的是一个Subscription对象，而Subscription对象有unsubscribe方法，Subject并不是Subscription，但是Subject也有unsubscribe方法，如果调动Subject的unsubscribe方法，那表示这个subject已经不管事了，之后再调用这个Subject对象的next方法就会出错。</p>
+<p class="ziti">达到这样警醒目的，就是在合适的时间调用Subject对象的unsubscribe函数，下面是一个示例代码：</p>
+<hr/>
+<pre class="ziti1">const tick$ = Observable.interval(1000).take(5);
+const subject = new Subject();
+
+tick$.subscribe(subject);
+
+subject.subscribe(value =&gt; console.log('observer: ' + value));
+setTimeout(() =&gt; {
+  subject.unsubscribe();
+}, 1500);
+</pre>
+<hr/>
+<p class="ziti">其中，tick$会间隔一秒钟吐出数据，调用下游subject的next函数，但是在1.5秒的时候subject的unsubscribe函数被调用，所以，当在2秒是，tick$还要调用subject的next就会抛出一个错误异常：</p>
+<hr/>
+<pre class="ziti1">ObjectUnsubscribedError: object unsubscribed
+</pre>
+<hr/>
+</body>
+</html>

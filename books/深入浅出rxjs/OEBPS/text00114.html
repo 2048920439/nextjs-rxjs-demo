@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.3.3　windowWhen和bufferWhen</h3>
+<p class="ziti">RxJS提供了根据时间和数据个数划分上游数据的操作符，当然也少不了最具有RxJS特色的操作符：用Observable对象来控制Observable对象的生成。windowWhen和bufferWhen就是这样最具有RxJS特色的操作符，它们接受一个函数作为参数，这个参数名为closingSelector，closingSelector应该返回一个Observable对象，用于控制上游的数据分割，每当返回的Observable对象产生数据或者完结时，windowWhen就认为是一个缓冲区块的结束，重新开启一个缓冲窗口。</p>
+<p class="ziti">下面是使用windowWhen的示例代码，bufferWhen的用法类似：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/timer';
+import 'rxjs/add/operator/bufferWhen';
+
+const source$ = Observable.timer(0, 100);
+const closingSelector = () =&gt; {
+  return Observable.timer(400);
+};
+const result$ = source$.windowWhen(closingSelector);
+</pre>
+<hr/>
+<p class="ziti">当result$被订阅的时候，windowWhen就开始工作，首先开启一个缓冲窗口，然后立刻调用closingSelector获得一个Observable对象，在这个Observable对象输出数据的时候，当前的缓冲窗口就关闭，同时开启一个新的缓冲窗口，然后再次调用closingSelector获得一个Observable对象。</p>
+<p class="ziti">这段代码产生的弹珠图和之前windowTime和windowCount产生的弹珠图没有什么区别，但是closingSelector函数是没有参数的，所以没有办法通过参数控制灵活地变化。</p>
+<p class="ziti">closingSelector之所以没有参数，是因为调用closingSelector的时机和上游数据的产生没有任何关系，windowWhen并不是在上游产生数据的时候调用closingSelector，而是在被订阅的那个时刻或者缓冲区间结束时就调用closingSelector。因为closingSelector没有参数，所以，这种灵活性其实并不容易真正实现。如果让closingSelector是纯函数，因为没有参数，就只能通过访问外部变量来获得变化因素，这显然违背函数式编程的原则；或者，保持closingSelector为纯函数，但是返回一个数据源在外部的Observable对象，下面是一个例子：</p>
+<hr/>
+<pre class="ziti1">const closingSelector = () =&gt; {
+  return Observable.fromEvent(document.querySelector("#click", "click"));
+};
+</pre>
+<hr/>
+<p class="ziti">其中的closingSelector依然是一个纯函数，但是返回的Observable对象中的数据却是可以变化，以此实现了灵活的控制，但是这种灵活本身并不好应用，所以，windowWhen和bufferWhen属于挺鸡肋的两个操作符，更加实用的可能是下面要介绍的windowToggle和bufferToggle。</p>
+</body>
+</html>

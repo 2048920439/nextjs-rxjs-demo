@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">2.2.7　Observable的出错处理</h3>
+<p class="ziti">Observable和Observer的交流，除了用next传递数据，用complete表示“没有更多数据”，还需要一种表示“出错了”的方式。</p>
+<p class="ziti">理想情况下，Observable只管生产数据给Observer来消耗，但是，难免有时候Observable会遇到了异常情况，而且这种异常情况不是Observable自己能够处理并恢复正常的，Observable在这时候没法再正常工作了，就需要通知对应的Observer发生了这个异常情况，如果只是简单地调用complete，Observer只会知道“没有更多数据”，却不知道没有更多数据的原因是因为遭遇了异常，所以，我们还要在Observable和Observer的交流渠道中增加一个新的函数error。</p>
+<p class="ziti">修改代码来展示error的功能，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+const onSubscribe = observer =&gt; {
+  observer.next(1);
+  observer.error('Someting Wrong');
+  observer.complete();
+};
+const source$ = new Observable(onSubscribe);
+const theObserver = {
+  next: item =&gt; console.log(item),
+  error: err =&gt; console.log(err),
+  complete: () =&gt; console.log('No More Data'),
+}
+source$.subscribe(theObserver);
+</pre>
+<hr/>
+<p class="ziti">这段代码的执行结果如下：</p>
+<hr/>
+<pre class="ziti1">1
+Someting Wrong
+</pre>
+<hr/>
+<p class="ziti">在onSubscribe函数中，通过调用next函数给Observer推送了一个数据1，接着，error函数给Observer推送了一个错误信息，在这里错误信息是一个字符串Something Wrong，被theObserver的error处理函数输出。</p>
+<p class="ziti">值得注意的是，在调动observer.error函数之后，紧接着调用了observer.complete，却没有引发theObserver的complete函数调用，这是为什么呢？</p>
+<p class="ziti">在RxJS中，一个Observable对象只有一种终结状态，要么是完结（complete），要么是出错（error），一旦进入出错状态，这个Observable对象也就终结了，再不会调用对应Observer的next函数，也不会再调用Observer的complete函数；同样，如果一个Observable对象进入了完结状态，也不能再调用Observer的next和error。</p>
+<div class="pic"><img alt="" src="Image00006.jpg" />
+</div>
+<p class="middle-img">图2-2　Observable对象的状态流转图</p>
+<p class="ziti">在前面已经介绍过，onSubscribe的参数observer并不是传给subscribe的参数theObserver，而是对theObserver的包装，所以，即使在observer.error被调用之后强行调用observer.complete，也不会真正调用到theObserver的complete函数。</p>
+</body>
+</html>

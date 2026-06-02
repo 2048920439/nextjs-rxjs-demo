@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.3.5　Subject可以有多个上游</h3>
+<p class="ziti">Subject的典型应用场景，就是只有一个上游Observable对象，作为一个Observer，接受这个Observable对象的数据，转给下游，不过，Subject没有上游Observable的数量限制，作为一个Observer，一个Subject对象完全可以有多个上游数据流。</p>
+<p class="ziti">如果让一个Subject订阅多个数据流，起到的作用就是把多个数据源的内容汇聚到一个Observable中。</p>
+<p class="ziti">虽然Subject具备这样汇聚多个数据流的功能，但是这种使用方式可能有意想不到的结果，如下面的代码所示：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/mapTo';
+
+const tick1$ = Observable.interval(1000).mapTo('a').take(2);
+const tick2$ = Observable.interval(1000).mapTo('b').take(2);
+const subject = new Subject();
+
+tick1$.subscribe(subject);
+tick2$.subscribe(subject);
+
+subject.subscribe(value =&gt; console.log('observer 1: ' + value));
+subject.subscribe(value =&gt; console.log('observer 2: ' + value));
+</pre>
+<hr/>
+<p class="ziti">其中，subject拥有两个上游数据流tick1$和tick2$，这两个数据流都是通过interval产生的Cold Observable对象，每隔一秒钟吐出一个整数，然后利用mapTo转化为间隔一秒钟吐出一个固定的字符串，利用take只从两个数据流中分别拿两个数据。</p>
+<p class="ziti">也就是说，tick1$每隔一秒钟吐出一个a字符串，吐出两个之后完结，tick2$同样每隔一秒钟吐出一个字符串，只不过吐出的是b，同样是吐出两个之后完结。因为subject订阅了tick1$和tick2$，直观上，让人感觉上面的代码会产生下面的8行输出：</p>
+<hr/>
+<pre class="ziti1">observer 1: a
+observer 2: a
+observer 1: b
+observer 2: b
+observer 1: a
+observer 2: a
+observer 1: b
+observer 2: b</pre>
+<hr/>
+<p class="ziti">事实上，这段代码产生的是下面这样的6行输出：</p>
+<hr/>
+<pre class="ziti1">observer 1: a
+observer 2: a
+observer 1: b
+observer 2: b
+observer 1: a
+observer 2: a</pre>
+<hr/>
+<p class="ziti">tick2$吐出的第二个b，并不会被subject转给下游，为什么呢？</p>
+<p class="ziti">因为tick1$是由take产生的，也就是说在吐出2个数据之后就会调用下游的complete函数，也就是调用subject的complete函数。在上一小节10.3.4中我们已经知道，一个Subject对象是不能被重复使用的，只要complete函数被调用，它的生命周期也就结束了，再来调用它的next函数是不会有任何反应的。</p>
+<p class="ziti">tick2$传给下游的第二个b，发生在tick$完结之后，所以第二个数据b传给subject时它已经“死”了，自然不会得到任何输出。</p>
+<p class="ziti">从上面的例子可以看到，虽然Subject理论上可以合并多个数据流，但是，因为任何一个上游数据流的完结或者出错信息都可以终结Subject对象的生命，让Subject来做合并数据流的工作显得并不合适。</p>
+<p class="ziti">想要合并数据流，还是用merge这个操作符更恰当，比如，上面的代码可以改成下面这样：</p>
+<hr/>
+<pre class="ziti1">const tick1$ = Observable.interval(1000).mapTo('a').take(2);
+const tick2$ = Observable.interval(1000).mapTo('b').take(2);
+
+const merged$ = Observable.merge(tick1$, tick2$);
+
+merged$.subscribe(value =&gt; console.log('observer 1: ' + value));
+merged$.subscribe(value =&gt; console.log('observer 2: ' + value));</pre>
+<hr/>
+<p class="ziti">使用merge，只有上游所有的数据流都完结之后，产生的Observable对象才完结，所以最后得到的结果是预期的8行输出，tick2$吐出的第二个b也能够得到处理。</p>
+</body>
+</html>

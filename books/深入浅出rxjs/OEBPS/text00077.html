@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">6.1.1　count：统计数据个数</h3>
+<p class="ziti">count的作用是统计上游Observable对象吐出的所有数据个数。比如下面的代码中，count的上游的就是of和concat产生的Observable对象：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/concat';
+import 'rxjs/add/operator/count';
+
+const source$= Observable.of(1, 2, 3).concat(Observable.of(4, 5, 6));
+const count$ = source$.count();
+</pre>
+<hr/>
+<p class="ziti">其中，count$会吐出一个，也是唯一的一个数据6，因为source$通过concat组合而成的数据流里总共有6个数据。</p>
+<p class="ziti">如果修改source$的代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$= Observable.timer(1000).concat(Observable.timer(1000));
+const count$ = source$.count();
+</pre>
+<hr/>
+<p class="ziti">那么count$产生的数据就是2，值得注意的是count$只有在2秒钟之后才产生这个数据2，因为timer延迟了source$的完结时间。</p>
+<p class="ziti">count的弹珠图如图6-1所示。</p>
+<div class="pic"><img alt="" src="Image00048.jpg" />
+</div>
+<p class="middle-img">图6-1　count的弹珠图</p>
+<p class="ziti">要想统计一个Observable对象中产生的所有数据个数，只能等到它结束，非常合理。</p>
+</body>
+</html>

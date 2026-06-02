@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">1.2　函数式编程</h2>
+<h3 class="p3">
+<a id="a1">1.2.1　什么是函数式编程</a>
+<br/>
+</h3>
+<p class="ziti">顾名思义，函数式编程就是非常强调使用函数来解决问题的一种编程方式。</p>
+<p class="ziti">你可能会问，使用函数不是任何一种语言、任何一种编程方式都有的方式吗？这根本不算是什么特点啊。的确，几乎任何一种编程语言都支持函数，但是函数式编程对函数的使用有一些特殊的要求，这些要求包括以下几点：</p>
+<p class="ziti6">·声明式（Declarative）</p>
+<p class="ziti6">·纯函数（Pure Function）</p>
+<p class="ziti6">·数据不可变性（Immutability）</p>
+<p class="ziti">在深入介绍这三个特点之前，先提个问题：JavaScript算不算函数式编程语言？</p>
+<p class="ziti">有的语言是纯粹意义上的函数式编程语言，比如Haskell、LISP，这些编程语言本身就强制要求代码遵从以上三个要求，不过，和很多其他语言一样，JavaScript语言并没有强制要求数据不可变性，用JavaScript写的函数也并不能保证没有副作用。</p>
+<p class="ziti">那么，JavaScript到底算不算函数式编程语言呢？</p>
+<p class="ziti">从语言角度讲，JavaScript当然不算一个纯粹意义上的函数式编程语言，但是，JavaScript中的函数有第一公民的身份，因为函数本身就是一个对象，可以被赋值给一个变量，可以作为参数传递，由此可以很方便地应用函数式编程的许多思想。</p>
+<p class="ziti">我们把函数式编程看作一种编程思想，即使语言本身不支持一些特性，我们依然可以应用这样的编程思想，用于提高代码的质量。所以，JavaScript并不是纯粹的函数式编程语言，但是，通过应用一些编程规范，再借助一点工具的帮助，我们完全可以用JavaScript写出函数式的代码，RxJS就是辅助我们写出函数式代码的一种工具。</p>
+<p class="ziti">接下来，我们分别介绍JavaScript如何满足函数式编程的特性需要。</p>
+<p class="ziti">
+<span class="yanse">1.声明式</span>
+</p>
+<p class="ziti">和声明式相对应的编程方式叫做命令式编程（Imperative Programming），命令式编程也是最常见的一种编程方式。</p>
+<p class="ziti">先来看一个命令式编程的例子，我们要实现一个功能，将一个数组中每个元素的数值乘以2。这样一个功能可以实现为一个叫double的函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">function double(arr) {
+  const results = []
+  for (let i = 0; i &lt; arr.length; i++){
+    results.push(arr[i] * 2)
+  }
+  return results
+}
+</pre>
+<hr/>
+<p class="middle-img">代码1-1　double函数根据参数数组产生一个新的数组，每个元素乘以2</p>
+<p class="ziti">上面的double实现是典型的命令式编程风格，我们的代码把计算逻辑完整地描述了一遍：</p>
+<p class="ziti">
+<span class="yanse">步骤一</span>
+ ，创造一个名为results的数组，顾名思义，这个results数组将会是最终结果，不过这个数组一开始是空的，在计算过程中会不断填充内容；</p>
+<p class="ziti">
+<span class="yanse">步骤二</span>
+ ，创建一个循环，循环次数就是输入参数数组arr的长度；在循环体中，每次把数组arr中的一个元素乘以2，把结果push到数组results；</p>
+<p class="ziti">
+<span class="yanse">步骤三</span>
+ ，循环结束的时候，results就是我们想要的结果，返回这个结果，结束。</p>
+<p class="ziti">这个double函数的实现没有任何毛病，但是，我们又来了一个需求：实现一个函数，能够把一个数组的每个元素加一。</p>
+<p class="ziti">好的，一样的套路，我们可以再实现一个addOne函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">function addOne(arr) {
+  const results = []
+  for (let i = 0; i &lt; arr.length; i++){
+    results.push(arr[i] + 1)
+  }
+  return results
+}
+</pre>
+<hr/>
+<p class="ziti">如果比较一下double和addOne这两个函数的代码，就会发现，除了函数名和push的参数之外，这两个函数如出一辙，简直就是一个模子里倒出来的。实际上，我在写addOne的时候，就是把double的代码拷贝过来，把函数名改为addOne，然后把push的参数改为arr[i]+1。</p>
+<p class="ziti">是不是嗅到点不大好的味道？没错，不大好的味道来自于重复代码，因为，“重复代码可能是所有软件中邪恶的根源<sup>
+<a id="ch1" href="text00005.html#ch1_back">[1]</a>
+</sup>
+ <span>。在double和addOne函数中出现了大量的重复代码，这就是让人感觉很不舒服的地方，我们应该想办法改进。</span>
+</p>
+<p class="ziti">我们可以看到命令式编程的一个大问题，因为我们通过代码让电脑按照我们的指示来解决问题，但是这世界上很多问题都有相似的模式，比如上面的double和addOne函数，都是循环一个数组，对每个元素做一个操作，然后把操作结果塞给另一个数组。很自然我们会想到把这种模式抽象出来，这样就不用重复地编写这样的代码。</p>
+<p class="ziti">我们利用JavaScript的map函数，来重新实现double和addOne函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">function double(arr) {
+  return arr.map(function(item) {return item * 2});
+}
+function addOne(arr) {
+  return arr.map(function(item) {return item + 1});
+}
+</pre>
+<hr/>
+<p class="middle-img">代码1-2　double和addOne的map实现方式</p>
+<p class="ziti">可以看到代码简洁了很多，因为省略了重复代码。我们看不到重复的for循环，也看不到往一个数组里做push动作的指令，这一切都被封装在数组的map函数中，map的主要贡献就是提供了一个函数类型的参数，这个函数参数可以定制对每一个数组元素如何处理。</p>
+<p class="ziti">我们来看double中这个定制函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">function(item) {return item * 2}</pre>
+<hr/>
+<p class="ziti">这个函数实现了这样一个功能：不管传入什么数据，都会返回这个数据乘以2的结果。</p>
+<p class="ziti">这就是声明式编程，因为在double函数中，代码实际上是这样一种解读：把一个数组映射（map）为另一个数组，每个对应的元素都乘以2。</p>
+<p class="ziti">相比之下，代码1-2中的声明式代码，要比代码1-1中的命令式编程代码更容易维护。</p>
+<p class="ziti">利用JavaScript的语法特性，我们可以把上面例子中的函数简写为lambda表达式，double和addOne函数的实现可以进一步简化，代码如下：</p>
+<hr/>
+<pre class="ziti1">const double = arr =&gt; arr.map(item =&gt; item * 2);
+const addOne = arr =&gt; arr.map(item =&gt; item + 1);</pre>
+<hr/>
+<p class="ziti">当代码简洁到这个地步，可以看到，在命令式编程中的for循环，都被封装在了map函数的实现中，这样一来，对我们开发者来说，就不需要再去写循环的重复代码，直接使用map就可以写出更简洁、更有表现力的代码。实际上，当你熟悉RxJS编程之后，你会发现自己几乎再也不会写循环语句了。</p>
+<p class="ziti">在JavaScript中，因为函数具有第一公民的地位，一个函数可以作为参数传递给另一个函数，所以才让map这种功能实现成为可能。数组函数map的使用只是最简单的声明式编程的样例，本书的其他章节将进一步介绍声明式编程。</p>
+<p class="ziti">心细的读者可以注意到，上面我们实现的double和addOne函数，文字描述是“将一个数组的每个元素乘以2（或者加1）”，但是，实际上并没有真的去修改作为参数的数组，而是产生了一个新的数组，这就涉及函数式编程的另一个重要特性：纯函数。</p>
+<p class="ziti">
+<span class="yanse">2.纯函数</span>
+</p>
+<p class="ziti">还是以上面提到的double函数为例子，不过，这一次我们从使用者角度来看double，代码如下：</p>
+<hr/>
+<pre class="ziti1">const oneArray = [1, 2, 3];
+const anotherArray = double(oneArray);
+// anotherArray的内容为[ 2, 4, 6 ]
+// oneArray的内容依然是[ 1, 2, 3 ]</pre>
+<hr/>
+<p class="ziti">我们先声明一个oneArray，然后将oneArray作为参数传递给double函数，返回的结果赋值给anotherArray，因为double的实现遵从了保持数据不可改的原则，所以oneArray数组依然是以前的值，而anotherArray是一个全新的数组，这两个数组中的数据相互独立，互不干扰。所以，我们说double就是一个“纯函数”。</p>
+<p class="ziti">所谓纯函数，指的是满足下面两个条件的函数。</p>
+<p class="ziti6">·函数的执行过程完全由输入参数决定，不会受除参数之外的任何数据影响。</p>
+<p class="ziti6">·函数不会修改任何外部状态，比如修改全局变量或传入的参数对象。</p>
+<p class="ziti">表面上看起来，纯函数的要求，是限制了我们编写函数的方式，似乎让我们没法写出“更强大”的函数，实际上，这种限制带来的好处远远大于所谓“更强大”的好处，因为，纯函数让我们的代码更加简单，从而更加容易维护，更加不容易产生bug。</p>
+<p class="ziti">我们还是通过一段代码例子来说明，代码如下：</p>
+<hr/>
+<pre class="ziti1">const originalArray = [1, 2, 3];
+const pushedArray = arrayPush(originalArray, 4);
+const doubledPushedArray = double(pushedArray);
+// pushedArray值应该是[ 1, 2, 3, 4 ]
+// doubledPushedArray值应该是 [ 2, 4, 6, 8 ]</pre>
+<hr/>
+<p class="ziti">只看这段代码中几个函数的命名，就能够猜出每个值的计算结果，但是，当上面的语句执行完毕之后，originalArray的值是什么呢？</p>
+<p class="ziti">先需要问，希望originalArray的值是什么，从代码维护性角度来说，当然希望originalArray保持初始值，因为这样很清晰，也可以继续使用originalArray做其他的计算，于是，我们增加下面的代码。</p>
+<hr/>
+<pre class="ziti1">const doubleOriginalArray = double(originalArray);</pre>
+<hr/>
+<p class="ziti">然后，运行结果，我们一看实际上doubleOriginalArray的值是：</p>
+<hr/>
+<pre class="ziti1">[ 2, 4, 6, 8 ]</pre>
+<hr/>
+<p class="ziti">不对呀，我们的originalArray应该只有三个元素，double之后产生的doubleOriginal-Array应该也只有三个元素，预期的结果是这样。</p>
+<hr/>
+<pre class="ziti1">[ 2, 4, 6 ]</pre>
+<hr/>
+<p class="ziti">问题出在哪里呢？</p>
+<p class="ziti">问题出在arrayPush这个函数，我们刚才一直没有展示arrayPush函数的实现，现在我们来看一看arrayPush的代码，如下所示：</p>
+<hr/>
+<pre class="ziti1">function arrayPush (arr, newValue) {
+  arr.push(newValue);
+  return arr;
+}
+</pre>
+<hr/>
+<p class="ziti">可以看到，arrayPush这个函数直接调用了传入参数arr的push函数，在JavaScript中，数组的push函数会修改数组的值，在数组尾部添加新的元素，所以，arrayPush直接修改了输入参数，这违背了纯函数的第二条规则。</p>
+<p class="ziti">如果arrayPush是一个纯函数，则这段程序就会显得可靠得多。</p>
+<p class="ziti">我们尝试写一个arrayPush的纯函数实现，代码如下：</p>
+<hr/>
+<pre class="ziti1">function arrayPush (arr, newValue) {
+  return [...arr, newValue];
+}
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，我们使用了ES6的扩展操作符（Spread Operator），将输入参数arr的所有元素扩展开，然后在后面加上newValue，产生一个全新的数组，输入参数arr没有发生改变，这是一个纯函数。</p>
+<p class="ziti">和纯函数相反的就是“不纯函数”（Impure Function），一个函数之所以不纯，可能做了下面这些事情：</p>
+<p class="ziti6">·改变全局变量的值。</p>
+<p class="ziti6">·改变输入参数引用的对象，就像上面不是纯函数的arrayPush实现。</p>
+<p class="ziti6">·读取用户输入，比如调用了alert或者confirm函数。</p>
+<p class="ziti6">·抛出一个异常。</p>
+<p class="ziti6">·网络输入/输出操作，比如通过AJAX调用一个服务器的API。</p>
+<p class="ziti6">·操作浏览器的DOM。</p>
+<p class="ziti">上面还只是不纯函数的一部分表现，其实，有一个很简单的判断函数纯不纯的方法，就是假设将一个函数调用替换为一个预期返回的常数，程序运行结果是否一样。</p>
+<p class="ziti">还是以上面的代码为例，我们看arrayPush是不是一个纯函数，就看使用它的地方。</p>
+<hr/>
+<pre class="ziti1">const pushedArray = arrayPush(originalArray, 4); // 预期得到[ 1, 2, 3, 4]</pre>
+<hr/>
+<p class="ziti">我们预期这个调用返回4个元素的数组，那么，就把对arrayPush的函数调用替换成预期的返回结果。</p>
+<hr/>
+<pre class="ziti1">const pushedArray = [ 1, 2, 3, 4];</pre>
+<hr/>
+<p class="ziti">对于使用数组push函数的实现，这样的替换当然产生不同的效果，所以它并不是纯函数。</p>
+<p class="ziti">满足纯函数的特性也叫做引用透明度（Referential Transparency），这是更加正式的说法。怎么称呼不重要，重要的是开发者要理解，所谓的纯函数，做的事情就是输入参数到返回结果的一个映射，不要产生副作用（Side Effect）。</p>
+<p class="ziti">如果你有写单元测试代码的经历，可能会很快意识到，用纯函数是非常容易写单元测试的。单元测试是对每一小段代码单元的测试，被测对象往往就是一个函数，如果一个函数和太多外部的资源有牵连，比如访问AJAX请求、依赖某个全局变量，那光是mock这些外部的资源就让写单元测试的过程痛苦不堪，当这些外部的东西设计发生变化的时候，又需要修改对应的单元测试。</p>
+<p class="ziti">“测试驱动开发”（Test-Driven Development）提出了这么多年，在业界被追捧得很热，但却总是得不到全面实施，一个很大的原因就是很多软件项目因为不遵守函数式编程的规范，所以造成单元测试困难。如果被测函数都是纯函数，单元测试可以轻松达到100%的代码覆盖率。</p>
+<p class="ziti">
+<span class="yanse">3.数据不可变</span>
+</p>
+<p class="ziti">数据不可变（Immutable）是函数式编程非常重要的一个概念，对于刚刚接触这个概念的朋友，可能会觉得莫名其妙，因为众所周知程序就是用代码指令在操作数据，如果数据不能变化，那一个程序又能够干什么有用的事情？</p>
+<p class="ziti">程序要好发挥作用当然是要产生变化的数据，但是并不意味着必须要去修改现有数据，替换方法是通过产生新的数据，来实现这种“变化”，也就是说，当我们需要数据状态发生改变时，保持原有数据不变，产生一个新的数据来体现这种变化。</p>
+<p class="ziti">不可改变的数据就是Immutable数据，它一旦产生，我们就可以肯定它的值永远不会变，这非常有利于代码的理解。</p>
+<p class="ziti">其实，你可能已经体会到了Immutable数据类型的好处，在JavaScript中，字符串类型、数字类型就是不可改变的数据，使用这两种类型的数据给你带来的麻烦比较少。相反，JavaScript中大部分对象都是可变的，比如JavaScript自带的原生数组类型，数组的push、pop、sort函数都会改变一个数组的内容，由此引发的bug可不少。这些不纯的函数导致JavaScript天生不是一个纯粹意义上的函数式编程语言。</p>
+<p class="ziti">在JavaScript社区已经出现一些辅助工具来实现Immutable特性，比如Immutable.js这样的库，不过，即使没有这些工具的帮助，程序员也只需要一点纪律感，就能保持代码中的数据不可变。</p>
+<p class="p6">注意</p>
+<p class="ziti6">JavaScript中的const关键字虽然有常数（constant）的意思，但其实只是规定一个变量引用的对象不能改变，却没有规定这个const变量引用的对象自身不能发生改变，所以，这个“常量”依然是变量。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00005.html#ch1">[1]</a>
+ 《Clean Code》Robert C.Martin 著，第3章Functions 的“Don’t Repeat Yourself”小节。</p>
+</body>
+</html>

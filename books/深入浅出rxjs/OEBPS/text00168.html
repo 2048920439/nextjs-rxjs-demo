@@ -1,0 +1,12 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">11.4　支持Scheduler的操作符</h2>
+<p class="ziti">RxJS中支持Scheduler的操作符可以分为两类。</p>
+<p class="ziti">第一类其实我们已经很熟悉，就是普通的创建或者组合Observable对象的操作符，比如上面举例过的range和interval，它们有自己的功能，Scheduler只是一个可选参数，没有Scheduler也依然能工作，使用了Scheduler参数只是让产生的Observable对象吐出数据的节奏发生变化。</p>
+<p class="ziti">还有一类，它们存在的唯一功能就是应用Scheduler，所以Scheduler实例是必须要有的参数，在RxJS中，这一类操作符有两个：observeOn和subscribeOn。</p>
+<p class="ziti">接下来就分别介绍这些支持Scheduler的操作符。</p>
+</body>
+</html>

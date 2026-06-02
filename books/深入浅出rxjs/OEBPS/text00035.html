@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">3.3.1　操作符函数的实现</h3>
+<p class="ziti">每个操作符都是一个函数，不管实现什么功能，都必须考虑下面这些功能要点：</p>
+<p class="ziti6">·返回一个全新的Observable对象。</p>
+<p class="ziti6">·对上游和下游的订阅及退订处理。</p>
+<p class="ziti6">·处理异常情况。</p>
+<p class="ziti6">·及时释放资源。</p>
+<p class="ziti">我们以最简单的map操作符实现来说明上面的要点。</p>
+<p class="ziti">
+<span class="yanse">1.返回一个全新的Observable对象</span>
+</p>
+<p class="ziti">map的功能是对上游推送下来的任何数据做一个映射，产生一个新的数据转而推送给下游，具体如何映射，通过函数参数来定制。</p>
+<p class="ziti">先不要管如何把这个操作符挂到Observable类上去，我们先实现这个函数，对应代码如下：</p>
+<hr/>
+<pre class="ziti1">function map(project) {
+  //实现代码待定
+}
+</pre>
+<hr/>
+<p class="ziti">其中project就是定制映射功能的函数，project接受一个参数，返回这个参数的映射结果。</p>
+<p class="ziti">接下来看map如何使用，代码示例如下：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.map(x =&gt; x * 2);
+</pre>
+<hr/>
+<p class="ziti">其中，传递给map的函数参数把输入参数乘以2，如果source$是一个1、2、3的序列，那么map返回的序列就是2、4、6。一定要注意，map并不会修改上游的source$，如果map修改了上游的Observable对象，那就违背了函数式编程的原则，所以map一定要返回一个全新的Observable对象，这个全新的Observable对象可以吐出和上游source$不同的数据，也可以吐出和source$不同的数据。</p>
+<p class="ziti">很显然，map函数实现中必定会有创造Observable的动作，下面就是map的代码实现：</p>
+<hr/>
+<pre class="ziti1">function map(project) {
+  return new Observable(observer =&gt; {
+    this.subscribe({
+      next: value =&gt; observer.next(project(value)),
+      error: err =&gt; observer.error(error),
+      complete: () =&gt; observer.complete(),
+    });
+  });
+}
+</pre>
+<hr/>
+<p class="ziti">可以看到，map中利用new关键字创造了一个Observable对象，函数返回的结果就是这个对象，如此一来，map可以用于链式调用，可以在后面调用其他的操作符，或者调用subscribe增加Observer。</p>
+<p class="ziti">在这里，我们假设this代表的是上游的Observable对象，所以，可以直接使用subscribe函数订阅其中的事件。对于error和complete事件，map基本上没什么可做的，就是全部转手交给下游处理；对于next事件，我们调用project函数，把推送的数据做映射，然后传递给下游。</p>
+<p class="ziti">一个map功能的操作符基本功能就完成了，但这只是一个起点，还有更多需要考虑的细节。</p>
+<p class="ziti">
+<span class="yanse">2.订阅和退订处理</span>
+</p>
+<p class="ziti">上面的map实现并没有考虑退订的情况，其中订阅了一个Observable对象，却没有退订。如果相关资源得不到释放，就有可能造成资源泄露。</p>
+<p class="ziti">对于map，并没有占用什么资源，但是，作为一个通用的操作符，无法预料上游Observable是如何实现的，上游完全可能在被订阅时分配了特殊资源，如果不明确地告诉上游这些资源再也用不着了的话，它也不会释放这些资源，所以，对于map来说，当下游退订时，需要对上游做退订的动作。</p>
+<p class="ziti">我们改进map的实现，增加unsubscribe的实现，代码如下：</p>
+<hr/>
+<pre class="ziti1">function map(project) {
+  return new Observable(observer =&gt; {
+    const sub = this.subscribe({
+      next: value =&gt; observer.next(project(value)),
+      error: err =&gt; observer.error(error),
+      complete: () =&gt; observer.complete(),
+    });
+    return {
+      unsubscribe: () =&gt; {
+        sub.unsubscribe();
+      }
+    };
+  });
+}
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，当订阅上游Observable对象时，我们保留返回值在sub变量中，返回一个包含unsubscribe函数属性的对象，unsubscribe就直接调用sub的unsubscribe函数，如此一来，当map的下游退订，上游的Observable也会接收到退订通知，从而可以释放相关资源。</p>
+<p class="ziti">map是一个简单的操作符，涉及的Observable对象只有上游和下游两个，有的操作符很复杂，数据来自多个Observable对象，这样就涉及多个Observable对象的订阅和退订。</p>
+<p class="ziti">基本原则就是：当不再需要从某个Observable对象获取数据的时候，就要退订这个Observable对象。</p>
+<p class="ziti">
+<span class="yanse">3.处理异常情况</span>
+</p>
+<p class="ziti">在一种场景下工作得很好的代码，未必能够在另一种场景下生存，考虑到所有可能的情况是编写强壮代码之道。</p>
+<p class="ziti">对于map这个操作符，参数project是一种输入，不受map自身控制，换句话说，project可能是有问题的代码，这超出了map函数的控制范围，而我们能做的，就是考虑到project的调用可能会出错。</p>
+<p class="ziti">比如，对map有下面这样的使用方法：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.map(x =&gt; x.foo.bar);</pre>
+<hr/>
+<p class="ziti">可是，从source$中吐出来的数据可能不包含foo属性，当尝试去访问foo.bar的时候，就是在访问undefined的bar属性，这会产生一个异常错误。</p>
+<p class="ziti">在之前的map实现中，对project的调用没有保护，最后这个异常错误就被抛了出来，把整个程序的运行都破坏掉，这当然不是最理想的处理，更好的处理方式是捕获异常错误，把异常错误沿着数据流往下游传递，最终如何处理交给Observer来决定，这是更加可控的方法。</p>
+<p class="ziti">改进上面map实现的部分，如下所示：</p>
+<hr/>
+<pre class="ziti1">const sub = this.subscribe({
+  next: value =&gt; {
+    try {
+      observer.next(project(value));
+    } catch (err) {
+      observer.error(err);
+    }
+  },
+  error: err =&gt; observer.error(error),
+  complete: () =&gt; observer.complete(),
+});
+</pre>
+<hr/>
+<p class="ziti">在对上游数据的处理中，利用try和catch的组合捕获project调用的可能错误，如果真的有错误，那就调用下游的error函数。</p>
+<p class="ziti">所以，map有两种可能向下游传递error消息的方式，一种是上游的error直接转手给下游，另一种是project函数执行过程中产生的error也交给下游。在第9章中我们会详细介绍RxJS中的异常处理和重试机制。</p>
+<p class="ziti">
+<span class="yanse">4.及时释放资源</span>
+</p>
+<p class="ziti">map并不占用什么资源，但有的操作符则不是这样，尤其是和浏览器资源直接打交道的操作符。比如，从DOM中获取用户操作事件的操作符，产生的Observable对象被订阅时，肯定会在DOM中添加事件处理函数，如果事件处理函数只被添加而不删除，那就有产生资源泄露的危险，所以，一定要在退订的时候去掉挂在DOM上的这些事件处理函数。</p>
+<p class="ziti">有的操作符还会和WebSocket资源关联从中获取推送消息，这些操作符一定要在相关Observable对象被退订时释放WebSocket资源。</p>
+</body>
+</html>

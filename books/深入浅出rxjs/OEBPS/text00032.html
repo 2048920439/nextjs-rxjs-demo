@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">3.2.1　功能分类</h3>
+<p class="ziti">根据功能，操作符可以分为以下类别：</p>
+<p class="ziti6">·创建类（creation）</p>
+<p class="ziti6">·转化类（transformation）</p>
+<p class="ziti6">·过滤类（filtering）</p>
+<p class="ziti6">·合并类（combination）</p>
+<p class="ziti6">·多播类（multicasting）</p>
+<p class="ziti6">·错误处理类（error Handling）</p>
+<p class="ziti6">·辅助工具类（utility）</p>
+<p class="ziti6">·条件分支类（conditional&amp;boolean）</p>
+<p class="ziti6">·数学和合计类（mathmatical&amp;aggregate）</p>
+<p class="ziti">RxJS自带的任何操作符都属于上面某一种分类，比如，现在我们已经熟悉的map属于“转化类”，而filter从它的名字就看得出来属于“过滤类”。从第4章到第10章，会分别介绍各种类型的操作符。</p>
+<p class="ziti">像filter和map这样的操作符的输入是上游的一个Observable对象，返回另一个Observable对象，这些操作符链式调用串接起来，就形成了一条河流，河水就是其中传递的数据。不过，任何河流都需要有源头，不然不管河床有多长，没有水也不能称为河。“创建类”操作符就是数据河流的源头，创建类操作符是没有上游的，它们是数据管道的起点，在第4章中我们会详细介绍创建类操作符。</p>
+<p class="ziti">多条河流可以合并，比如长江，就是由岷江、赤水、嘉陵江、乌江、湘江等多条支流汇聚而成的，在RxJS中，多个Observable对象中的数据也可以合并到同一个Observable对象中，支持这种操作的操作符属于“合并类”，在第5章中我们会重点介绍。</p>
+<p class="ziti">RxJS中多个“辅助工具类”的操作符，会在第6章介绍。</p>
+<p class="ziti">有时候，数据流中不是所有的数据都有必要走到终点，当需要把某些数据筛选掉的时候，就该“过滤类”操作符上场了，在第7章中会探讨过滤类操作符的使用方式，要知道过滤类可不只有filter一个操作符。</p>
+<p class="ziti">在一条河流中，上游水的成分和下游也会不同，可能包含更多杂质，也可能更加清澈，这是因为河流对水有转化作用。“转化类”操作符对上游Observable对象中的每个数据进行转化，产生一个新的数据推送给下游，在第8章中会详细介绍转化类操作符。</p>
+<p class="ziti">任何代码都可能产生异常错误，RxJS的Observable同样支持异常错误处理，在第9章我们会重点介绍“错误处理类”的操作符。</p>
+<p class="ziti">当一个Observable对象拥有多个Observer，也就是同样一个数据要通知给多个接受者时，就是多播，在第10章中我们会介绍“多播类”操作符。</p>
+<p class="ziti">上面的功能分类方式将RxJS自带的所有操作符全部涵盖了，如果未来RxJS再增加某个新的操作符，肯定也属于上面某一种分类。</p>
+<p class="ziti">还有一些操作符的种类，它们并不能涵盖所有的操作符，每一种分类只是若干具有某方面特性的操作符的集合，如下所示：</p>
+<p class="ziti6">·背压控制类（backpressure control）</p>
+<p class="ziti6">·可连接类（connectable）</p>
+<p class="ziti6">·高阶Observable（higher order observable）处理类</p>
+<p class="ziti">当发大水的时候，河流下游因为河道无法让水流及时通过，水流就会淤积，逐步把压力传递给上游，这种现象就是“背压”。背压可能导致严重的问题，对于河流，可能导致水漫过河坝引起洪灾。上游如果有水库，就可以控制流向下游的水量，减少对河道的压力。在RxJS的世界，“背压控制类”操作符就像是大坝，当下游对数据处理不过来的时候，可以控制数据的传输，减轻下游处理压力，过滤类和转化类操作符中都包含具备背压控制的成员，在第7章和第8章中都会介绍。</p>
+<p class="ziti">可连接类操作符返回的Observable对象比较特殊，支持connect函数，这些操作符全部和多播有关，在第10章多播部分会详细介绍。</p>
+<p class="ziti">高阶Observable对象不是“高级的”Observable对象，是指产生数据本身也是Observable对象的Observable对象，这说起来有点绕口，不过这是最有趣的Observable对象，在合并类、过滤类和转化类的操作符中，都可以看到高阶Observable对象的身影。</p>
+</body>
+</html>

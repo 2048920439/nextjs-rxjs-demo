@@ -1,0 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">9.5　本章小结</h2>
+<p class="ziti">在这一章中，我们了解了JavaScript自带的异常处理方式，通过try/catch指令可以处理同步操作的异常，但是不能处理异步操作的异常。</p>
+<p class="ziti">使用回调函数，并在回调函数中利用参数传递错误异常，可以解决异步操作的问题，但是却可能造成“回调函数地狱”。</p>
+<p class="ziti">Promise可以解决回调函数方式的问题，但是Promise自身不能够重试。</p>
+<p class="ziti">RxJS自带的操作符比较完美地解决了所有问题，使用catch、retry和retryWhen，可以方便地支持“恢复”和“重试”两类异常处理方式。</p>
+<p class="ziti">retryWhen和scan、delay等操作符结合，可以非常方便定制出任意重试功能，可见RxJS功能的强大。</p>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.2.1　create：毫无神奇之处</h3>
+<p class="ziti">create是最简单的一个操作符，因为它的功能很简单，就是直接调用Observable的构造函数，逻辑代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.create = function (subscribe) {
+    return new Observable(subscribe);
+};
+</pre>
+<hr/>
+<p class="ziti">上面的代码就在Observable类的定义之中，所以，create不需要导入任何其他模块就可以直接使用。</p>
+<p class="p6">提示</p>
+<p class="ziti6">还记得另一个不需要导入任何模块就可以直接使用的操作符是哪个吗？就是在lettable操作符部分介绍过的pipe操作符。</p>
+<p class="ziti">create这个操作符并没有给我们带来任何神奇的功能，使用它和直接使用Observable构造函数没什么区别，所以，绝大部分情况用不上它。</p>
+<p class="ziti">在本书的代码示例中，偶尔会用上create，应用场景往往是简单直观地创造Observable对象。当读者逐渐熟悉所有的操作符之后，会发现用RxJS提供的操作符组合起来就能够创造绝大部分需要的数据流，而用不上create。</p>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">9.4　重试的本质</h2>
+<p class="ziti">假如retryWhen的参数notifer产生的Observable对象吐出数据过快会怎么样呢？比如，下面的代码：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.interval(600);
+const error$ = source$.map(throwOnUnluckyNumber);
+const retry$ = error$.retryWhen(err$ =&gt; Observable.interval(1000)));</pre>
+<hr/>
+<p class="ziti">数据流的最初源头是interval产生的Observable对象，每隔600毫秒吐出一个递增正整数，到5*600=2400毫秒之后会吐出引发错误的数据4。</p>
+<p class="ziti">notifer返回由interval产生的Observable对象，节奏为每一秒钟吐出一个数据，当第一次发生错误时，retryWhen会在1秒钟之后重试，而且，之后每隔一秒retryWhen都会开始新一轮重试，这时候RxJS会有什么样的行为呢？</p>
+<p class="ziti">在上面的代码中，retry$会每隔600毫秒依次吐出0、1、2、3，然后错误引发了重试，之后就只会每隔1秒钟吐出0，不会再吐出1、2、3。</p>
+<p class="ziti">为什么会这样呢？</p>
+<p class="ziti">因为无论是retryWhen还是retry，所谓的“重试”，其实就是重新订阅（subscribe）一遍上游Observable对象的过程，在订阅上游的同时，会退订上一次的订阅，所以，如此一来，上面代码中上游只有0才有机会被吐出，之后的数据都因为退订而没有出头之日了。</p>
+<p class="ziti">理解“重试”其实就是退订加上订阅的操作非常重要，如果上游Observable是一个Hot数据流，可能结果并不是一次“重试”。</p>
+<p class="ziti">这里创造一个Hot数据流，代码如下：</p>
+<hr/>
+<pre class="ziti1">const emitter = new EventEmitter();
+Observable.interval(600).subscribe((value) =&gt; {
+  emitter.emit('tick', value);
+});
+
+const hotSource$ = Observable.create(observer =&gt; {
+  console.log('on subscribe');
+
+  const listener = (value) =&gt; observer.next(value);
+  emitter.on('tick', listener);
+
+  return () =&gt; {
+    console.log('on unsubscribe');
+    emitter.removeListener('tick', listener);
+  }
+});
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，一个inteval产生的Observable对象是Cold数据流，也就是每次订阅都会产生一个全新的数据序列，为此，我们创造一个全局的emitter，让interval产生的Observable对象每隔600毫秒去触发emitter上的tick事件，由此避免interval被重复订阅。</p>
+<p class="ziti">通过Observable.create产生的hotSource$，每次被订阅和退订的时候，控制台上都会有打印输出，然后，对于所有的observer，让emitter的tick事件来驱动next的调用。</p>
+<p class="ziti">显而易见，hotSource$是一个Hot数据流。</p>
+<p class="p6">提示</p>
+<p class="ziti6">上面创造Hot数据流的过程虽然直观，但是也显得十分繁琐，在后面的章节中，我们会介绍更加简单的创建Hot数据流的方法。</p>
+<p class="ziti">使用hotSource$的代码如下：</p>
+<hr/>
+<pre class="ziti1">const error$ = hotSource$.map(throwOnUnluckyNumber);
+const retry$ = error$.retry(1);
+
+retry$.subscribe(
+  value =&gt; console.log('value: ', value),
+  err =&gt; console.log('error: ', err),
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">上面的代码的运行输出结果如下：</p>
+<hr/>
+<pre class="ziti1">on subscribe
+value:  0
+value:  1
+value:  2
+value:  3
+on unsubscribe
+on subscribe
+value:  5
+value:  6
+value:  7
+complete
+on unsubscribe
+</pre>
+<hr/>
+<p class="ziti">hotSource$被订阅，于是输出subscribe，然后吐出0、1、2、3，当吐出4时，这个不吉利数字引发了错误，retry会对上游（也就是error$）先做退订，然后再做订阅。</p>
+<p class="ziti">注意，因为上游是一个Hot数据流，再次订阅的时候，上游吐出来的数据不是从0开始，而是从5开始，这样就不会再遇到不吉利的数字4，所以，接下来输出的就是5、6、7。</p>
+<p class="ziti">在整个数据流完结之后，hotSource$的unsubscribe会再被调用一次。</p>
+<p class="ziti">从上面的例子可以很清楚地看到，对于Hot数据流，即使使用了retry和retryWhen，也并不是“重试”，只不过是重新订阅而已。</p>
+</body>
+</html>

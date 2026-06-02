@@ -1,0 +1,11 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">8.6　累计数据</h2>
+<p class="ziti">前面介绍的所有操作符，上游的数据之间不会产生任何影响。比如，上游产生一个数据A，经过操作符处理，可能变成了另一个数据f（A），也可能被放到了另一个Observable对象中或者一个数组中，这个数据A被操作符处理完之后也就完了，不会对后续的数据产生什么影响；如果上游再产生一个数据B，传给下游的是一个f（B），或者B被放到一个Observable对象或者数组中，就好像之前并不曾有一个数据A存在过一样，因为各个数据之间是独立的。</p>
+<p class="ziti">当然，像上面这样各个数据之间毫无关系的处理，非常符合函数式编程的原则，各个数据之间纠葛越少，程序的逻辑也就越简单清晰，产生bug的可能性也就越少。但是，某些应用场景下，传给下游的数据依赖于之前产生的所有数据。对应上面的例子，当上游产生数据B时，希望传给下游的不是f（B），而是f（A，B），也就是希望传给下游的数据是一个综合了之前上游数据A的函数f执行结果，当然，如果上游再产生了一个数据C，希望由此给下游传递一个综合之前所有数据的结果f（A，B，C）。</p>
+<p class="ziti">为了实现这种功能，RxJS提供了能够累计所有上游数据的操作符，例如scan和mergeScan。</p>
+</body>
+</html>

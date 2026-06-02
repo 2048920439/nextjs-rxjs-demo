@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">6.1.3　reduce：规约统计</h3>
+<p class="ziti">如果需要对上游Observable吐出的所有数据进行更加复杂的统计运算，就该用reduce这个操作符了。reduce的意思是“规约”，这是一种十分强大的运算方式，在JavaScript中的数组也有reduce这个函数，和RxJS中的reduce功能类似，只是处理的对象变成了Observable。</p>
+<p class="ziti">无论是JavaScript数组原生支持的reduce，还是RxJS中的reduce操作符，都接受一个函数参数，这个函数参数就是“规约函数”，规约函数的形式如下：</p>
+<hr/>
+<pre class="ziti1">function(accumulation, current) {
+  //accumulation是当前累计值，current是当前数据
+  //函数应该返回最新的累计值
+}
+</pre>
+<hr/>
+<p class="ziti">reduce的功能就是对一个集合中所有元素依次调用这个规约函数，这个规约函数可以返回一个“累积”的结果，然后这个“累积”的结果会作为参数和数据集合的下一个元素一起成为规约函数下次被调用的参数，如此遍历集合中所有的元素，因为规约函数可以任意定义，所以最后得到的“累积”结果也就完全可定制。</p>
+<p class="ziti">除了规约函数，reduce还有一个可选参数seed，这是规约过程中“累计”的初始值，如果不指定seed参数，那么数据集合中的第一个数据就充当初始值，当然，这样第一个数据不会作为current参数调用规约函数，而是直接作为accumulation参数传递给规约函数的第一次调用。</p>
+<p class="ziti">比如，我们可以利用reduce来计算从1到100的正整数之和，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/range';
+import 'rxjs/add/operator/reduce';
+
+const source$ = Observable.range(1, 100)
+const reduced$ = source$.reduce(
+  (acc, current) =&gt; acc + current,
+  0
+);
+</pre>
+<hr/>
+<p class="ziti">其中，reduce有两个参数，第一个参数是规约函数，第二个参数是“累积”值的初始值，也叫“种子值”，这里种子值当然为0。规约函数的第一个参数acc代表当前的“累积”，第二个参数current是当前吐出的元素值。</p>
+<p class="ziti">以上面的代码为例，上游Observable由range吐出的数值是从1到100的正整数，reduce会为每个正整数调用一次规约函数。</p>
+<p class="ziti">1）第一次规约函数被调用时，参数acc的值为种子（seed）值0，参数current为上游Observable吐出来的第一个数1，这个规约函数做的工作就是把acc与current的和返回，这一次返回的是0+1，也就是1。</p>
+<p class="ziti">2）第二次规约函数被调用时，current的参数为2，参数acc是上一次规约函数被调用时返回的结果1，所以规约函数返回3。</p>
+<p class="ziti">3）第三次规约函数被调用时，current为3，acc为3，规约函数返回6。</p>
+<p class="ziti">4）第四次规约函数被调用时，current为4，acc为6，规约函数返回10。</p>
+<p class="ziti">……</p>
+<p class="ziti">第100次规约函数被调用时，也就是最后一次被调用时，current为100，acc为4950，规约函数返回5050，这是最后一次规约函数的返回结果，也就是reduce产生的Observable对象吐出的唯一的一个数据结果。</p>
+<p class="ziti">对于上面这个例子，也可以给reduce传递第二个参数seed，产生的结果也是一样。</p>
+<p class="ziti">实际上，数学类操作符有一个reduce就足够了，因为上面说的count、max和min的功能都可以通过reduce来实现，比如，实现max功能的代码如下：</p>
+<hr/>
+<pre class="ziti1">const maxReducer = comparer =&gt; {
+  return (typeof comparer === 'function')
+    ? function (x, y) { return comparer(x, y) &gt; 0 ? x : y; }
+    : function (x, y) { return x &gt; y ? x : y; };
+};
+Observable.prototype.max = function (comparer) {
+  return this.reduce(maxReducer(comparer));
+}
+</pre>
+<hr/>
+<p class="ziti">还可以利用reduce来实现其他需要遍历所有Observable吐出数据的功能，比如，实现计算平均数，代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.average = function () {
+  return this.reduce(
+    (acc, current) =&gt; ({sum: acc.sum + current, count: acc.count + 1 }),
+    {sum: 0, count: 0}
+  ).map(acc =&gt; acc.sum / acc.count);
+}
+</pre>
+<hr/>
+<p class="ziti">其中，每一次规约产生的累积结果是一个对象，包含一个字段sum代表当前遍历到的数值之和，还有一个字段count代表当前遍历的个数，当上游Observable对象完结的时候，得到的最终规约结果中，sum就是所有数值之和，count就是所有数值的个数。</p>
+<p class="ziti">最后，使用一个map函数，将sum除以count，就是平均数。在RxJS v4版中，存在名为average的操作符，在v5版中，去掉了average操作符，因为就像上面代码展示的，很容易通过reduce实现average功能，没有必要在核心操作符中包含一个average。</p>
+</body>
+</html>

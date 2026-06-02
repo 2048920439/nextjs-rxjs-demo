@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">3.2.2　静态和实例分类</h3>
+<p class="ziti">除了按照功能分类之外，操作符还可以从存在形式这个方面来分类。具体来说，就是操作符的实现函数和Observable类的关系，在深入这个话题之前，需要先了解JavaScript类是如何实现的。</p>
+<p class="ziti">JavaScript从诞生之初就具备面向对象编程的特性，面向对象事件有“类”（class）的概念，但在JavaScript中类是通过函数来实现的。</p>
+<p class="ziti">例如，我们需要创造一个类代表“程序员”，然后希望“程序员”的个体有写代码的功能，那么用JavaScript来表示，示例代码就是这样的：</p>
+<hr/>
+<pre class="ziti1">function Programmer() {
+}
+
+Programmer.create = function() {
+  console.log('Programmer.create');
+  return new Programmer();
+};
+
+Programmer.prototype.code = function() {
+  console.log('Programmer.code');
+  return 'Hello World';
+};
+</pre>
+<hr/>
+<p class="ziti">这个函数名为Programmer，代表的就是“程序员”这个类，习惯上一个函数如果代表类，第一个字母就是大写。这个类有两个函数，一个是create，直接赋值给Programmer；另一个函数名为code，则是赋值给Programmer.prototype，prototype在JavaScript中是一个很特殊的属性，用于实现继承关系，当调用某个对象的实例函数时，会去对应的prototype中寻找对应的函数实现。</p>
+<p class="ziti">使用create和code这两个函数的方式也不同，如下所示：</p>
+<hr/>
+<pre class="ziti1">const morgan = Programmer.create();
+morgan.code();</pre>
+<hr/>
+<p class="ziti">create函数的调用是直接利用Programmer，而不是利用Programmer的实例，create函数本身利用new关键字创造了一个Programmer的实例。</p>
+<p class="ziti">对于code的函数调用则依赖于Programmer的实例，当调用code函数时，JavaScript会先确定code代表的对象是由Programmer函数创造出来的，然后去Programmer的属性proptotype中找code的实现，因为前面已经给Programmer.prototype.code赋值了一个函数，这个函数就是需要被执行的函数。</p>
+<p class="ziti">假如在prototype中没有找到同名的函数实现，那么就会在prototype的prototype属性中继续找，依次递归，要么找到对应名称的函数，要么直到某一层prototype为空，表示没有对应的函数实现。这种在prototype中逐级寻找函数实现的方式叫做“prototype链”，可以翻译为“原型链”，JavaScript中利用prototype链来实现类之间的继承关系。</p>
+<p class="ziti">在ES6中明确了class这个关键字代表“类”，但是class可以认为只是一种语法糖（syntax sugar），让使用JavaScript代码来定义“类”更加直观简洁，但是本质还是利用prototype链来实现面向对象的机制，并没有引入什么新的继承模型。</p>
+<p class="ziti">在RxJS中，可以认为有下面这样一个关于Observable的类的定义：</p>
+<hr/>
+<pre class="ziti1">class Observable {
+  constructor() {
+    //构造函数的实现
+  }
+}
+</pre>
+<hr/>
+<p class="ziti">所有的操作符都是函数，不过有的操作符是Observable类的静态函数，也就是不需要Observable实例就可以执行的函数，所以称为“静态操作符”；另一类操作符是Observable的实例函数，前提是要有一个创建好的Observable对象，这一类称为“实例操作符”。</p>
+<p class="ziti">对于一个静态操作符，比如名为of，可以认为它是这样添加给Observable类的：</p>
+<hr/>
+<pre class="ziti1">Observable.of = functionToImplementOf;</pre>
+<hr/>
+<p class="ziti">对于一个实例操作符，比如名为map，可以认为是通过下面这样添加给Observable类的prototype的：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.map = implementationOfMap;</pre>
+<hr/>
+<p class="ziti">在实际代码中，如果不想把RxJS全部导入，而是想单独导入每个操作符的相关功能，那么导入代码也会有明显区别。</p>
+<p class="ziti">如果要导入静态操作符，比如名为of的操作符，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/of';</pre>
+<hr/>
+<p class="ziti">导入的模块是位于node_modules/rxjs/add/observable/of.js的文件，这个模块做的工作就是在Observable类上加一个静态方法，类似下面这样的效果：</p>
+<hr/>
+<pre class="ziti1">Observable.of = functionToImplementOf;</pre>
+<hr/>
+<p class="ziti">如果要导入实例操作符，比如map，对应的导入代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/operator/map';</pre>
+<hr/>
+<p class="ziti">可以看到，和静态操作符的区别就是导入路径中为add/operator，而不是add/observable。将静态操作符和实例操作符放在不同的目录中，虽然从代码组织方面来看是一个好的做法，但是也让开发者不得不记住两个不同的路径。</p>
+<p class="ziti">上面的代码中导入的模块是node_modules/rxjs/add/observable/of.js，其中的代码是在Observable的prototype属性上增加一个函数，这样，每一个Observable的实例对象就被赋予了这个函数的功能。RxJS的map.js文件中代码很复杂，但是逻辑上有下面这样代码的功能：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.map = functionToImplementMap;</pre>
+<hr/>
+<p class="ziti">即使不知道of和map这两个操作符具体的功能，读者也应该清楚，这两个操作符的使用方式明显不同。对于of，因为它是一个静态操作符，所以当作Observable类的静态方法调用就可以，如下所示：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(/*一些参数*/);</pre>
+<hr/>
+<p class="ziti">而map是实例操作符，所以，使用map就是调用某个具体Observable对象的成员方法，如下所示：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.map(/*一些参数*/);</pre>
+<hr/>
+<p class="ziti">当然，无论是静态操作符还是实例操作符，它们都会返回一个Observable对象。在链式调用中，静态操作符只能出现在首位，实例操作符则可以出现在任何位置，因为链式调用中各级之间靠Observable对象来关联，一个静态函数在链式调用的中间位置是不可能有容身之处的。</p>
+<p class="ziti">一个操作符应该是静态的形式还是实例的形式，完全由其功能决定。有意思的是，有些功能既可以作为Observable对象的静态方法，也可以作为Observable对象的实例方法，比如merge这个合并类的操作符，它支持两种使用方式，可以像下面这样使用静态操作符形式：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/merge';
+
+const result$ = Observable.merge(source1$, source2$);</pre>
+<hr/>
+<p class="ziti">也可以使用实例操作符的形式，如下所示：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/operator/map';
+
+const result$ = source1$.merge(source2$);</pre>
+<hr/>
+<p class="ziti">这两种形式没有本质区别，可以自由选择，当然，在链式调用的中间位置只能使用实例函数形式的merge，merge的用法在第5章会详细介绍。</p>
+</body>
+</html>

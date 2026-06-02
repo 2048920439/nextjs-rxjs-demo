@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">12.1.2　利用日志来调试</h3>
+<p class="ziti6">最有效的调试工具，依然是仔细考虑过而且位置恰当的打印语句。</p>
+<p class="you1">——Brian W.Kernighan<sup>
+<a id="ch1" href="text00176.html#ch1_back">[1]</a>
+</sup>
+</p>
+<p class="ziti">上面这句话说于1979年，三十多年过去了，通过打印语句调试的方法依然是开发者群体中最流行的调试方法，经久不衰，可见必有很大的优势。</p>
+<p class="ziti">通过输出日志来调试，最大的优势就是简单易行，不需要熟悉任何一种Debugger的用法，只要在代码中添加一些输出语句就行了，而且添加语句之后，可以反复执行看结果，和Debugger的能力也不相上下。</p>
+<p class="ziti">在使用Debugger时，作为开发者我们最关注的无外乎两样东西。</p>
+<p class="ziti">第一关注的是程序运行过程中的“状态”，代码出了bug，也多是因为数据产生了预料不到的偏差，代码才表现得不一样。在Debugger中，当程序停止在某条语句的时候，可以很直观地观察到当前状态。</p>
+<p class="ziti">第二关注的是代码的执行走向，在条件语句中，是向左走还是向向右走，在循环语句中，循环体执行多少次。在Debugger中，只要执行到断点，就可以用Step命令来操纵执行的节奏，从而跟踪代码的走向。</p>
+<p class="ziti">现在我们知道在RxJS中Debugger基本派不上什么用场，那首先想到的就只能用“打log”的方法来解决问题。</p>
+<p class="ziti">如果巧妙合理地应用“打log”的技巧，实际上完全也可以达到Debugger一样的目的。</p>
+<p class="ziti">在JavaScript中，最常用的输出日志（log）函数就是console.log，目前大部分浏览器都支持console以及console上的log函数，有的浏览器还支持console上其他的输出log函数，比如console.error，为了简单起见，这里只使用console.log。</p>
+<p class="ziti">在日志中，可以输出当前可以访问到的变量的值，这就跟踪了程序的状态。当然，输出日志不光是一门技术也是一门艺术，如果只是单纯把变量输出，那很多日志混杂在一起根本无法区分，就失去了日志的意义，比如下面这样的代码：</p>
+<hr/>
+<pre class="ziti1">sourceA$.subscribe(value =&gt; console.log(value));
+sourceB$.subscribe(value =&gt; console.log(value));</pre>
+<hr/>
+<p class="ziti">在上面的代码中，sourceA$和sourceB$代表的数据流引发的log，就是把参数value输出，这样两个数据流的结果混杂在一起，根本看不出哪个日志是哪个数据流产生的，这样的日志并不能给予调试多少帮助。</p>
+<p class="ziti">将代码改进一点，自然是要在日志中加入特定的标示，下面是改进后的代码。</p>
+<hr/>
+<pre class="ziti1">sourceA$.subscribe(value =&gt; console.log('interval value: ', value));
+sourceB$.subscribe(value =&gt; console.log('timer value: ', value));</pre>
+<hr/>
+<p class="ziti">执行到某个输出日志的语句的时候，代表指令会执行这条输出日志所在的执行路径，所以根据日志也可以跟踪代码的执行走向，下面是一段示例代码：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.scan((result, value) =&gt; {
+  console.log(`in scan: result = ${result} ; value = ${value}`;
+  return result + value;
+});
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，通过scan这个操作符，从上游数据流source$产生出一个新的数据流赋值给result$。</p>
+<p class="ziti">我们知道，RxJS中数据管道是“懒执行”的，仅仅创造了一个result$并不会让管道中的逻辑立刻开始执行，只有当result$被subscribe的时候才有可能执行，但是result$什么时候被subscribe呢？输出日志会告诉我们。</p>
+<p class="ziti">当result$被subscribe之后，到底会有多少数据经过scan呢？这些数据是什么值呢？输出的日志可以展示这些信息。</p>
+<p class="ziti">从上面的例子可以看出，只要在代码中特定位置插入输出日志的语句，通过阅读代码执行产生的日志，就能够帮助我们调试代码。</p>
+<p class="ziti">不过，上面展示的只是最基本的输出日志做法，真实的开发中不可能用这么幼稚的输出日志方法，接下来接受更加深入的技巧。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00176.html#ch1">[1]</a>
+ 参见Unix for Beginners (1979) https://en.wikiquote.org/wiki/Brian_Kernighan。</p>
+</body>
+</html>

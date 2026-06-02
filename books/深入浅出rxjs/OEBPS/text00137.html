@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">9.3.2　retry</h3>
+<p class="ziti">上面介绍的catch主要用于“恢复”，但是这种恢复只是往数据流管道里塞另外的数据，让数据流得以继续，很多时候，这样还是不够的，毕竟塞进去的数据并不是真正预期的数据，这时候，如果重来一次有可能获得正确结果，就应该用上“重试”，retry就是用来重试的操作符之一。</p>
+<p class="ziti">要注意，只有对于再来一次有可能成功的操作，才有重试的必要，比如访问服务器API的操作，失败的原因是服务器崩溃，那就可以重试；对于必定会失败的操作，比如上面代码例子中使用throwOnUnluckyNumber的error$对象，无论重试多少次都是失败，就没有必要重试了。</p>
+<p class="ziti">不过，在本书的示例代码中，为了简单清晰，依然会重试必定会失败的操作，读者只需要注意在实际开发中，要根据具体场景选择是否要重试。</p>
+<p class="ziti">retry这个操作符的作用就是让上游的Observable重新走一遍，达到重试的目的。</p>
+<p class="ziti">这个操作符接受一个数值参数number，number用于指定重试的次数，如果number为负数或者没有number参数，那么就是无限次retry，直到上游不再抛出错误异常为止。</p>
+<p class="ziti">通常，retry调用应该有一个正整数的参数，也就是要指定有限次数的重试，否则，很可能陷入无限循环，毕竟被重试的上游Observable只是“有可能重试成功”，意思就是也有可能重试不成功，如果真的运气不好就是重试不成功，也真没有必要一直重试下去。</p>
+<p class="ziti">比如，访问某个服务器API失败，考虑到服务器可能会偶尔不稳定，重试几次是一个很好的策略，但是，如果服务器一直返回错误但客户端程序一直重试，那就是徒耗资源，而且会给用户不好的体验。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在实际应用开发中，因为外部资源导致的异常错误适合重试，如果是代码原因导致的异常错误，应该是找到代码的bug去修复代码，重试是没有意义的。</p>
+<p class="ziti">正因为retry通常要限定重试次数，所以retry通常也要和catch配合使用，重试只是增加获得成功结果的概率，当重试依然没有结果的时候，还是要catch上场做“恢复”的工作。</p>
+<p class="ziti">配合使用retry和catch的代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 5);
+const error$ = source$.map(throwOnUnluckyNumber);
+const retry$ = error$.retry(2);
+const catch$ = retry$.catch(err =&gt; Observable.of(8));</pre>
+<hr/>
+<p class="ziti">还是利用throwOnUnlucky来产生错误，retry的参数是3，也就是在第一次失败之后再重试2次，但是在这段代码中重试肯定是会失败的，第二次失败之后，retry就不产生作用了，任由错误向下游传递，下游是catch，捕获错误，向下游传递数据8。</p>
+<p class="ziti">最终catch$吐出的数据序列是这样的：</p>
+<hr/>
+<pre class="ziti1">1 2 3 1 2 3 1 2 3 8</pre>
+<hr/>
+<p class="ziti">前一个1、2、3序列是第一次运行，第二个和第三个1、2、3序列是两次重试的结果，最后一个8就是catch的作用。</p>
+<p class="ziti">前面已经介绍过，Promise不能重试，这是Promise的一个劣势，但是RxJS的Observable可以重试，所以能够更好地处理现实场景。</p>
+<p class="ziti">但是，retry也有一个问题，当上游传下错误时，retry会立即开始重试，而现实中这种处理方式未必合理，还是以访问服务器API为例，服务器返回一个错误，立刻重新访问这个API，很可能还是返回一个错误，因为我们都知道服务器要是因为崩溃出问题，不大能瞬间恢复正常，最好的策略是稍微等待一段时间之后再重新尝试。</p>
+<p class="ziti">显然，retry这个操作符还不满足延时重试的要求，所以，还需要另外一个操作符，那就是retryWhen。</p>
+</body>
+</html>

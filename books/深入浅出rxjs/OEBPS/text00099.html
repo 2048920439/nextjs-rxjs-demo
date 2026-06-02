@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">7.2.4　根据数据序列做回压控制</h3>
+<p class="ziti">前面介绍的回压控制操作符，带Time后缀的操作符根据时间来选取数据并抛弃一些上游数据，可是，很多实际场景下，时间并不是唯一的因素；不带Time后缀的throttle、debounce和audit可以根据数据来决定回压控制的节奏，但是，这三个操作符的函数参数只有一个数据参数，无法综合考虑多个上游数据。所以，上面提到的操作符都无法解决一个很实际的应用场景问题：不希望处理重复的上游数据。</p>
+<p class="ziti">比如，上游的数据序列是0、0、1、1、1、1、2、2、2、2，某些场景下，我们只需要处理0、1、2分别一次就行，当某个数据连续出现的时候，我们没必要处理，而且这种数据序列的出现和时间又没有关系，所以前面介绍的回压控制操作符都帮不上忙，这时候就需要用上名字里包含distinct的操作符了。</p>
+<p class="ziti">
+<span class="yanse">1.distinct</span>
+</p>
+<p class="ziti">distinct的含义就是“不同”，RxJS中这个操作符的作用就是只返回从没出现过的数据，上游同样的数据只有第一次产生时会传给下游，其余的都被舍弃掉了。</p>
+<p class="ziti">下面是使用distinct的示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/distinct';
+
+const source$ = Observable.of(0, 1, 1, 2, 0, 0, 1, 3, 3);
+const distinct$ = source$.distinct();
+
+distinct$.subscribe(
+  console.log,
+  null,
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">这段代码产生的输出如下：</p>
+<hr/>
+<pre class="ziti1">0
+1
+2
+3
+complete
+</pre>
+<hr/>
+<p class="ziti">虽然0、1、3都在source$中出现了多次，但是在下游中都只出现了一次。</p>
+<p class="ziti">distinct判断两个数据是否相同就是用JavaScript的===操作符，对于普通的数值和字符串数据，distinct默认的比较方式足够，但是对于普通JavaScript对象，===操作符就没有什么意义了，所以，distinct提供了一个函数参数keySelector，用于定制distinct应该比对什么样的属性。</p>
+<p class="p6">提示</p>
+<p class="ziti6">RxJS中曾经有一个名为distinctKey的操作符，从v5.5.0开始被删除掉了，利用distinct就可以实现distinctKey的功能。</p>
+<p class="ziti">假设上游的输入像这样定义：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(
+  {name: 'RxJS', version: 'v4'},
+  {name: 'React', version: 'v15'},
+  {name: 'React', version: 'v16'},
+  {name: 'RxJS', version: 'v5'}
+);
+</pre>
+<hr/>
+<p class="ziti">而我们认为数据中只要name字段相同就是相同数据，那么就可以这么使用distinct：</p>
+<hr/>
+<pre class="ziti1">const distinct$ = source$.distinct(x =&gt; x.name);
+</pre>
+<hr/>
+<p class="ziti">这样一来，最终distinct$产生的数据就只会有下面两个对象：</p>
+<hr/>
+<pre class="ziti1">{ name: 'RxJS', version: 'v4' }
+{ name: 'React', version: 'v15' }
+</pre>
+<hr/>
+<p class="ziti">distinct还有一个潜在的问题需要注意，如果上游产生的不同数据很多，那么可能会造成内存泄露。可以想象一下distinct的实现方式，它肯定先订阅上游的Observable对象，然后自己维护一个“唯一数据集合”记录上游推送下来的所有唯一的数据，每当上游产生一个数据，distinct就查看一下这个数据是否在“唯一数据集合”中，如果存在，那就直接舍弃掉；如果不存在，就把这个数据添加到“唯一数据集合”中，然后把这个数据传给下游。这样一种实现方式下，如果上游不同的数据有多少，那么distinct需要维护的“唯一数据集合”也就有多大，如果上游Observable对象不同的数据很多而且总不完结，那么distinct就要持续维持庞大的数据集合，这就会造成不必要的数据压力。</p>
+<p class="ziti">为了克服这个缺点，distinct还提供第二个可选的参数flush，第二个参数可以是一个Observable对象，每当这个Observable对象产生数据时，distinct就清空“唯一数据集合”，一切重来，这样就避免了内存泄露。</p>
+<p class="ziti">下面是使用distinct第二个可选参数的示例代码：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.interval(100).map(x =&gt; x % 1000);
+const distinct$ = source$.distinct(null, Observable.interval(500));</pre>
+<hr/>
+<p class="ziti">source$中会产生1000个唯一的数据，distinct的第二个参数每500毫秒就会产生一个数据，这个数据是什么值不重要，重要的是它会清空distinct以前积压的所有唯一数据。</p>
+<p class="ziti">使用了distinct的第二个参数，distinct表现出来的行为就会和以前不一样，传递给下游的数据并不是在整个上游所有数据中唯一的，而只是在一段时间范围内是唯一的，是否使用这个参数要根据实际应用需求来判断。</p>
+<p class="ziti">
+<span class="yanse">2.distinctUntilChanged</span>
+</p>
+<p class="ziti">distinctUntilChanged的工作和distinct类似，也是淘汰掉重复的数据，但distinct-UntilChanged拿到一个数据不是和一个“唯一数据集合”比较，而是直接和上一个数据比较，也就是说，这个操作符要保存上游产生的上一个数据就足够，当然，也就没有了distinct潜在的内存泄露问题。</p>
+<p class="ziti">修改上面distinct的示例代码，使用distinctUntilChanged，如下所示：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(0, 1, 1, 2, 0, 0, 1, 3, 3);
+const distinct$ = source$.distinctUntilChanged();</pre>
+<hr/>
+<p class="ziti">产生的输出结果如下：</p>
+<hr/>
+<pre class="ziti1">0
+1
+2
+0
+1
+3
+complete</pre>
+<hr/>
+<p class="ziti">可以看到，结果中出现了重复数据，比如1，出现了两次，但是在上游连续出现1的部分，都只有一个数据1进入了下游，出现了两处1，是因为这两处1之间有其他数据产生而已。</p>
+<p class="ziti">对于数据是普通对象的情景，distinctUntilChanged提供了一个可选的参数用来定制比较两个对象是否相等的逻辑，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(
+  {name: 'RxJS', version: 'v4'},
+  {name: 'React', version: 'v15'},
+  {name: 'React', version: 'v16'},
+  {name: 'RxJS', version: 'v5'}
+);
+const compare = (a, b) =&gt; a.name === b.name;
+const distinct$ = source$.distinctUntilChanged(compare);
+</pre>
+<hr/>
+<p class="ziti">其中，最终distinct$会包含source$中的所有数据，因为两个name为RxJS的数据并不连续，所以都会进入下游。</p>
+<p class="ziti">有意思的是，distinct的可选参数是keySelector，keySelector接受一个参数，返回一个能够确定这个参数唯一性的值；distinctUntilChanged的可选参数是compare，compare接受两个参数，返回bool类型结果。这两个操作符其实可以算是兄弟，但是对于定制数据比较方法的函数参数定义却不同，应该说是RxJS设计的一个失误，完全应该保持一致的方法。</p>
+<p class="ziti">
+<span class="yanse">3.distinctUntilKeyChanged</span>
+</p>
+<p class="ziti">RxJS还提供一个distinctUntilKeyChanged，这个操作符可以认为distinctUntil-Changed的一个简化写法，直接根据数据的某些字段来进行比较。</p>
+<p class="ziti">比如，上面使用distinctUntilChanged的代码可以这样用distinctUntilKeyChanged实现：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(
+  {name: 'RxJS', version: 'v4'},
+  {name: 'React', version: 'v15'},
+  {name: 'React', version: 'v16'},
+  {name: 'RxJS', version: 'v5'}
+);
+const distinct$ = source$.distinctUntilKeyChanged('name');
+</pre>
+<hr/>
+<p class="ziti">这个操作符只能指定一个用来比较的字段，如果想要比较两个数据字段，还是只能够利用distinctUntilChanged加上compare参数。</p>
+<p class="ziti">distinctUntilKeyChanged并没有增加什么必不可少的功能，既然RxJS能够去掉很鸡肋的distinctKey，其实也完全可以去掉这个distinctUntilKeyChanged。</p>
+</body>
+</html>

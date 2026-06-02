@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.3.3　makeHot操作符</h3>
+<p class="ziti">现在我们知道了Subject可以实现多播，但是可惜Subject并不是一个操作符，所以无法链式调用，不过，可以创造一个新的操作符来达到链式调用的效果。</p>
+<p class="ziti">新创建的操作符可以把上游的Cold Observable转化成Hot Observable，所以命名为makeHot，代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.makeHot = function () {
+  const cold$ = this;
+  const subject = new Subject();
+  cold$.subscribe(subject);
+  return subject;
+}
+</pre>
+<hr/>
+<p class="ziti">有了makeHot之后，就可以在代码中通过链式调用的方法直接产生一个Hot Observable了，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const hotTick$ = Observable.interval(1000).take(3).makeHot();
+
+hotTick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  hotTick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 1500);
+</pre>
+<hr/>
+<p class="ziti">makeHot返回的是一个Subject对象，这其实留下了一点漏洞，拿到makeHot返回的结果hotTick$，可以直接调用hotTick$的next、error或者complete方法来影响下游，比如像下面这样：</p>
+<hr/>
+<pre class="ziti1">const hotTick$ = Observable.interval(1000).take(3).makeHot();
+hotTick$.complete();
+//下面的Observer不会收到任何消息
+hotTick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+</pre>
+<hr/>
+<p class="ziti">这样一来，下游的Observer收到的信息并不完全是由hotTick$的上游Cold Observable产生的，对应用而言可能产生意想不到的结果。</p>
+<p class="ziti">如果想彻底杜绝这种可能性，可以对makeHot进行改进，让它返回的是一个纯粹的Observable对象，代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.makeHot = function () {
+  const cold$ = this;
+  const subject = new Subject();
+  cold$.subscribe(subject);
+  return Observable.create((observer) =&gt; subject.subscribe(observer));
+}
+</pre>
+<hr/>
+<p class="ziti">在上面改进的makeHot实现中，makeHot不是直接返回Subject对象，而是返回利用Observable.create产生的一个新的Observable对象，当然，所做的事情只是把所有消息从Subject对象转手给Observer，但是这样就避免了Subject暴露给外部。</p>
+<p class="ziti">在这里我们介绍makeHot是为了让大家体会利用Subject构建多播操作符的原理，实际项目中，我们不需要使用自己定制的makeHot，因为RxJS已经提供了一套操作符来支持多播，接下来的章节会介绍这些操作符，不过，这些操作符内部其实利用的都是Subject。</p>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">9.3.1　catch</h3>
+<p class="ziti">上面说过，在RxJS数据流中产生的错误会沿着管道流动，因为大部分操作符都会忽略错误，直接转手给下游，一直传递给Observer，但是catch这种操作符比较特殊，它会在管道中捕获上游传递过来的错误。</p>
+<p class="ziti">为了演示catch的功能，先定义一个可以产生错误异常的函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">const throwOnUnluckyNumber = value =&gt; {
+  if (value === 4) {
+    throw new Error('unlucky number 4');
+  }
+  return value;
+};
+</pre>
+<hr/>
+<p class="ziti">上面定义的throwOnUnluckNumber函数只做一件很简单的事情，比如有些人认为4的谐音不吉利，所以当输入参数为4的时候，就抛出一个Error对象，对于任何其他参数，都直接返回给调用者。</p>
+<p class="ziti">然后，我们在RxJS中演示catch如何捕获异常，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/range';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+
+const source$ = Observable.range(1, 5);
+const error$ = source$.map(throwOnUnluckyNumber)
+const catch$ = error$.catch((err, caught$) =&gt; Observable.of(8));
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，source$产生一系列递增正整数，这些正整数经过throwOn-UnluckyNumber之后，其中的正整数4会引发错误，所以error$会在吐出1、2、3之后就吐出一个Error对象。</p>
+<p class="ziti">如果让一个Observer直接去订阅这个error$，最后这个Observer的error函数会被调用，但是，我们不想因为这点事劳烦Observer，所以又创建了catch$，通过在error$的下游再增加一个catch来捕获错误。</p>
+<p class="ziti">catch这个操作符接受一个函数作为参数，这个函数一般命名为selector，它有两个参数，第一个参数是error，也就是被捕获的错误，第二个参数caught$，代表上游紧邻的那个Observable对象，在上面的例子中，caught$应用的就是变量error$。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在官方文档中，selector参数的第二个参数被命名为caught，但是，它实际上是一个Observable对象，在本书中为了保持命名一致，将第二个参数命名为caught$。</p>
+<p class="ziti">selector函数返回一个Observable对象，当catch捕获上游传来的错误时，调用参数selector这个函数，返回的Observable中吐出的数据会被当做“恢复”现场用的数据传递给下游。</p>
+<p class="ziti">在上面的例子中，selector函数是这样定义的，代码如下：</p>
+<hr/>
+<pre class="ziti1">(err, caught$) =&gt; Observable.of(8)</pre>
+<hr/>
+<p class="ziti">两个参数都没有派上用场，直接返回一个只有一个数据8的Observable对象，因为我们有人认为，8是一个吉利的数字，用它来代替不吉利的4再合适不过。</p>
+<p class="ziti">所以，source$会吐出下面的正整数序列。</p>
+<hr/>
+<pre class="ziti1">1 2 3 4 5</pre>
+<hr/>
+<p class="ziti">error$会在source$吐出4的时候抛出错误，但最后catch$不会往下游扔错误，而是吐出以下序列的正整数：</p>
+<hr/>
+<pre class="ziti1">1 2 3 8</pre>
+<hr/>
+<p class="ziti">原本出现不吉利数字4的位置，被catch$用8来替换，但是因为发生了错误，正常的序列被打断，原本source$应该吐出的5不会有机会走到catch$的下游。</p>
+<p class="ziti">值得注意的是，因为selector返回的是一个Observable对象而不是一个数据，所以，实际上在“恢复”过程中可以产生多个数据，将上面的代码改成这样：</p>
+<hr/>
+<pre class="ziti1">const catch$ = error$.catch((err, caught$) =&gt; Observable.of(8).repeat(8));</pre>
+<hr/>
+<p class="ziti">上面的selector参数函数返回的Observable对象是重复8次8，最后catch$吐出的正整数序列就是这样：</p>
+<hr/>
+<pre class="ziti1">1 2 3 8 8 8 8 8 8 8 8</pre>
+<hr/>
+<p class="ziti">对于selector的第一个参数err，就和try/catch中的错误对象一样，可以用来判断错误类型，也可以用来记录错误日志。</p>
+<p class="ziti">selector的第二个参数caught$比较有意思，因为它代表的是上游的Observable对象，如果selector就返回caught$的话，相当于让上游Observable重新走一遍，事实上，catch这个操作符其实不光有“恢复”的功能，也有“重试”的功能，所以，我们不敢说catch只能做“恢复”工作，只能说它主要是做“恢复”工作的。</p>
+<p class="ziti">使用catch来做“重试”的代码如下：</p>
+<hr/>
+<pre class="ziti1">const catch$ = error$.catch((err, caught$) =&gt; caught$).take(10);</pre>
+<hr/>
+<p class="ziti">在上面的代码中，selector参数函数返回了caught$，因为caught$代表的就是上游Observable对象error$，所以就是让error$重来一遍，当然，error$依然会抛出错误，所以重试失败，于是错误又被捕获，又重来……这其实就是一个死循环，所以，在catch之后添加了一个take，只拿10个吐出的数据，这样就避免了catch$无法结束的问题。</p>
+<p class="ziti">最后，catch$吐出的正整数序列是这样：</p>
+<hr/>
+<pre class="ziti1">1 2 3 1 2 3 1 2 3 1</pre>
+<hr/>
+<p class="ziti">重试了三次，第三次只有机会吐出1，因为take产生了效果，只需要拿10个吐出的数据。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在RxJS v4中，catch是一个静态操作符，使用方式也和v5的完全不一样，所以v4和v5在异常处理上是完全不兼容的。</p>
+</body>
+</html>

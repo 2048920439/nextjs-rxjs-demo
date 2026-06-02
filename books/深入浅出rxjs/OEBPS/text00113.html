@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.3.2　windowCount和bufferCount</h3>
+<p class="ziti">RxJS提供了根据时间参数来界定区间的windowTime和bufferTime，也很贴心地提供了根据数据个数来界定区间的windowCount和bufferCount。</p>
+<p class="ziti">使用windowCount的示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.timer(0, 100);
+const result$ = source$.windowCount(4);</pre>
+<hr/>
+<p class="ziti">windowCount和windowTimer一样产生高阶Observable对象，弹珠图如图8-6所示。</p>
+<div class="pic"><img alt="" src="Image00078.jpg" />
+</div>
+<p class="middle-img">图8-6　windowCount的弹珠图</p>
+<p class="ziti">windowCount还支持可选的第二个参数startWindowEvery，如果不使用第二个参数，那么所有的时间区间没有重叠部分；如果使用了第二个参数，那么第一个参数依然是时间区间的长度，但是每间隔第二个参数startWindowEvery的毫秒数，就会新开一个时间区间。</p>
+<p class="ziti">下面是使用第二个参数startWindowEvery的示例代码：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.windowCount(4, 5);</pre>
+<hr/>
+<p class="ziti">我们故意让第二个参数比第一个参数更大，这样就会展示丢弃部分上游的数据，弹珠图如图8-7所示。</p>
+<div class="pic"><img alt="" src="Image00079.jpg" />
+</div>
+<p class="middle-img">图8-7　第二个参数大于第一个参数的windowCount弹珠图</p>
+<p class="ziti">对于bufferCount，和windowCount一样，区别只是传给下游的是缓存数据组成的数组。</p>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.3.2　from：可把一切转化为Observable</h3>
+<p class="ziti">from可能是创建类操作符中包容性最强的一个了，因为它接受的参数只要“像”Observable就行，然后根据参数中的数据产生一个真正的Observable对象。</p>
+<p class="ziti">“像”Observable的对象很多，一个数组就像Observable，一个不是数组但是“像”数组的对象也算，一个字符串也很像Observable，一个JavaScript中的generator也很像Observable，一个Promise对象也很像，所以，from可以把任何对象都转化为Observable对象。</p>
+<p class="ziti">利用from来转化数组，实例代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/from';
+const source$ = Observable.from([1, 2, 3]);</pre>
+<hr/>
+<p class="ziti">其中，source$会产生3个数据，也就是from输入数组参数的3个元素：1、2、3。这很好了解，一个数组本身就代表一个数据序列，转换成Observable是很自然的事情。</p>
+<p class="ziti">神奇的是，一个对象即使不是数组对象，但只要表现得像是一个数组，一样可以被from转化，下面是示例代码：</p>
+<hr/>
+<pre class="ziti1">function toObservable() {
+  return Observable.from(arguments);
+}
+
+const source$ = toObservable(1, 2, 3);
+</pre>
+<hr/>
+<p class="ziti">在JavaScript中，任何一个函数体中都可以通过arguments访问所有的调用参数，arguments其实并不是一个数组，但是它也支持length属性，也支持根据下标访问某个具体的参数，所以表现得“像”是一个数组，一样能够被from处理。</p>
+<p class="ziti">在上面的代码中，调用toObservable的三个参数都会成为返回的Observable对象吐出的数据。</p>
+<p class="ziti">在ES6的语法中，有一个generator的概念，一个generator表面上看像是一个函数，但是通过yield语句可以在“函数”结束之前就返回阶段性结果，并把控制权交还给调用者，是否继续执行这个“函数”由调用者决定。generator实际上实现了一种Iterable的类型，这种类型也能够被from消化，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">function * generateNumber(max) {
+  for (let i=1; i&lt;=max; ++i) {
+    yield i;
+  }
+}
+
+const source$ = Observable.from(generateNumber(3));
+</pre>
+<hr/>
+<p class="ziti">在上面的例子中，generateNumber就是一个generator，如果迭代读取generate-Number（3）的结果，就会得到1、2、3，from就是利用这一点，把generator的结果塞给了产生的Observable对象。</p>
+<p class="ziti">from还可以接受一个字符串作为参数，不过结果可能有点出乎你的意料，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.from('abc');
+</pre>
+<hr/>
+<p class="ziti">直观上，你可能会觉得最后source$包含一个数据，就是字符串abc，事实上，并不是这样，source$包含三个数据，依次是字符a、字符b和字符c，这是因为在from的眼里，把输入参数都当做一个Iterable来看待，字符串abc在from看来就和数组['a'，'b'，'c']没有区别。</p>
+<p class="ziti">既然from可以把一切长得像Observable的物体都变成Observable，对于真正的Observable自然也不会放过，实例代码如下：</p>
+<hr/>
+<pre class="ziti1">const another$ = Observable.of(1, 2, 3);
+const source$ = Observable.from(another$);
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，source$的数据流和another$完全一样，当然，这没有什么意义，既然我们有了another$这个Observable，为什么还要转化为source$呢。</p>
+<p class="ziti">最后，from还可以接受Promise对象，行为和fromPromise完全一样，接下来，就来介绍fromPromise。</p>
+</body>
+</html>

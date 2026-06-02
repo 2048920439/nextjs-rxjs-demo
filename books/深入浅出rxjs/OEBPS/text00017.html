@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">2.2.2　迭代器模式</h3>
+<p class="ziti">迭代者（Iterator，也称为“迭代器”）指的是能够遍历一个数据集合的对象，因为数据集合的实现方式很多，可以是一个数组，也可以是一个树形结构，也可以是一个单向链表……迭代器的作用就是提供一个通用的接口，让使用者完全不用关心这个数据集合的具体实现方式。</p>
+<p class="ziti">迭代器另一个容易理解的名字叫游标（cursor），就像是一个移动的指针一样，从集合中一个元素移到另一个元素，完成对整个集合的遍历。</p>
+<p class="ziti">设计模式的实现方式很多，但是不管对应的函数如何命名，通常都应该包含这样几个函数：</p>
+<p class="ziti6">·getCurrent，获取当前被游标所指向的元素。</p>
+<p class="ziti6">·moveToNext，将游标移动到下一个元素，调用这个函数之后，getCurrent获得的元素就会不同。</p>
+<p class="ziti6">·isDone，判断是否已经遍历完所有的元素。</p>
+<p class="ziti">使用这套函数来遍历一个集合的代码如下：</p>
+<hr/>
+<pre class="ziti1">const iterator = getIterator();
+while (iterator.isDone()) {
+  console.log(iterator.getCurrent());
+  iterator. moveToNext ();
+}
+</pre>
+<hr/>
+<p class="ziti">然而，在使用RxJS的过程中绝对看不到类似这样的代码，实际上，你都看不到上面所说的三个函数，因为，上面所说的是“拉”式的迭代器实现，而RxJS实现的是“推”式的迭代器实现。</p>
+<p class="p6">提示</p>
+<p class="ziti6">在编程的世界中，所谓“拉”（pull）或者“推”（push），都是从数据消费者角度的描述，比如，在网页应用中，如果是网页主动通过AJAX请求从服务器获取数据，这是“拉”，如果网页和服务器建立了websocket通道，然后，不需要网页主动请求，服务器都可以通过websocket通道推送数据到网页中，这是“推”。</p>
+<p class="ziti">在RxJS中，作为迭代器的使用者，并不需要主动去从Observable中“拉”数据，而是只要subscribe上Observable对象之后，自然就能够收到消息的推送，这就是观察者模式和迭代器两种模式结合的强大之处。</p>
+</body>
+</html>

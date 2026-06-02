@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">7.1.2　first</h3>
+<p class="ziti">在第6章我们介绍过find和findIndex，first的功能和这两个操作符很相似，但是也有明显的区别。</p>
+<p class="ziti">主要区别是，first可以没有判定函数参数，但find和findIndex必须要有判定函数作为参数。当使用first不给任何判定函数时，就相当于找上游Observable吐出的第一个数据，比如下面的代码：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/first';
+
+const source$ = Observable.of(3, 1, 4, 1, 5, 9);
+const first$ = source$.first();</pre>
+<hr/>
+<p class="ziti">first$吐出数据3之后就完结，因为3就是上游source$吐出的第一个数据。</p>
+<p class="ziti">如果修改上面的代码，给first一个判定函数参数，得到的结果就会不一样，比如作如下修改：</p>
+<hr/>
+<pre class="ziti1">const first$ = source$.first(x =&gt; x % 2 === 0);</pre>
+<hr/>
+<p class="ziti">这样修改之后，first$就会吐出4之后完结，因为source$中第一个偶数就是4。</p>
+<p class="ziti">在介绍find和findIndex的时候，我们提出一个问题，如果想要获得第一个满足判定条件的值和序号怎么办？</p>
+<p class="ziti">当时我们使用了zip这个操作符来合并find和findIndex的结果，实际上，只使用first这一个操作符就能完成这个功能，方法就是借助first的第二个参数，first的第二个参数是可选参数，如果使用，发挥的就是“结果选择器”的作用。</p>
+<p class="ziti">比如，我们要找上游Observable吐出的第一个偶数，还有这第一个偶数在数据流中的序号，使用first的代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/first';
+
+const source$ = Observable.of(3, 1, 4, 1, 5, 9);
+const first$ = source$.first(
+  x =&gt; x % 2 === 0,
+  (value, index) =&gt; [value, index]
+);
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，first的第二个参数就是一个“结果选择器”函数，把代表满足条件的值和序号合并为一个数组，传递给下游，最后吐出的就是[4，2]这个数组。</p>
+<p class="ziti">first和find/findIndex对于没找到满足判定条件的情况处理也有区别，如果first的上游Observable到完结时依然没有满足判定条件的数据，那么first会向下游抛出一个error；而find与findIndex没有匹配的数据就会吐出一个undefined。</p>
+<p class="ziti">比如，修改上面的first使用代码如下：</p>
+<hr/>
+<pre class="ziti1">const first$ = source$.first(x =&gt; x &lt; 0);</pre>
+<hr/>
+<p class="ziti">因为source$没有小于0的数据，所以first找不到满足判定条件的值，当source$完结时，first$就会向下游传一个EmptyError，如下所示：</p>
+<hr/>
+<pre class="ziti1">EmptyError: no elements in sequence</pre>
+<hr/>
+<p class="ziti">当然，很多情况下抛出error不是我们想要的结果，抛出error意味着发生了无法处理的情况，但是，事实上很多情况下，上游Observable没有我们想要的数据，向下游传递一个“默认值”可能是更合理的方法。</p>
+<p class="ziti">比如，当上游Observable没有小于0的数时，我们就向下游传递一个-1，代码如下：</p>
+<hr/>
+<pre class="ziti1">const first$ = source$.first(
+   x =&gt; x &lt; 0,
+   f =&gt; f,
+   -1
+);</pre>
+<hr/>
+<p class="ziti">第三个参数-1，就是当source$没有满足判定条件时会传给下游的数据。不过，要使用第三个参数，就必须要使用第二个参数，如果根本不需要对选中的数据进行转化，那就像上面代码一样，给一个把传入数据原样返回的函数就行了。</p>
+<p class="ziti">从上面first和find/findIndex的比较可以看出来，first具备的功能更加强大，但一些简单场景还是可以使用find和findIndex。</p>
+</body>
+</html>

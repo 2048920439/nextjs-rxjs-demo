@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.5.1　publishLast和AsyncSubject</h3>
+<p class="ziti">publishLast多播的是上游的最后（Last）一个数据，它的实现方式如下面代码所示：</p>
+<hr/>
+<pre class="ziti1">function publishLast() {
+  return multicast.call(this, new AsyncSubject ());
+}
+</pre>
+<hr/>
+<p class="ziti">使用Subject的一个子类AsyncSubject，这个AsyncSubject虽然扮演的也是一个“中间人”角色，但是却并不会把上游Cold Observable的所有数据都转手给下游的Observer，它会记录最后一个数据，当上游Cold Observable完结的时候，才把最后一个数据传递给Observer。</p>
+<p class="ziti">也就是说，使用了AsyncSubject的publishLast产生的ConnectableObservable对象，最多只会包含一个数据，也就是上游吐出来的最后一个数据。</p>
+<p class="ziti">同时，AsyncSubject对象表现得“可以重用”，即使上游Cold Observable完结时候调用了AsyncSubject对象的complete方法，之后添加的Observer依然可以从AsyncSubject中获得数据，而且是立刻获得数据，当然，这立刻获得数据就是上游吐出的最后一个数据。</p>
+<p class="ziti">无论Observer是什么时候添加的，它们获得的数据都是一样的，所以看起来AsyncSubject是“可重用的”。</p>
+<p class="ziti">下面的代码演示了publishLast的功能特性：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/publishLast';
+import 'rxjs/add/operator/take';
+
+const tick$ = Observable.interval(1000).take(3);
+const sharedTick$ = tick$.publishLast().refCount();
+
+sharedTick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  sharedTick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">sharedTick$由publishLast产生，因为publishLast返回的是ConnectableObservable对象，所以可以链式调用refCount。</p>
+<p class="ziti">tick$总共会吐出0、1、2总共三个数据，但是publishLast只关心最后一个。</p>
+<p class="ziti">上面的代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 2
+observer 2: 2
+</pre>
+<hr/>
+<p class="ziti">1号Observer在4秒的时候获得publishLast所产生的Observable吐出的第一个也是最后一个数据2。</p>
+<p class="ziti">2号Observer在5秒钟时添加，它会立刻获得第一个也是最后一个数据2。</p>
+</body>
+</html>

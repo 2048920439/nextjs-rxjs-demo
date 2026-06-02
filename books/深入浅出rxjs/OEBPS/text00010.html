@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">1.5　RxJS是否是函数响应式编程</h2>
+<p class="ziti">我们已经看到，RxJS兼具函数式和响应式（Reactive）两种编程方式的特点，那么很自然，我们是不是可以说RxJS是“函数响应式编程”呢？似乎完全没有问题，如果我们认为Fucntional加上Reactive就是Functional Reactive Programming的话，Functional Reactive Programming可以简称为FRP，RxJS属于FRP。</p>
+<p class="ziti">但是，“RxJS就是FRP”这种说法会被否定，因为FRP在20世纪就已经作为一项编程技术获得了严格的数学定义<sup>
+<a id="ch1" href="text00010.html#ch1_back">[1]</a>
+</sup>
+ <span>，按照FRP发明人之一Conal Elliott的描述</span>
+ <sup>
+<a id="ch2" href="text00010.html#ch2_back">[2]</a>
+</sup>
+ <span>，FRP包含两个重要元素：</span>
+</p>
+<p class="ziti6">·指称性（denotative）</p>
+<p class="ziti6">·临时的连续性（temporally continuous）</p>
+<p class="ziti">如果要解释这两个术语，不得不涉及很多数学原理。在读者睡着之前，还是用简单易懂的语言来说明正统FRP的观点吧。正统FRP认为，一个系统如果能被称为FRP，除了要有Functional和Reactive的特点，还必须要能够支持两个事件可以“同时发生”，这就是指称性的要求。总之，按照正统FRP的说法，你的系统只有Functional和Reactive，不能说自己是FRP。</p>
+<p class="ziti">在业界，这是非常有争议的一个话题：包括RxJS在内的Rx，到底算不算FRP？按照正统FRP的观点，Rx不算，因为Rx不满足指称性的要求，在Rx的所有实现中，都存在一个局限，就是当两个“流”合并的时候，不能按照FRP那样严格处理同时发生的事件，我们在第5章中会详细介绍这个细节。</p>
+<p class="ziti">但是，真的就因为二十多年前FRP这个词被抢先占用，所以之后一个既支持Functional又支持Reactive的系统并不能叫FRP吗？Rx界很多人都对此非常不满，要知道，很多程序员真正接触Functional和Reactive，就是从Rx开始的，作为一个影响力这样大的工具，还不能名正言顺地称自己为FRP，真的是非常憋屈。孔夫子教导我们：“当仁不让于师。”<sup>
+<a id="ch3" href="text00010.html#ch3_back">[3]</a>
+</sup>
+ <span>意思是说，应该做的事，就要积极去做，即使面对前辈，也不要谦让。我尊重前辈们对计算机科学尤其是对FRP的贡献，但是我不认为还要浪费口舌争执Rx是什么地位，所以，我的观点是，Rx就是属于FRP。</span>
+</p>
+<p class="fnote">
+<a id="ch1_back" href="text00010.html#ch1">[1]</a>
+ FRP相关的资源http://conal.net/papers/frp.html。</p>
+<p class="fnote">
+<a id="ch2_back" href="text00010.html#ch2">[2]</a>
+ https://stackoverflow.com/questions/5875929。</p>
+<p class="fnote">
+<a id="ch3_back" href="text00010.html#ch3">[3]</a>
+ 引自《论语·卫灵公》</p>
+</body>
+</html>

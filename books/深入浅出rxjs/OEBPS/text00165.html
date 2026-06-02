@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">11.3.1　单线程的JavaScript</h3>
+<p class="ziti">JavaScript是一个单线程的语言，也就是说，在JavaScript的世界里，可以认为永远只有一个线程来运行所有的JavaScript代码。有的人觉得这是JavaScript的一个局限，导致JavaScript无法开发出“更强大”的功能，实际上，这个“局限”却是JavaScript一个很大的优势。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在某些浏览器中有Web Worker这个功能，一个Web Worker相当于一个新的线程，在具有Web Worker功能的浏览器中，可以把JavaScript的工作分配到多个这样的线程中去做，但是，Web Worker只是某些浏览器的功能，并不是JavaScript这个语言本身的功能，Web Worker访问浏览器资源也受到限制，比如，Web Worker不能直接操作DOM。所以，可以认为Web Worker只能帮助浏览器中的应用分担纯CPU运算的功能。在本书中，我们不考虑Web Worker带来的影响。</p>
+<p class="ziti">不可否认，只支持单线程，在解决某些问题的时候，会觉得受到了限制，但是，我们要知道JavaScript语言的定位，JavaScript自发明之初，就把自己定位成一个应用层开发语言，换句话说，JavaScript是用来直接开发应用的，而不是开发计算机底层的。</p>
+<p class="ziti">如果你要开发一个硬件驱动程序，那应该选择C语言甚至汇编语言；如果你要开发一个操作系统，那使用JavaScript也不是一个明智的选择；但是，如果你要开发一个面向用户的应用，那么JavaScript这样的高级语言就显得更加合适。</p>
+<p class="ziti">特定于线程这件事，不同于很多其他高级语言，JavaScript只支持单线程，这简化了很多场景下应用代码的编写。</p>
+<p class="ziti">举个例子，在应用中同时发出多个请求来访问其他服务的API，API请求的返回结果会被汇总到一个数据中，在JavaScript中这个操作非常简单直白，下面是一段示例代码：</p>
+<hr/>
+<pre class="ziti1">const result = {
+  lastStatus : null,
+  lastResponse : null
+};
+fetch(apiFoo).then(res =&gt; {
+  result.lastResponse = res.json();
+  result.lastStatus = res.status;
+});
+fetch(apiBar).then(res =&gt; {
+  result.lastResponse = res.json();
+  result.lastStatus = res.status;
+});
+</pre>
+<hr/>
+<p class="ziti">上面的JavaScript代码并不是能够运行的完整代码，只是用来展示JavaScript处理这个需求的方式。这段代码利用fetch访问的两个API分别是apiFoo和apiBar，返回的结果记录在result对象中，result上的foo属性是访问apiFoo的结果，result上的bar属性是访问apiBar的结果，另外result上的lastStatus记录的是最后一个API请求的响应状态。</p>
+<p class="ziti">访问apiFoo和访问apiBar都是异步操作，而且返回结果的时间完全无法控制，因为时间不光受本地机器的运行环境影响，还受网络条件和服务器运行环境的影响，虽然先发出了对apiFoo的请求，但是完全有可能apiBar先返回结果，当然也有可能两个API请求同时获得结果。</p>
+<p class="ziti">如果很不巧，真的同时获得两个API的返回结果，那会发生什么情况呢？</p>
+<p class="ziti">假设JavaScript支持多线程，返回结果的处理可以在不同线程上处理，那么就会产生紊乱的情况。</p>
+<p class="ziti">在上面的代码中，第一个线程处理apiFoo的返回结果，在更新完result.lastResponse之后，还没来得及更新result.lastStatus，处理apiBar返回结果的第二个线程被激活，这第二个线程更新完result.lastResponse和result.lastStatus就完成了这一轮的使命，然后，控制权重新回到第一个线程手上，但是这个线程完全不知道刚刚发生了什么，它只是遵照代码指令去更新result.lastStatus。</p>
+<p class="ziti">最终的结果，result.lastResponse是apiBar的结果，result.lastStatus却是apiFoo的返回状态，这就是紊乱的情况，称为竞态（Race Condition）。</p>
+<p class="ziti">当然，上面只是假设JavaScript支持多线程的情况，庆幸的是，在现实中因为JavaScript只支持单线程，所以上面假设的情况绝不会发生，处理apiFoo返回结果的线程和处理apiBar返回结果的线程是同一个线程，如果apiFoo先返回，那这个线程在处理完apiFoo之前是绝不会抽空去处理apiBar的，这样最终的数据状态也绝对是一致的。</p>
+<p class="ziti">对于其他支持多线程的语言，应对上面的场景就麻烦得多，为了保持数据的一致性，就要利用加锁等机制来避免多个线程访问统一数据的冲突情况，如果应用开发者忘了加锁，那就会出问题。最可怕的是，可能大部分情况下没有问题，只在少部分情况下有问题，这反而更危险，因为问题被隐藏起来了，直到关键时刻才狠狠地咬伤你。</p>
+<p class="ziti">我的观点很明确：作为一个应用层开发语言，应该关注于怎么描述应用逻辑，而不应该纠缠于什么线程执行逻辑这种事情，所以，JavaScript只支持单线程绝对是一个好的设计。</p>
+<p class="ziti">当然，你可能不同意我的观点，不过你也不能改变JavaScript中只有一个线程的事实，所以，无论如何都要理解JavaScript如何在只有一个线程的前提下处理异步和并发任务。</p>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.3.1　两面神Subject</h3>
+<p class="ziti">Subject兼具Observable和Observer的性质，就像有两副面孔，可以左右逢源。下面是一个使用Subject的代码例子：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/map';
+
+const subject = new Subject();
+subject.map(x =&gt; x * 2).subscribe(
+  value =&gt; console.log('on data: ' + value),
+  err =&gt; console.log('on error: ' + err.message),
+  () =&gt; console.log('on complete')
+);
+
+subject.next(1);
+subject.next(2);
+subject.next(3);
+subject.complete();
+</pre>
+<hr/>
+<p class="ziti">Subject通过下面的方法导入和创建，可以看到它在rxjs的一级目录下，和Observable是同一级别的地位：</p>
+<hr/>
+<pre class="ziti1">import {Subject} from 'rxjs/Subject';
+
+const subject = new Subject();</pre>
+<hr/>
+<p class="ziti">一个Subject对象是一个Observable，所以可以在后面链式调用任何操作符，也可以调用subscribe来添加Observer。</p>
+<p class="p6">注意</p>
+<p class="ziti6">虽然有习惯把Observable对象的变量名带上$后缀，而且Subject其实也是一种Observable，但是业界并没有习惯把Subject对象的变量名加上$后缀。</p>
+<p class="ziti">一个Subject对象同时也是一个Observer，所以也支持next、error和complete方法，在上面的代码中，我们通过next方法往Subject对象传递1、2、3三个数据，然后通过complete方法完结这个Subject对象。</p>
+<p class="ziti">最后，代码运行结果是下面这样：</p>
+<hr/>
+<pre class="ziti1">on data: 2
+on data: 4
+on data: 6
+on complete</pre>
+<hr/>
+<p class="ziti">每个送给Subject对象的数字，经过map之后，最后得到的结果都乘以2。</p>
+<p class="ziti">从上面的例子可以看到，Subject并不是一个操作符，它是一个和Observable平级的一种存在，但是，Subject和Observable有一个重大区别，就是Observable对Observer是没有“记忆”的，但是Subject却记得住有哪些Observer订阅了自己。</p>
+<p class="ziti">回顾一下create这个操作符，这个操作符是所有Observable最基本的构造方法，接受一个observer参数，然后设置何时调用这个observer参数的next、error、complete方法，如下所示：</p>
+<hr/>
+<pre class="ziti1">Observable.create(observer =&gt; {
+    // 调用observer.next()或者observer.error()或者observer.complete()
+});
+</pre>
+<hr/>
+<p class="ziti">但是Observable对象并不会去记住有哪些observer订阅了自己，也就是说，Observable对所有的observer一视同仁，每一个observer来都是一样的照顾。</p>
+<p class="ziti">但是，对于Subject来说不一样，Subject有状态，这个状态就是所有Observer的列表，所以，当调用Subject的next函数时，才可以把消息通知给所有的Observer。</p>
+<p class="ziti">下面是Subject对象拥有多个Observer的例子：</p>
+<hr/>
+<pre class="ziti1">const subject = new Subject();
+
+const subscription1 = subject.subscribe(
+  value =&gt; console.log('on observer 1 data: ' + value),
+  err =&gt; console.log('on observer 1 error: ' + err.message),
+  () =&gt; console.log('on observer 1 complete')
+);
+
+subject.next(1);
+
+subject.subscribe(
+  value =&gt; console.log('on observer 2 data: ' + value),
+  err =&gt; console.log('on observer 2 error: ' + err.message),
+  () =&gt; console.log('on observer 2 complete')
+);
+
+subject.next(2);
+subscription1.unsubscribe();
+subject.complete();
+</pre>
+<hr/>
+<p class="ziti">上面代码的工作步骤如下：</p>
+<p class="ziti">1）1号Observer订阅了subject，调用subject的next推送了数据1，这个消息只有1号Observer响应，因为当前只有一个Observer。</p>
+<p class="ziti">2）2号Observer也订阅了subject，这时候调用subject的next方法推送数据2，subject现在知道自己有两个Observer，所以会分别推送消息给1号和2号Observer。</p>
+<p class="ziti">3）之前订阅了subject的1号Observer通过unsubscribe方法退订，这时候subject知道自己只有一个2号Observer，所以，当调用complete方法时，只有2号Observer接到通知。</p>
+<p class="ziti">程序的运行结果如下：</p>
+<hr/>
+<pre class="ziti1">on observer 1 data: 1
+on observer 1 data: 2
+on observer 2 data: 2
+on observer 2 complete
+</pre>
+<hr/>
+<p class="ziti">因为next（1）在2号Observer加入之前执行，所以2号Observer没有接收到1。</p>
+<p class="ziti">从这个例子看得出来，后加入的观察者，并不会获得加入之前Subject对象上通过next推送的数据，这个特点，让Subject可以用来实现Cold Observable到Hot Observable的转换，从而实现真正的多播。</p>
+</body>
+</html>

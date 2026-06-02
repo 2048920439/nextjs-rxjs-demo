@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">10.5　高级多播功能</h2>
+<p class="ziti">到现在位置，我们了解了multicast、publish和share这三个支持“多播”的操作符，其中multicast是最底层的实现，其余两个操作符都是利用multicast实现的。</p>
+<p class="ziti">可能读者会这样一种感觉：多播也不过如此嘛，玩来玩去也不过就几个选择而已，使用multicast的时候用Subject对象还是用工厂函数，使用multicast的时候用不用第二个参数selector，就这么几种组合，似乎没有什么更多花样。</p>
+<p class="ziti">的确，multicast的使用方法研究透了也就这几种组合，可是，光是multicast的第一个参数，就可以衍生出很多高级多播功能。</p>
+<p class="ziti">读者可能会问：multicast第一个参数不是只有两个选择吗？Subject对象或者产生Subject对象的工厂函数，还能有什么高级用法？</p>
+<p class="ziti">别忘了，Subject既然是一个类，那么它也可以有子类，它的子类可以具有比Subject更具体更强的功能，如果我们传递给multicast第一个参数的是一个Subject子类的对象，或者一个产生Subject子类对象的工厂函数，那么自然就让multicast产生的Observable对象具备更强大的功能。</p>
+<p class="ziti">我们说过，多播的核心是Subject，增强多播功能，也就是创造更强大的Subject。</p>
+<p class="ziti">RxJS提供了如下三个高级的多播操作符：</p>
+<p class="ziti6">·publishLast</p>
+<p class="ziti6">·publishReplay</p>
+<p class="ziti6">·publishBehavior</p>
+<p class="ziti">在这三种增强的多播操作符背后，是这三个Subject的子类：</p>
+<p class="ziti6">·AsyncSubject</p>
+<p class="ziti6">·ReplaySubject</p>
+<p class="ziti6">·BehaviorSubject</p>
+<p class="ziti">这三个操作符和三个Subject子类是一一对应的关系，publishLast使用了AsyncSubject，publishReplay使用了ReplaySubject，publishBehavior使用了Behavior-Subject。</p>
+<p class="ziti">从命名上也容易看出它们的对应关系，publishXXX就要用上XXXSubject，只有publishLast用的是AsyncSubject，名字几乎看不出什么关联。</p>
+<p class="ziti">接下来，我们就逐一成对介绍这些操作符和Subject子类。</p>
+</body>
+</html>

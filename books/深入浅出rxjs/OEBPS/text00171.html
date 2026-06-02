@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">11.4.3　subscribeOn</h3>
+<p class="ziti">Scheduler不光可以用来控制Observable对象推送数据的时机，还可以用来控制添加Observer的时机。默认情况下，当调用subscribe的时候，Observable对象就会被订阅，下面的代码展示了这个过程：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+import 'rxjs/add/operator/subscribeOn';
+
+const source$ = Observable.create(observer =&gt; {
+  console.log('on subscribe');
+  observer.next(1);
+  observer.next(2);
+  observer.next(3);
+
+  return () =&gt; {
+    console.log('on unsubscribe');
+  }
+});
+
+console.log('before subscribe');
+source$.subscribe({
+  complete: () =&gt; {
+    console.log('Time elapsed: ' + (Date.now() - timeStart) + 'ms')
+  }
+});
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">为了清晰地看到何时对Observable订阅内容，我们用Observable.create创造了Observable对象，当这个Observable被订阅时，会输出on subscribe。在调用subscribe函数之前和之后，我们分别输出before subscribe和after subscribe。通过比较这三个输出的顺序，就能够看到实际订阅发生的时机。</p>
+<p class="ziti">程序输出结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+on subscribe
+data:  1
+data:  2
+data:  3
+after subscribe
+</pre>
+<hr/>
+<p class="ziti">可以看到，on subscribe在after subscribe之前输出，可见这是一个同步的过程，调用Observable对象的subscribe函数，会立刻引发订阅的动作。</p>
+<p class="ziti">对上面的代码稍作修改，使用subscribeOn，如下所示：</p>
+<hr/>
+<pre class="ziti1">const tweaked$ = source$.subscribeOn(asap);
+
+console.log('before subscribe');
+tweaked$.subscribe(
+  value =&gt; console.log('data: ', value),
+  error =&gt; console.log('error: ', error),
+  () =&gt; console.log('complete')
+);
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">我们对source$使用subscribeOn方法，传入asap，产生了一个新的Observable对象名叫tweaked$，然后，调用tweaked$的subscribe方法，这时候就不再是同步订阅tweaked$了，而是由asap控制节奏，也就是要等到这一次同步执行的操作结束之后才执行订阅。程序运行结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+after subscribe
+on subscribe
+data:  1
+data:  2
+data:  3
+</pre>
+<hr/>
+<p class="ziti">和observeOn一样，subscribeOn通常在数据管道中只需要使用一次，而且最好是在尾部，紧贴着调用subscribe之前。</p>
+</body>
+</html>

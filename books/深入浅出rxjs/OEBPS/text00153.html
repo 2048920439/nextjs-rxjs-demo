@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.4.1　multicast</h3>
+<p class="ziti">事实上，在使用RxJS的应用中，不大可能直接使用multicast这个操作符，但是为了真正理解多播在RxJS中的形态，必须从理解multicast开始。</p>
+<p class="ziti">
+<span class="yanse">1.多播操作符的老大</span>
+</p>
+<p class="ziti">multicast是个实例操作符，能够以上游的Observable为数据源产生一个新的Hot Observable对象。在前面已经介绍过，RxJS中通过Subject实现Cold Observable到Hot Observable的转化，所以，multicast也毫不奇怪地利用了Subject类型。</p>
+<p class="ziti">最简单的使用multicast的形式如下：</p>
+<hr/>
+<pre class="ziti1">const hotSource$ = coldSource$.multicast(new Subject());</pre>
+<hr/>
+<p class="ziti">其中，上游的coldSource$是一个Cold Observable，直接链式调用multicast返回的结果hotSource$就是一个Hot Observable。</p>
+<p class="ziti">在这里，multicast接受一个Subject对象作为参数，这个Subject对象扮演的就是上游Cold Observable和下游之间的“中间人”角色。</p>
+<p class="ziti">读者可能有一个疑问，为什么multicast自己不创造一个Subject对象呢？为什么要调用者创造一个Subject对象传递给multicast？</p>
+<p class="ziti">因为multicast实际上是一个很底层的操作符，RxJS中其他支持多播的操作符都基于multicast，所以multicast就设计得非常可定制化，让调用者传入Subject就是为了让基于multicast实现的其他操作符能够定制行为。</p>
+<p class="ziti">实际上，multicast的第一个参数不光可以是一个Subject对象，还可以是一个返回Subject对象的函数，如果使用函数作为参数，就可以进一步定制multicast的行为，在后面的部分我们会介绍利用这一功能的操作符。</p>
+<p class="ziti">
+<span class="yanse">2.可连接的Observable</span>
+</p>
+<p class="ziti">multicast作为实例操作符，返回的是一个Observable对象，不过，这个Observable对象比较特殊，实际上是Observable子类ConnectableObservable的实例对象。</p>
+<p class="ziti">ConnectableObservable，顾名思义，就是“可以被连接的”Observable，这种Observable对象包含一个connect函数，connect的作用是触发multicast用Subject对象去订阅上游的Observable，换句话来说，如果不调用connect函数，这个Connectable-Observable对象就不会从上游Observable那里获得任何数据。</p>
+<p class="ziti">下面是一段示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/multicast';
+import 'rxjs/add/operator/take';
+
+const coldSource$ = Observable.interval(1000).take(3);
+const tick$ = coldSource$.multicast(new Subject());
+
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 1500);
+</pre>
+<hr/>
+<p class="ziti">其中，使用了multicast来产生Hot Observable，名为tick$，tick$也有两个Observer，每个Observer都会把接收到的数据输出打印，但是，这段程序不会有任何输出结果，因为自始至终，tick$的connect函数都没有被调用，也就是说，tick$始终没有订阅上游的coldSource$，自然不会收到数据。</p>
+<p class="ziti">如果把multicast返回的ConnectableObservable比喻为一个连接多个管道的阀门，那么connect就是这个阀门上的开关，不调用connect，水是不会流过阀门的。</p>
+<p class="ziti">RxJS为什么要引入ConnectableObservable这个概念呢？为什么需要把事情搞复杂要求使用者主动去调用connect函数呢？为什么不干脆就让multicast直接subscribe上游的Cold Observable呢？</p>
+<p class="ziti">答案是：要控制开始多播的时机。</p>
+<p class="ziti">在一个多播场景中，到底什么时候让“中间人”Subject开始subscribe上游Cold Observable，并没有一个唯一答案，只能根据实际场景来决定。</p>
+<p class="ziti">要知道，上游的Cold Observable一旦被subscribe，就会开始往Subject对象推送数据，这时候，如果multicast产生的Hot Observable并没有注册Observer，这些数据没有接受者，就会被丢弃掉。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在后面的章节中，我们会介绍在没有Observer的情况下不丢弃掉数据的方法，这里只介绍最简单实现，最简单实现下，multicast没有Observer就真的会把上游推送的数据丢弃。</p>
+<p class="ziti">假如multicast不需要connect函数，而是直接subscribe上游Cold Observable，那么，不等multicast函数返回，上游就开始吐出数据，假如上游是由range操作符产生的同步数据流，不等multicast产生的Observable被添加Observer，同步数据流中的数据一口气全都吐出就完结了，Observer根本什么数据都获得不了。</p>
+<p class="ziti">所以，RxJS让multicast的使用者自己来决定connect的时机。</p>
+<p class="ziti">我们改进上面的代码，如下所示：</p>
+<hr/>
+<pre class="ziti1">const coldSource$ = Observable.interval(1000).take(3);
+const tick$ = coldSource$.multicast(new Subject());
+
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 1500);
+tick$.connect();
+</pre>
+<hr/>
+<p class="ziti">当connect函数被调用的时候，tick$拥有1号Observer，这个Observer会持续获得所有数据，而2号Observer在1.5秒之后添加，所以没能拿到1秒钟时刻tick$吐出的数据。</p>
+<p class="ziti">最终代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 2: 1
+observer 1: 2
+observer 2: 2
+</pre>
+<hr/>
+<p class="ziti">connect可以控制ConnectableObservable去订阅上游的时机，实际上，还要考虑退订上游的时机，如果不退订的话，可能导致资源泄露。</p>
+<p class="ziti">要求multicast的使用者主动去调用返回ConnectableObservable对象的connect，还要考虑退订，这显得很麻烦，所以，ConnectableObservable还提供了一个解决这个问题的refCount函数。</p>
+<p class="ziti">
+<span class="yanse">3.refCount自动计数</span>
+</p>
+<p class="ziti">在很多场景下，都希望ConnectableObservable是这样一种行为：</p>
+<p class="ziti">当第一个Observer添加的时候，就让作为中间人的Subject对象去订阅上游Cold Observable，之后，如果再有新的Observer添加，因为Hot Observable的特性，之前吐出的数据是收不到了，但是之后吐出的数据可以接收到。当Observer退订Hot Observable的时候，其他还在订阅的Observer不受影响，但是，当最后一个Observer退订的时候，代表上游数据源不再有人关心了，这时候就应该让中间人Subject退订上游Cold Observable。</p>
+<p class="ziti">上面这种行为，显然需要对Observer的个数进行跟踪，当Observer数量大于1时订阅上游，当Observer数量减少为0时退订上游，而这正是refCount函数的作用。</p>
+<p class="ziti">refCount也是ConnectableObservable对象的函数，如下所示。</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/multicast';
+import 'rxjs/add/operator/take';
+
+const coldSource$ = Observable.interval(1000).take(3);
+const tick$ = coldSource$.multicast(new Subject()).refCount();
+
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+}, 500);
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 2000);
+</pre>
+<hr/>
+<p class="ziti">上面的代码中，利用multicast产生了一个ConnectableObservable，然后链式调用refCount产生了tick$，tick$在0.5秒和2秒时分别添加了1号Observer和2号Observer。</p>
+<p class="ziti">当tick$添加1号Observer的时候，开始subscribe上游的coldSource$，所以在程序运行1.5秒之后1号Observer接收到第一个数据0。</p>
+<p class="ziti">在2秒钟的时刻，tick$添加2号Observer，这时候2号Observer错过了第一个数据0，但是能够接收到2.5秒吐出的1。</p>
+<p class="ziti">最终程序的输出是下面这样：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 2: 1
+observer 1: 2
+observer 2: 2
+</pre>
+<hr/>
+<p class="ziti">因为不需要写代码调用connect函数，使用refCount之后，相对于直接使用connect，大大简化了代码。</p>
+<p class="ziti">不过，如果使用refCount，那么对应的multicast往往不能只是接受一个Subject对象作为参数，而是接受一个返回Subject对象的函数作为参数。</p>
+<p class="ziti">为什么呢？我们用一段代码来展示让multicast接受一个Subject对象作为参数的问题，代码如下：</p>
+<hr/>
+<pre class="ziti1">const coldSource$ = Observable.interval(1000).take(3);
+const tick$ = coldSource$.multicast(new Subject()).refCount();
+
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">在这段代码里，tick$有两个Observer，其中1号Observer立刻添加，而2号Observer在5秒之后添加。</p>
+<p class="ziti">当1号Observer添加的时候，上游的coldSource$被发动，间隔1秒钟吐出一个递增整数，一共吐出3个整数，加上在吐出第一个整数之前等待的1秒，总共经历了4秒，然后coldSource$完结。</p>
+<p class="ziti">注意，2号Observer是在第5秒添加的，直观上，似乎2号Observer还会引发对coldSource$的一次subscribe，然而，实际上不会，上面代码的运行结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 1: 2</pre>
+<hr/>
+<p class="ziti">很明显，2号Observer没有获得任何数据，因为添加2号Observer根本没有再次subscribe上游的coldSource$，为什么会这样？</p>
+<p class="ziti">在前面我们介绍过，Subject是不能重复使用的，一个Subject一旦被调用了complete函数，它的生命周期就终结了，不能再接受数据了。</p>
+<p class="ziti">在上面的例子中，multicast接受的Subject对象就是串接Cold Observable和Hot Observable的唯一中间人，当1号Observer引发subscribe了coldSource$之后，4秒钟的时候coldSource$会调用下游的complete方法，其实调用的就是中间人Subject对象的complete方法，终结了这个唯一Subject对象的生命，于是，当5秒钟2号Observer上场的时候，这个Subject对象不能再执行“中间人”的任务了。</p>
+<p class="ziti">如果我们想要的是2号Observer添加的时候重新subscribe上游，那么就需要让multicast接收一个返回Subject的函数作为参数。</p>
+<p class="ziti">通常，这样产生一个特定类型对象的函数叫做“工厂”（Factory），修改之后让multicast使用工厂函数的代码如下：</p>
+<hr/>
+<pre class="ziti1">const subjectFactory = () =&gt; {
+  console.log('enter subjectFactory');
+  return new Subject();
+}
+
+const coldSource$ = Observable.interval(1000).take(3);
+const tick$ = coldSource$.multicast(subjectFactory).refCount();
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">其中，subjectFactory函数很简单，每次被调用除了打印信息就是返回一个新的Subject对象，实际上，subjectFactory可以简写成下面这样：</p>
+<hr/>
+<pre class="ziti1">const subjectFactory = () =&gt; new Subject();
+</pre>
+<hr/>
+<p class="ziti">我们有意让subjectFactory包含打印信息，是为了在输出中更清楚地看到程序执行过程，实际过程如下：</p>
+<p class="ziti">1）当1号Observer被添加的时候，multicast产生的ConnectableObservable对象就会去subscribe上游的coldSource$，当然，这个过程需要一个Subject对象，可是multicast的参数并不是一个Subject对象，而是一个函数，于是ConnectableObservable对象就去调用这个函数，得到了一个新创造的Subject对象，于是就用这个Subject对象去联系上游的coldSource$了。</p>
+<p class="ziti">2）到了4秒钟的时候，coldSource$完结，调用了刚才产生的Subject对象的complete，于是这个Subject对象的生命也就终结了，不能再充当中间人了。</p>
+<p class="ziti">3）到了5秒钟的时候，2号Observer被添加，这时候multicast产生的Connectable-Observable对象依然会去subscribe上游的coldSource$，依然需要一个Subject对象，但是刚才那个Subject对象已经完蛋了，不能用了，于是它重新调用multicast的函数参数，又获得了一个新的Subject对象，让这个新的Subject对象去扮演中间人角色。</p>
+<p class="ziti">所以，上面这段代码的执行结果是这样：</p>
+<hr/>
+<pre class="ziti1">enter subjectFactory
+observer 1: 0
+observer 1: 1
+observer 1: 2
+enter subjectFactory
+observer 2: 0
+observer 2: 1
+observer 2: 2
+</pre>
+<hr/>
+<p class="ziti">可以看到，subjectFactory被调用了两次，2号Observer也接受了coldSource$的数据。</p>
+<p class="ziti">上面的代码中，因为1号Observer和2号Observer没有时间重叠，所以实际效果就和没有Hot Observable没有多播一样，完完全全就是重新获取一个Cold Observable的数据，下面的代码更能清楚展示refCount的多播效果：</p>
+<hr/>
+<pre class="ziti1">const subjectFactory = () =&gt; new Subject();
+
+const coldSource$ = Observable.interval(1000).take(3);
+const tick$ = coldSource$.multicast(subjectFactory).refCount();
+
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 1500);
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 3: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">上面的代码中，1号和2号Observer有时间重叠，1号Observer的添加会让subject-Factory产生一个Subject对象来subscribe上游的coldSource$，2号Observer添加的时候，会继续使用这个Subject对象，也不会再次subscribe上游的coldSource$，这是真正的多播。</p>
+<p class="ziti">4秒钟时，coldSource$完结，1号和2号Observer都不再接受数据，然后5秒钟时，3号Observer会让subjectFactory产生一个新的Subject对象，这是一个全新的开始。</p>
+<p class="ziti">最后程序执行结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 2: 1
+observer 1: 2
+observer 2: 2
+observer 3: 0
+observer 3: 1
+observer 3: 2
+</pre>
+<hr/>
+<p class="ziti">现在，你应该能够理解multicast除了能接受Subject对象作为参数，还接受一个返回Subject对象函数作为参数的意义，就是应对这种场景。</p>
+<p class="ziti">如果希望multicast产生ConnectableObservable对象能够在unsubscribe了上游数据流之后还能再次subscribe，就必须传递给multicast一个产生Subject的工厂函数。</p>
+<p class="ziti">
+<span class="yanse">4.秘密参数selector</span>
+</p>
+<p class="ziti">除了第一个参数指定一个Subject对象或者指定一个产生Subject对象的工厂方法，multicast其实还支持第二个参数，只不过这个参数是可选的，而且文档介绍很少，所以可以算是multicast的一个秘密参数。</p>
+<p class="ziti">multicast这第二个秘密参数名叫selector，在官方文档上，对selector的介绍是这样的<sup>
+<a id="ch1" href="text00153.html#ch1_back">[1]</a>
+</sup>
+ <span>：“Optional selector function that can use the multicasted source stream as many times as needed，without causing multiple subscriptions to the source stream.Subscribers to the given source will receive all notifications of the source from the time of the subscription forward.”</span>
+</p>
+<p class="ziti">读者可以自行体会一下英文原文含义，当然，如果你感觉这段介绍晦涩难懂不知所云，也很正常，因为它本来就很难懂。</p>
+<p class="ziti">我在这里先翻译，然后再具体解释，上面这段介绍翻译就是这样：selector是一个可选参数，它可以使用上游数据流任意多次，但不会重复订阅上游数据流，这个selector函数返回一个新的数据源，订阅新数据源就可以获得从订阅开始数据源发送的所有数据。</p>
+<p class="ziti">可能你看了这段翻译依然一头雾水，没关系，接着往下看，你就会明白<sup>
+<a id="ch2" href="text00153.html#ch2_back">[2]</a>
+</sup>
+ <span>。</span>
+</p>
+<p class="ziti">前面我们介绍过，multicast会返回一个ConnectableObservable对象，实际上这种说法不完全准确，只有不使用第二个参数selector的情况下，multicast才返回拥有connect和refCount这两个神奇方法的ConnectableObservable对象，一旦使用了第二个参数selector，等于告诉multicast：我有一个比ConnectableObservable更合适的Observable，就不要返回默认的ConnectableObservable对象了，用我这个selector函数来产生Observable对象吧。</p>
+<p class="ziti">换句话说，只要指定了selector参数，就指定了multicast返回的Observable对象的生成方法。</p>
+<p class="ziti">selector函数有一个参数，通常叫做shared，这个shared参数就是multicast第一个参数所代表的Subject，如果multicast第一个参数是Subject对象，shared就是这个Subject对象；如果multicast第一个参数是Subject的工厂方法，那么shared就是调用工厂方法产生的Subject对象。</p>
+<p class="ziti">通过下面的代码可以理解selector的用法。</p>
+<hr/>
+<pre class="ziti1">const coldSource$ = Observable.interval(1000).take(3);
+const selector = shared =&gt; {
+  return shared.concat(Observable.of('done'));
+}
+const tick$ = coldSource$.multicast(new Subject(), selector);
+
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">我们定义了一个selector方法，为了简单起见，selector的函数实现只是在参数shared后面用concat补了一个done字符串，这样每一个Observer最后都会被推送一个字符串类型数据done。</p>
+<p class="ziti">在multicast函数调用时，第二个参数使用我们定义的selector函数，产生的tick$就不再是ConnectableObservable类型了，意味着tick$没有connect和refCount方法，tick$这个Observable对象，就是selector函数返回的Observable对象。</p>
+<p class="ziti">这段代码运行的结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 1: 2
+observer 1: done
+observer 2: done
+</pre>
+<hr/>
+<p class="ziti">我们来分析一下为什么会是这样的运行结果。</p>
+<p class="ziti">程序启动，当1号Observer订阅tick$时，multicast会用第一个参数的Subject对象去订阅coldSource$，然后把Subject对象作为参数调用selector函数，这是selector函数第一次被调用，它会返回一个由concat产生的新的Observable对象。</p>
+<p class="ziti">然后，每隔1秒钟，coldSource$会吐出一个整数，到第4秒钟完结，因为concat的作用，1号Observer会在coldSource$完结时立刻收到一个done字符串，之后才结束。</p>
+<p class="ziti">在5秒钟时，2号Observer上场，这次依然会引发multicast用第一个参数Subject去订阅coldSource$，然后把Subject对象作为参数调用selector，只可惜，Subject对象的生命已经结束了，所以这个Subject对象并不能成功subscribe上游coldSource$。selector被调用的时候，shared参数就是一个已经死掉的Subject对象，相当于一个已经是完结状态的Observable，但是concat依然会在这个Observable后面补上done，所以最后2号Observer会接收到一个done字符串。</p>
+<p class="ziti">上面的例子中，使用了selector参数之后，虽然multicast也用上了Subject，返回的却并不是一个Hot Observable，因为每一次对multicast返回的Observable对象的subscribe，都会引发一次对上游数据流的subscribe，下面的代码示例可以清楚地表明这一点：</p>
+<hr/>
+<pre class="ziti1">const coldSource$ = Observable.create((observer) =&gt; {
+  console.log('enter subscribe');
+  Observable.interval(1000).take(2).subscribe(observer);
+});
+const selector = shared =&gt; {
+  console.log('enter selector');
+  return shared.concat(Observable.of('done'));
+}
+const tick$ = coldSource$.multicast(new Subject(), selector);
+
+tick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+tick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+</pre>
+<hr/>
+<p class="ziti">上面的代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">enter selector
+enter subscribe
+enter selector
+enter subscribe
+observer 1: 0
+observer 2: 0
+observer 1: 0
+observer 2: 0
+observer 1: 1
+observer 2: 1
+observer 1: done
+observer 2: done
+</pre>
+<hr/>
+<p class="ziti">在代码中，我们有意用Observable.create产生数据流，为的是让产生的Observable对象被subscribe时输出enter subscribe，从而清楚看到这个订阅发生。</p>
+<p class="ziti">tick$有两个Observer，两次subscribe，引发了两次enter subscribe的输出，可见multicast使用了selector参数之后，不会再像没有selector函数一样产生一个只subscribe上游一次的ConnectableObservable对象。</p>
+<p class="ziti">实际上，我们也不大可能写出比ConnectableObservable更加精妙的Observable，那么，multicast支持这个selector参数来定制Observable到底有什么意义呢？</p>
+<p class="ziti">如果使用selector，意义在于处理“三角关系”的数据流。</p>
+<p class="ziti">三角关系的出现，会带来一些意想不到的麻烦，我们通过代码来说明，下面是一个存在“三角关系”数据流的代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/delay';
+import 'rxjs/add/operator/merge';
+
+const coldSource$ = Observable.interval(1000).take(2)
+    .do(x =&gt; console.log('source ', x));
+const tick$ = coldSource$;
+const delayedTicks$ = tick$.delay(500);
+const mergedTick$ = delayedTicks$.merge(tick$);
+mergedTick$.subscribe(value =&gt; console.log('observer : ' + value));
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，我们用一种新的方式来检查一个Observable是否被重复subscribe，这个方法就是使用do这个操作符，do存在于数据流管道之中，没有机会修改管道中流过的数据，但是所有的数据都会经它之手，所以do的意义在于可以做一些产生副作用的工作，比如，输出流过管道的数据，这也是使用RxJS编程一招惯用的调试方法。</p>
+<p class="ziti">我们在产生coldSource$的链式调用中使用了do，把流过coldSuorce$的数据打印输出，如果coldSource$对一个数据只输出一遍，那说明只有一个Observer订阅，如果每个输出两遍，那就说明它被subscribe了两遍。</p>
+<p class="ziti">tick$就是coldSource$，delayTick$是tick$的下游，对tick$吐出的每个数据都延时0.5秒往下游传递，同时，mergeTick$是delayTick$和tick$合并而成，这三个Observable对象就形成了“三角关系”。</p>
+<p class="ziti">上面的代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">source  0
+source  0
+observer : 0
+observer : 0
+source  1
+source  1
+observer : 1
+observer : 1
+</pre>
+<hr/>
+<p class="ziti">我们看到对于interval和take产生的0和1两个数据，do这个操作符发挥作用，输出了两遍，可见tick$被订阅了两次。</p>
+<p class="ziti">这显得很浪费，因为delayTick$讲道理只依赖于tick$的数据，既然已经通过interval和take产生了一个数据流，实在没理由为delayTick$再让interval和take再产生一遍。</p>
+<p class="ziti">特定于我们这个简单问题，只是浪费，对于复杂的问题，可能不只是浪费，而是功能的错误。</p>
+<p class="ziti">要解决这个问题，就可以用上带selector参数的multicast方法，改进上面的代码，如下所示：</p>
+<hr/>
+<pre class="ziti1">const coldSource$ = Observable.interval(1000).take(2).do(x =&gt; console.log('source ', x));
+const result$ = coldSource$.multicast(new Subject(), shared =&gt; {
+  const tick$ = shared;
+  const delayedTicks$ = tick$.delay(500);
+  const mergedTick$ = delayedTicks$.merge(tick$);
+  return mergedTick$;
+});
+result$.subscribe(value =&gt; console.log('observer : ' + value));
+</pre>
+<hr/>
+<p class="ziti">可以看到，对于tick$、delayedTick$和mergedTick$三者的关系没变，甚至代码都和以前一样，不同的只是搬到了multicast的selector参数里面了。</p>
+<p class="ziti">在这个代码改变之后，coldSource$就不会再被多次subscribe了，程序执行结果如下：</p>
+<hr/>
+<pre class="ziti1">source  0
+observer : 0
+observer : 0
+source  1
+observer : 1
+observer : 1
+</pre>
+<hr/>
+<p class="ziti">每个数据只有一个source输出，可见coldSource$只被multicast订阅了一次。</p>
+<p class="ziti">当然，如果我们给result$再添加一个Observer，coldSource$还是会被多订阅一次，可见，带有selector参数的multicast用法，应对的场景不是多个Observer的多播，而是“三角关系”下如何避免对上游的重复订阅。</p>
+<p class="ziti">说了这么多，读者可能有一点疑惑，带selector的multicast有真正的用处吗？</p>
+<p class="ziti">当然有，有用的场景就是：上游是Cold Observable，逻辑上有多个数据流对这个Cold Observable有依赖，而且要把这多个数据流组合起来传给下游Observer，可是又不想或者不能多次subscribe上游Cold Observable的场景。</p>
+<p class="ziti">我们利用带selector的multicast来产生一个有实际价值的操作符。</p>
+<p class="ziti">在前面的章节我们知道，RxJS自带一个操作符叫做defaultIfEmpty，当上游数据流是空的情况下，就给下游传递一个默认数据，然后完结。这个操作符对于提供默认值非常有用，使用defaultIfEmpty，下游就不用处理没有数据的情况，因为至少会有一个默认数据传递下来。</p>
+<p class="ziti">不过，defaultIfEmpty也有一个缺点，那就是它只能提供一个默认数据，现在，我们想要做一个增强版的操作符，当上游数据流为空时，给下游传递的不只是一个默认数据，而是把一个默认的Observable对象中的数据都传递下去，这个操作符命名为defaultObservableIfEmpty。</p>
+<p class="ziti">下面是defaultObservableIfEmpty的实现代码：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.defaultObservableIfEmpty = function(default$) {
+  const selector = shared =&gt; {
+    return shared.merge(
+      shared.isEmpty().mergeMap(
+        empty =&gt; empty ? default$: Observable.empty()
+      )
+    );
+  };
+  return this.multicast(new Subject(), selector);
+};
+</pre>
+<hr/>
+<p class="ziti">defaultObservableIfEmpty的实现就用到了multicast的selector参数，在selector中，多次使用到了shared，而且使用了merge这样的合并操作符。</p>
+<p class="ziti">显而易见，为了实现一个操作符功能，如果多次subscribe上游数据源，是非常不合适的，这就是multicast的selector参数的意义。</p>
+<p class="ziti">我们再回过头来看RxJS官方文档对selector的解释：selector是一个可选参数，它可以使用上游数据流任意多次，但不会重复订阅上游数据流。</p>
+<p class="ziti">希望读者你现在对这段解释理解得更清晰了。</p>
+<p class="ziti">彻底理解了multicast之后，再来理解RxJS中其他关于多播的操作符就水到渠成了，接下来介绍两个实际应用中更常用的多播操作符：publish和share。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00153.html#ch1">[1]</a>
+ 参见http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-multicast</p>
+<p class="fnote">
+<a id="ch2_back" href="text00153.html#ch2">[2]</a>
+ 这里我实在忍不住吐槽一下RxJS 官方文档中对多播操作符的注解，晦涩难懂，不去看源代码基本上没法理解其中的含义。</p>
+</body>
+</html>

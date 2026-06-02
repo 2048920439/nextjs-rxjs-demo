@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.4.3　share</h3>
+<p class="ziti">publish翻译为“发布”，share翻译为“分享”，都能够和“一对多”扯上联系，只是看操作符的名字，真的无法区分publish和share有什么区别。</p>
+<p class="ziti">所以，和publish一样，了解share具体干了什么，还不如看它的源代码是怎么写的。</p>
+<p class="ziti">根据RxJS的源代码，share的功能可以看作是如下代码所示：</p>
+<hr/>
+<pre class="ziti1">function shareSubjectFactory() {
+    return new Subject();
+}
+
+function share() {
+    return multicast.call(this, shareSubjectFactory).refCount();
+}
+</pre>
+<hr/>
+<p class="ziti">更简洁的表示，就是这样：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.share = function share() {
+    This.multicast(() =&gt; new Subject()).refCount();
+};
+</pre>
+<hr/>
+<p class="ziti">前面的章节已经详细介绍过multicast的使用方法，不难理解，share返回的就是一个ConnectableObservable对象，而且是一个调用了refCount的ConnectableObservable对象，可以自动根据Observer的多少来对上游进行subscribe和unsubscribe。</p>
+<p class="ziti">同时，考虑到Observer增加然后减少为0之后，新的Observer添加也希望获得数据的场景，传递给multicast的不是Subject对象，而是产生Subject对象的工厂函数。</p>
+<p class="ziti">可以说，share是使用multicast和ConnectableObservable的最典型用例。</p>
+<p class="ziti">下面是使用share的代码示例：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/share';
+import 'rxjs/add/operator/take';
+
+const tick$ = Observable.interval(1000).take(3);
+const sharedTick$ = tick$.share();
+
+sharedTick$.subscribe(value =&gt; console.log('observer 1: ' + value));
+setTimeout(() =&gt; {
+  sharedTick$.subscribe(value =&gt; console.log('observer 2: ' + value));
+}, 5000);
+</pre>
+<hr/>
+<p class="ziti">上面的代码的运行结果如下：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 1: 2
+observer 2: 0
+observer 2: 1
+observer 2: 2
+</pre>
+<hr/>
+<p class="ziti">可以看到，2号Observer在5秒钟之后依然能够获得tick$的数据，这得益于share实现中传给multicast的产生Subject对象的工厂方法。</p>
+<p class="ziti">注意，RxJS的官方文档一度犯了一个错误，声称share代表的意思是publish（）.refCount（）<sup>
+<a id="ch1" href="text00155.html#ch1_back">[1]</a>
+</sup>
+ <span>。</span>
+</p>
+<p class="ziti">这是错误的，因为publish在不带参数的情况下，相当于multicast（new Subject（）），没有使用产生Subject对象的工厂方法，直接使用了Subject对象，这和share的含义不一样。</p>
+<p class="ziti">可以试着把上面的代码，使用publish.refCount（）来产生sharedTick$，如下所示：</p>
+<hr/>
+<pre class="ziti1">const sharedTick$ = tick$.publish.refCount();
+</pre>
+<hr/>
+<p class="ziti">那么程序的输出就是这样：</p>
+<hr/>
+<pre class="ziti1">observer 1: 0
+observer 1: 1
+observer 1: 2
+</pre>
+<hr/>
+<p class="ziti">2号Observer不会有任何输出，因为唯一的Subject对象在4秒钟时因为第一次subscribe的tick$完结而结束生命了，而且Subject对象无法重复使用。</p>
+<p class="ziti">网络上很多文章无脑照搬RxJS的官方文档，所以RxJS官方文档中关于share的这个错误解释，也在网络上被传播开了，所以即使RxJS文档被修正，大家可能在其他文章中看到，请大家明辨是非，只有实践才是检验真理的唯一标准。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00155.html#ch1">[1]</a>
+ 参见https://github.com/ReactiveX/rxjs/issues/2937。</p>
+</body>
+</html>

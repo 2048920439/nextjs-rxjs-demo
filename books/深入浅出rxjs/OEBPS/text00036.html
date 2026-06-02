@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">3.3.2　关联Observable</h3>
+<p class="ziti">上面我们介绍了操作符的函数体部分如何编写，接下来要做的就是把这个函数和Observable关联起来。</p>
+<p class="ziti">
+<span class="yanse">1.给Observable打补丁</span>
+</p>
+<p class="ziti">这是最简单的方法，在3.2.2中介绍操作符的静态和实例分类时就介绍过。</p>
+<p class="ziti">在前一节中实现了map这个操作符，这个操作符需要一个上游Observable对象，所以，它当然是一个实例操作符，需要赋值给Observable的prototype，代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.map = map;</pre>
+<hr/>
+<p class="ziti">如果是静态操作符，则是直接赋值给Observable类的某个属性。</p>
+<p class="ziti">需要注意一点，函数声明部分不能使用ES6箭头函数的语法，如果像下面这样实现，那就肯定会出问题：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.map = (project) =&gt; {
+   //在这个函数体中this并不是Observable对象本身
+};</pre>
+<hr/>
+<p class="ziti">箭头函数中的this直接绑定于定义函数环境下的this，而不是执行时指定的this，如此一来，函数体中的this就永远是函数外部的this，执行时，函数体通过this是无法访问到上游Observable对象的。</p>
+<p class="ziti">上述方法就像是给Observable类增加一点功能，所以称为“打补丁”（patching），不过，打补丁并不是把操作符和Observable相关联的唯一方法，接下来会介绍其他方法。</p>
+<p class="ziti">
+<span class="yanse">2.使用bind绑定特定Observable对象</span>
+</p>
+<p class="ziti">有时候，我们并不希望一个操作符影响所有的Observable对象，比如，上面定义的map函数，我们只想在某些代码文件中的Observable对象使用，可是RxJS自带了一个map操作符，而且程序中其他Observable对象已经使用了RxJS自带的map操作符，如果还用上面打补丁的方法，就像一山不容二虎，肯定会有一个实现覆盖掉另一个实现，这不是我们想要的结果。</p>
+<p class="ziti">解决这个问题的方法，就是让我们自定义的操作符只对指定的Observable对象可用，这时就可以用bind，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const result$ = map.bind(source$)(x =&gt; x * 2);</pre>
+<hr/>
+<p class="ziti">在JavaScript中，函数是“一等公民”，函数也是一种对象，每个函数对象都有一个bind方法，bind就是“绑定”的意思，bind函数的参数可以是任何一个对象，bind函数的返回结果是一个新的函数，新的函数执行的依然是原函数的代码，但是运行时的this绑定为bind函数的第一个参数对象。</p>
+<p class="ziti">上面的代码换一种编写形式可以看得更清楚，如下所示：</p>
+<hr/>
+<pre class="ziti1">const operator = map.bind(source$);
+const result$ = operator(x =&gt; x * 2);</pre>
+<hr/>
+<p class="ziti">从上面的代码可以清楚地看到，map.bind产生的是一个新的函数操作符，然后这个操作符就可以像map一样接受参数来调用。</p>
+<p class="ziti">当然，也可以不用bind而用call，函数的call方法也可以指定函数体的this是什么对象，不同的是立刻执行原函数，而不是产生一个新的函数，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const result$ = map.call(source$, x =&gt; x * 2);</pre>
+<hr/>
+<p class="ziti">使用bind的用法有一个缺点，就是上游Observable只能作为操作符函数的参数，这样就没法用上链式调用，比如，想要连续使用两个map，代码就只能是这样：</p>
+<hr/>
+<pre class="ziti1">const result$ = map.bind(map.bind(source$)(x =&gt; x * 2))(x =&gt; x + 1);</pre>
+<hr/>
+<p class="ziti">上面这样的代码可读性很差，圆括号很多，也很容易出错。如果你以前并没有感觉到链式调用有什么出彩之处，现在应该能够体会到了。</p>
+<p class="ziti">为了克服这个缺点，可以使用“绑定操作符”（bind operator）<sup>
+<a id="ch1" href="text00036.html#ch1_back">[1]</a>
+</sup>
+ <span>，绑定操作符的形式是两个冒号，运行的时候绑定操作符后面的函数，但是保证函数运行时this是绑定操作符前面的对象，所以，想要让map对一个Observable对象使用，就可以像下面这样写：</span>
+</p>
+<hr/>
+<pre class="ziti1">const result$ = source$::map(x =&gt; x * 2);</pre>
+<hr/>
+<p class="ziti">上面的代码和使用bind或者call执行的效果一模一样，区别是在语法表示形式上将source$放到了前面，这样就可以使用链式调用，代码如下：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$::map(x =&gt; x * 2)::map(x =&gt; x + 1);</pre>
+<hr/>
+<p class="ziti">和之前使用一个句点符号来实现链式调用不同，这里使用了绑定操作符，但是，只要返回的都是Observable对象，句点符号和绑定操作符可以混合使用，代码如下：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$::map(x =&gt; x * 2).filter(x =&gt; x % 3 !== 0);</pre>
+<hr/>
+<p class="ziti">在上面的代码中，借助bind操作符，map和filter分别通过两种方式调用，依然形成一个链式调用，这样就克服了bind函数的缺点。</p>
+<p class="p6">提示</p>
+<p class="ziti6">绑定操作符虽然很受欢迎，但目前并不是ES6的标准语法，当ES6规格确定的时候并不包含这个操作符，但是它会出现在未来的ES版本中，即使目前浏览器也并不支持这种操作符，但是利用babel等转译工具，可以把源代码中的绑定操作符转化为使用bind或者call的JavaScript代码。</p>
+<p class="ziti">
+<span class="yanse">3.使用lift</span>
+</p>
+<p class="ziti">RxJS v5版本对架构有很大的调整，很多操作符都使用一个神奇的lift函数实现，lift的含义就是“提升”，功能是把Observable对象提升一个层次，赋予更多功能。lift是Observable的实例函数，它会返回一个新的Observable对象，通过传递给lift的函数参数可以赋予这个新的Observable对象特殊功能。</p>
+<p class="ziti">如果使用lift，那么map的实现代码如下所示：</p>
+<hr/>
+<pre class="ziti1">function map(project) {
+  return this.lift(function(source$) {
+    return source$.subscribe({
+      next: value =&gt; {
+        try {
+          this.next(project(value));
+        } catch (err) {
+          this.error(err);
+        }
+      },
+      error: err =&gt; this.error(error),
+        complete: () =&gt; this.complete(),
+    });
+  });
+}
+
+Observable.prototype.map = map;
+</pre>
+<hr/>
+<p class="ziti">可以看到，lift的参数是一个函数，当lift产生的Observable对象被订阅时，lift的参数函数就被调用，而且this代表Observer的对象，参数source$自然代表的是上游的Observable对象。</p>
+<p class="ziti">虽然RxJS v5的操作符都架构在lift上，应用层开发者并不经常使用lift，这个lift更多的是给RxJS库开发者使用。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00036.html#ch1">[1]</a>
+ 绑定操作符的提议参见：https://github.com/tc39/proposal-bind-operator。</p>
+</body>
+</html>

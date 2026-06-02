@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">11.3.3　Scheduler如何工作</h3>
+<p class="ziti">理解了JavaScript的单线程运行特点，还有调用栈、事件循环及Micro Task和Macro Task的区别之后，理解Scheduler的工作方式就不成问题了。</p>
+<p class="ziti">在RxJS中，如果不使用特定的Scheduler，就是通过调用栈来完成，比如range在默认的Scheduler下产生数据，可以认为是用下面的代码实现的：</p>
+<hr/>
+<pre class="ziti1">Observable.range = function(start, count) {
+  return Observable.create((observer) =&gt;  {
+    let index = start;
+    let end = start + count;
+    do {
+      if (index &gt;= end) {
+        observer.complete();
+        break;
+      }
+      observer.next(index++);
+    } while (true);
+  });
+};
+</pre>
+<hr/>
+<p class="ziti">从代码中可以看到，一旦range产生的Observable对象被订阅，没有任何的延迟，所有的数据会一口气吐出。</p>
+<p class="ziti">因为subscribe函数会引发Observable.create的函数参数，而在这个函数参数中的循环体直接调用observer参数的next和complete方法，所以实际上当subscribe函数返回之前，range产生的数据已经全部发完，而且调用了observer的complete方法。</p>
+<p class="ziti">这就是利用调用栈实现的Scheduler方式，非常简单，同时也可能造成性能问题。</p>
+<p class="p6">注意</p>
+<p class="ziti6">虽然RxJS官方文档中说undefined或者null就是所谓的“默认Scheduler”，实际上，从RxJS的源代码中可以看到，根本没有“默认Scheduler”的实现，也就是说，并没有“默认Scheduler”这样一个实际的类或者对象可用来重用，这个概念是每个操作符自己实现的。</p>
+<p class="ziti">我们说性能问题，并不是说一个任务花更少的时间执行完就是性能更好，性能是一个需要综合考量的指标，对于网页应用，用户感知的性能永远是第一位的。</p>
+<p class="ziti">像range这样在默认Scheduler下完全靠调用栈来产生数据，如果需要产生的数据量很大，那可能就会占用很长的一段执行时间，而且，因为是直接同步调用Observer的next和complete函数，如果Observer的这两个函数也涉及耗时的同步运算，那么一个range产生的Observable对象数据就会独占唯一的线程太久，造成应用卡顿，就会影响用户感知性能。</p>
+<p class="ziti">下面是一个用range产生比较大数据序列的示例：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+
+const timeStart = new Date();
+const source$ = Observable.range(1, 100000);
+console.log('before subscribe');
+source$.subscribe({
+  complete: () =&gt; {
+    console.log('Time elapsed: ' + (Date.now() - timeStart) + 'ms');
+  }
+});
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，range产生了从1到100000的整数序列，我们关心的是产生这些数据所要消耗的时间，所以在Observer中没有提供next函数，只定义了complete函数，通过计算完结时和开始时的时间之差，可以看到时间的消耗。</p>
+<p class="ziti">实际的时间消耗和CPU的性能有关系，而且每一次运行的结果有差异，在我正在写作的这台电脑上，运行结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+Time elapsed: 19ms
+after subscribe
+</pre>
+<hr/>
+<p class="ziti">range产生这一百万个数据消耗了19毫秒，因为默认不指定Scheduler的情况下range是同步吐出数据的，也就是说，这19毫秒范围内，JavaScript唯一的线程是被range这个函数执行独占的，所以程序在输出Time elapsed：19ms之后才输出after subscribe。</p>
+<p class="ziti">对上面的代码稍作修改，使用asap这个Scheduler，看一看执行结果如何，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+import {asap} from 'rxjs/scheduler/asap';
+
+const timeStart = new Date();
+const source$ = Observable.range(1, 100000, asap);
+console.log('before subscribe');
+source$.subscribe({
+  complete: () =&gt; {
+    console.log('Time elapsed: ' + (Date.now() - timeStart) + 'ms');
+  }
+});
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">代码的差异只是给range增加了第三个参数asap，这样一来，range产生从1到100000整数序列的节奏就由asap来控制。</p>
+<p class="ziti">在RxJS中，asap会尽量利用Micro Task，也就是在异步的情况下，尽量早地安排下一个数据的产生，这也就是为什么它叫asap（as soon as possible）。</p>
+<p class="ziti">改成使用asap之后，这段代码的输出结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+after subscribe
+Time elapsed: 215ms
+</pre>
+<hr/>
+<p class="ziti">上面是在我的电脑上的输出结果，因为CPU的性能原因，在读者你的电脑上运行，产生的结果可能会有不同，但是不同的只会是Time elapsed后面的时间数字，产生的三行输出顺序绝对不会有不同。</p>
+<p class="ziti">可以看到，使用了asap之后，产生全部数据用了215毫秒，比不使用asap的19毫秒要多，这难道说明使用asap之后性能反而下降了呢？</p>
+<p class="ziti">当然不是，使用了asap，是指产生全部数据的时间跨度是215毫秒，而不是独占唯一的线程215毫秒，asap把产生每一个数据的工作都通过Micro Task来实现，这多绕了个路，时间跨度当然大，但是这也避免了同步调用，在这215毫秒里，其他插入的微任务可以获得执行的机会，如果是在浏览器中执行，网页中的渲染和对用户操作的响应也可以在事件处理的间隙获得执行的机会。</p>
+<p class="ziti">总之，使用asap这样的Scheduler，目的是提高整体的感知性能，而不是为了缩短单独一个数据流的执行时间。</p>
+<p class="ziti">在RxJS中，每一个Scheduler类都继承形式如下的接口IScheduler：</p>
+<hr/>
+<pre class="ziti1">interface IScheduler {
+  now();
+  schedule(work, delay, state);
+}
+</pre>
+<hr/>
+<p class="ziti">上面并不是严格的JavaScript代码，只是展现Scheduler必须要实现的两个函数，一个是now，返回当前的时间；另一个是schedule，用于交给Scheduler一个工作。work就是代表工作的函数，delay是一个可选参数，代表希望Scheduler延时指定毫秒之后再执行work。</p>
+<p class="ziti">在RxJS中，每个操作符就是调用Scheduler的schedule函数来产生数据，传递给schdule的work函数就是产生下一个数据要做的工作，如果需要延时产生数据，就会传递一个非零的delay参数。很显然，interval操作符肯定会使用delay参数，而range操作符就不会使用delay参数。</p>
+<p class="ziti">RxJS的Scheduler实现十分复杂，在这里我们不去深究Scheduler实现的具体代码，只是从Scheduler的接口来感受一下各个常用Scheduler的特点。</p>
+<p class="ziti">asap和async两个Scheduler都是利用事件循环来实现异步的效果，两者的不同，就是asap会尽量使用Micro Task，而async利用的是Macro Task。</p>
+<p class="ziti">queue这个Scheduler，如果调用它的schedule函数式参数delay是0，那它就用同步的方式执行，如果delay参数大于0，那queue的表现其实就和async一模一样。</p>
+<p class="ziti">所以，要看出这三者的差别，通过下面的示例最合适：</p>
+<hr/>
+<pre class="ziti1">import {asap} from 'rxjs/scheduler/asap';
+import {async} from 'rxjs/scheduler/async';
+import {queue} from 'rxjs/scheduler/queue';
+
+console.log('before schedule');
+async.schedule(() =&gt; console.log('async'));
+asap.schedule(() =&gt; console.log('asap'));
+queue.schedule(() =&gt; console.log('queue'));
+console.log('after schedule');
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，分别使用queue、async和asap的schedule函数来安排执行一个简单的输出任务，我们有意把asap放在async后面，把queue放在asap后面。</p>
+<p class="ziti">上面的代码执行结果如下：</p>
+<hr/>
+<pre class="ziti1">before schedule
+queue
+after schedule
+async
+asap
+</pre>
+<hr/>
+<p class="ziti">可以看到，queue虽然在代码中放在最后，却第一个产生输出，因为它是同步执行的，所以肯定在输出after schedule之前就会完成任务。</p>
+<p class="ziti">async和asap都会把任务丢给事件循环来处理，所以任务执行在after schedule输出之后。又因为asap使用的是Micro Task，所以它的任务会抢在async之前完成。</p>
+<p class="ziti">现在，读者应该对Scheduler有了一个全面的认识，实际的开发过程中，不大可能需要开发新的Scheduler，更多的是如何利用RxJS提供的现有Scheduler，而使用Scheduler就是利用RxJS提供的操作符。</p>
+</body>
+</html>

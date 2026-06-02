@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.3.4　fromEvent</h3>
+<p class="ziti">如果从事网页开发，fromEvent是最可能会被用到的操作符，因为网页应用总是要获取用户在网页中的操作事件，而fromEvent最常见的用法就是把DOM中的事件转化为Observable对象中的数据。</p>
+<p class="ziti">fromEvent的第一个参数是一个事件源，在浏览器中，最常见的事件源就是特定的DOM元素，第二个参数是事件的名称，对应DOM事件就是click、mousemove这样的字符串。</p>
+<p class="ziti">我们用一个例子来说明fromEvent这个操作符在网页应用中的用法，假设网页中包含下面一段HTML：</p>
+<hr/>
+<pre class="ziti1">&lt;div&gt;
+  &lt;button id="clickMe"&gt;Click Me&lt;/button&gt;
+  &lt;div id="text"&gt;0&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+<hr/>
+<p class="ziti">我们希望点击id为clickMe的按钮时，id为text的div中的数字会增加1，连续点击那个按钮，对应数字会持续增加。</p>
+<p class="ziti">为了实现这个功能，对应的RxJS代码如下：</p>
+<hr/>
+<pre class="ziti1">let clickCount = 0;
+const event$ = Rx.Observable.fromEvent(document.querySelector('#clickMe'), 'click');
+event$.subscribe(
+  () =&gt; {
+    document.querySelector('#text').innerText = ++clickCount
+  }
+);
+</pre>
+<hr/>
+<p class="ziti">event$由fromEvent产生，fromEvent的第一个参数选中的就是id为clickMe的元素，第二个参数为字符串click，这样，所有对这个clickMe的点击事件，就是fromEvent产生的Observable对象会吐出的数据。</p>
+<p class="ziti">fromEvent是DOM和RxJS世界的桥梁，产生Observable对象之后，就可以完全按照RxJS的规则来处理数据，在这个例子中，因为event$中的数据类型十分单一，所以并没有特殊的处理，在后面的章节中可以看到对fromEvent产生Observable的处理。</p>
+<p class="ziti">fromEvent除了可以从DOM中获得数据，还可以从Node.js的events中获得数据，下面是一段示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import EventEmitter from 'events';
+import 'rxjs/add/observable/fromEvent';
+
+const emitter = new EventEmitter();
+const source$ = Observable.fromEvent(emitter, 'msg');
+
+source$.subscribe(
+  console.log,
+  error =&gt; console.log('catch', error),
+  () =&gt; console.log('complete')
+);
+
+emitter.emit('msg', 1);
+emitter.emit('msg', 2);
+emitter.emit('another-msg', 'oops');
+emitter.emit('msg', 3);
+</pre>
+<hr/>
+<p class="ziti">上面的代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">1
+2
+3
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，从events模块导入的EventEmitter就是Node.js自带的事件发生器类型，通过EventEmitter可以构造具体的事件发生器实例emitter，可以通过emitter的emit函数发送任何名称的事件，第一个参数就是事件名称，第二个参数是事件对象。</p>
+<p class="ziti">在代码中，emitter发送的事件名称为msg，事件对象是数字，可以认为msg就相对于DOM事件中的click事件名称，事件对象就是具体某个click事件。可见，Node.js的EventEmitter和DOM中的事件源很像，正因为很像，所以fromEvent能够一视同仁地处理。</p>
+<p class="ziti">可以注意到，emitter还发出了一个名为another-msg的事件，这个事件并没有计入source$，因为fromEvent的第二个参数明确指定只接受msg类型的事件。</p>
+<p class="ziti">还有一个有意思的地方，我们必须在source$添加了Observer之后再去调用emitter.emit，否则Observer什么都接受不到，为什么会这样呢？</p>
+<p class="ziti">因为fromEvent产生的是Hot Observable，也就是数据的产生和订阅是无关的，如果在订阅之前调用emitter.emit，那有没有Observer这些数据都会立刻吐出来，等不到订阅的时候，当添加了Observer的时候，自然什么数据都获得不到。</p>
+<p class="ziti">这是fromEvent和之前介绍的其他创建类操作符的重大区别，对fromEvent而言，数据源在RxJS的世界之外，数据的产生也完全不受RxJS控制，这就Hot Observable对象的特点。</p>
+</body>
+</html>

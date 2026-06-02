@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">9.3　RxJS的异常处理</h2>
+<p class="ziti">我们已经知道了try/catch不适用于异步操作，回调函数传递错误异常的缺陷，还有Promise处理异常的局限。RxJS是函数式编程的事件，上面所介绍的异步处理方法对于函数式编程尤其不适合。在函数式编程中，每个函数都应该是纯函数，也就是毫无副作用的函数，对于输入返回输出结果。</p>
+<p class="ziti">如果让一个函数可以抛（throw）出错误异常，那这个函数就不是纯函数，因为throw等于增加了一个新的函数出口，抛出去的异常会改变外部的状态。总之，能够抛出异常的函数违背了函数式编程的要求。</p>
+<p class="ziti">从函数调用者的角度来看，如果一个函数可能会抛出异常，那调用者不仅要关心函数的返回值如何处理，而且要用try/catch等方式处理函数可能抛出的东西，这加重了函数调用者的负担。</p>
+<p class="ziti">理所当然，本书是关于RxJS的，读者一定已经猜到了，克服上述所有方案缺点的最佳解法就是用RxJS。</p>
+<p class="ziti">在RxJS中，错误异常和数据一样，会沿着数据流管道从上游向下游流动，流过所有的过滤类或者转化类操作符，最后触发Observer的error方法。</p>
+<p class="ziti">值得注意的是，错误异常只存在于自己所处的数据流管道中，不会像try/catch那样影响全局，在一个数据流管道中奔流的错误，绝不会影响另一个管道，至于怎么处理这个错误异常，则交给Observer来处理。</p>
+<p class="ziti">当然，很多情况下，并不是所有的错误异常都要由最终Observer的error函数来处理，不然Observer要操心的事情也太多，如果逻辑上这些错误异常不该Observer操心，那自然应该在数据管道中就把这些错误处理掉。</p>
+<p class="ziti">对错误异常的处理可以分为两类：</p>
+<p class="ziti6">·恢复（recover）</p>
+<p class="ziti6">·重试（retry）</p>
+<p class="ziti">恢复，就是本来虽然产生了错误异常，但是依然让运算继续下去。最常见的场景就是在获取某个数据的过程中发生了错误，这时候自然没有获得正确数据，但是用一个默认值当做返回的结果，让运算继续。</p>
+<p class="ziti">重试，就是当发生错误异常的时候，认为这个错误只是临时的，重新尝试之前发生错误的操作，寄希望于重试之后能够获得正常的结果。</p>
+<p class="ziti">在实际应用中，重试和恢复往往配合使用，因为重试往往是有次数限制的，不能无限重试，如果尝试了次数上限之后得到的依然是错误异常，还是要用“恢复”的方法获得默认值继续运算。</p>
+<p class="ziti">RxJS中有如下四个操作符来支持异常操作：</p>
+<p class="ziti6">·catch</p>
+<p class="ziti6">·retry</p>
+<p class="ziti6">·retryWhen</p>
+<p class="ziti6">·finally</p>
+<p class="ziti">其中，catch主要用于“恢复”工作，而retry和retryWhen就像它们的名字表示的一样，用于“重试”工作。</p>
+</body>
+</html>

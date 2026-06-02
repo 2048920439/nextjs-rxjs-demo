@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">9.2.2　回调函数的局限</h3>
+<p class="ziti">在JavaScript中异步操作都需要使用回调函数，要传递异步操作中产生的错误异常，一般就要借助于回调函数的参数。</p>
+<p class="ziti">我们改进上面异步调用JSON.parse的代码，如下所示：</p>
+<hr/>
+<pre class="ziti1">const invalidJsonString = 'Not Found';
+
+const delayParse = (jsonString, callback) =&gt; {
+  setTimeout(() =&gt; {
+    try {
+      const result = JSON.parse(jsonString);
+      callback(null, result);
+    } catch (error) {
+      callback(error);
+    }
+  }, 1000);
+};
+
+delayParse(invalidJsonString, (error, result) =&gt; {
+  if (error) {
+    console.log('catch error: ', error);
+    return;
+  }
+  console.log(result);
+});
+</pre>
+<hr/>
+<p class="ziti">为了让代码结构清楚，我们定义了一个函数delayParse，这个函数接受一个callback作为回调函数参数，在setTimeout部分，利用try/catch同步捕获JSON.parse可能抛出的异常错误，然后通过调用callback函数把异常错误传递给delayParse的调用者。</p>
+<p class="ziti">在这里我们采用了Node.js的回调函数定义风格，也就是回调函数的第一个参数代表可能的错误，从第二个参数开始才是无错误和异常情况下需要传递给调用者的真实结果，所以，如果一切顺利，JSON.parse没有抛出异常，那么调用callback的第一个参数就是null，第二个参数是解析的结果；反之，如果解析错误，第一个参数就是错误异常，因为解析失败了，第二个参数当然也就不存在了。</p>
+<p class="ziti">使用回调函数的参数能够解决try/catch只能支持同步操作的问题，但是也有自己的局限，最臭名昭著的一点，就是嵌套使用会造成“回调函数地狱”（callback hell）。</p>
+<p class="ziti">如果异步操作之间存在依赖关系，只有前一个异步操作结束了，才可以进行下一个异步操作，那么就会造成异步操作的嵌套。</p>
+<p class="ziti">就以上面定义的delayParse函数为例，代码如下：</p>
+<hr/>
+<pre class="ziti1">const nestedDelay = (callback) =&gt; {
+  delayParse(jsonString1, (error, result) =&gt; {
+    if (error) return callback(error);
+    delayParse(jsonString2, (error, result) =&gt; {
+      if (error) return callback(error);
+      delayParse(jsonString3, (error, result) =&gt; {
+        if (error) return callback(error);
+        // do something
+        callback(null, result);
+      });
+    });
+  });
+};
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，nestedDelay函数嵌套调用了三次delayParse，这当然没有什么实际的应用意义，但是这个例子足够说明嵌套调用异步操作的问题。</p>
+<p class="ziti">“回调函数地狱”指的就是因为嵌套调用异步函数，每个函数都要给一个回调函数，在回调函数中再调用其他的回调函数，造成代码极其复杂难懂，最明显的症状就是因为每一层回调函数都要因为缩格，代码要向右缩进一段，最后最里层的函数已经相当偏右，以至于在代码编辑器里不得不向右滚动才能看到代码的全貌。</p>
+<p class="ziti">当然，缩格只是表象，解决“回调函数地狱”问题的方法并不是去掉缩格，本质原因还是异步操作的方式需要改进。</p>
+<p class="ziti">“回调函数地狱”也暴露除了用回调函数参数传递异常错误的局限，在上面的代码中，可以注意到每一个回调函数的第一行都长得像下面这样：</p>
+<hr/>
+<pre class="ziti1">if (error) return callback(error);</pre>
+<hr/>
+<p class="ziti">这是Node.js异步函数调用的套路，所以通常使用只有一行的简洁写法，不过，展开看会更加清楚：</p>
+<hr/>
+<pre class="ziti1">if (error) {
+   callback(error);
+   return;
+}</pre>
+<hr/>
+<p class="ziti">这段代码的含义是，如果发现上一个异步函数调用以错误收场，那当前这一层的异步函数也没有必要继续了，所以可以立即使用return结束，在使用return之前，通过调用callback把error传递给调用者。</p>
+<p class="ziti">可以看到，每一个回调函数的第一行都需要写这样一行，非常麻烦，将异常一层一层往外传递的任务落在了应用层程序的开发者身上。</p>
+<p class="ziti">有没有办法能够解决这个问题呢？有，使用Promise就能够大大简化代码。</p>
+</body>
+</html>

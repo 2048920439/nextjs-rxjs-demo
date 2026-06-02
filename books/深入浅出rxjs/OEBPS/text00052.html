@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.3.3　fromPromise：异步处理的交接</h3>
+<p class="ziti">如果from的参数是Promise对象，那么这个Promise成功结束，from产生的Observable对象就会吐出Promise成功的结果，并且立刻结束，示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const promise = Promise.resolve('good');
+const source$ = Observable.from(promise);
+
+source$.subscribe(
+  console.log,
+  error =&gt; console.log('catch', error),
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">上面的代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">good
+complete
+</pre>
+<hr/>
+<p class="ziti">Promise对象虽然也支持异步操作，但是它只有一个结果，所以当Promise成功完成的时候，from也知道不会再有新的数据了，所以立刻完结了产生的Observable对象。</p>
+<p class="ziti">在上面的代码中，如果我们修改产生promise变量的代码如下，让它成为一个失败的Promise对象：</p>
+<hr/>
+<pre class="ziti1">const promise = Promise.reject('oops');
+</pre>
+<hr/>
+<p class="ziti">那么，程序输出结果如下：</p>
+<hr/>
+<pre class="ziti1">catch oops
+</pre>
+<hr/>
+<p class="ziti">当Promise对象以失败而告终的时候，from产生的Observable对象也会立刻产生失败事件。</p>
+<p class="p6">注意</p>
+<p class="ziti6">在RxJS v4中，fromPromise不光支持Promise类型的对象作为参数，还支持返回Promise对象的函数作为参数，在RxJS v5中，这个功能取消了，fromPromise只能接受Promise对象作为参数。</p>
+</body>
+</html>

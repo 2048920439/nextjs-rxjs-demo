@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">9.2.1　try/catch只支持同步运算</h3>
+<p class="ziti">很可惜，JavaScript自带的try/catch方式就很麻烦。当错误发生的时候，JavaScript运行环境会中止当前指令，创建一个指向产生错误指令的栈跟踪信息（Stack Trace），包含错误信息、代码行号和代码所在文件名，把这些信息封在Error对象中，然后沿着执行栈一层一层往上找catch区块，如果找不到，那就只能交给JavaScript运行环境用默认方法处理。</p>
+<p class="ziti">很明显，try/catch方式只适用于同步代码指令，对于异步操作，try/catch就完全无用武之地了，例如下面的代码：</p>
+<hr/>
+<pre class="ziti1">Const invalidJsonString = 'Not Found';
+try {
+  setTimeout(() =&gt; {
+    JSON.parse(invalidJsonString);
+  }, 1000);
+} catch (error) {
+  console.log('catch error');
+}
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，setTimeout第一个参数是一个函数，这个函数会被异步执行，将setTimeout函数调用放在一个try/catch区块之中，根本捕捉不到JSON.parse抛出的错误异常。</p>
+<p class="ziti">因为包住setTimeout的try/catch是同步执行的，在上面的代码中，setTimeout引发的异步操作一秒钟之后才运行，到那个时候，try/catch部分早就同步执行完了，根本没有可能让setTimeout引发的错误异常交给catch来处理。</p>
+</body>
+</html>

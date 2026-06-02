@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">13.3.1　利用Subject作为桥梁</h3>
+<p class="ziti">上一节中，我们已经把Counter组件拆分为一个傻瓜组件和一个聪明组件，这样一分为二之后，可以保持傻瓜组件不变，但改变聪明组件的实现方式。接下来，我们就看如何用RxJS来实现聪明组件的部分。</p>
+<p class="ziti">需要在项目中添加rxjs，在项目目录的命令行下运行下面的命令：</p>
+<hr/>
+<pre class="ziti1">npm install –save rxjs</pre>
+<hr/>
+<p class="ziti">在上一节应用的基础上，我们修改src/Counter.js文件中的内容。</p>
+<p class="p6">提示</p>
+<p class="ziti6">完整的应用代码可以在本书配套的GitHub代码库中的chapter-13/react-rxjs/rxjs-container目录下找到。</p>
+<p class="ziti">对于傻瓜组件CounterView的部分，就如前面说过的一样，完全不需要改变，因为它就是一个纯函数，我们要改变的是给CounterView提供prop的聪明组件部分。</p>
+<p class="ziti">为了使用RxJS，我们需要导入一些功能，包括Subject类和scan这个操作符，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Subject} from 'rxjs/Subject';
+import 'rxjs/add/operator/scan';</pre>
+<hr/>
+<p class="ziti">然后，在src/Counter.js中清除掉原有的聪明组件代码，替换为下面这样的代码：</p>
+<hr/>
+<pre class="ziti1">class RxCounter extends React.Component {
+  constructor() {
+    super(...arguments);
+
+    this.state = {count: 0};
+
+    this.counter = new Subject();
+    const observer = value =&gt; this.setState({count: value});
+    this.counter.scan((result, inc) =&gt; result + inc, 0)
+      .subscribe(observer);
+  }
+
+  render() {
+    return &lt;CounterView
+      count={this.state.count}
+      onIncrement={()=&gt; this.counter.next(1)}
+      onDecrement={()=&gt; this.counter.next(-1)}
+    /&gt;
+  }
+}
+
+export default RxCounter;
+</pre>
+<hr/>
+<p class="ziti">其中，我们把利用RxJS实现的傻瓜组件叫做RxCounter，这个名字改变并不会影响使用这个文件的代码，因为傻瓜组件是以export default的方式导出的，在src/App.js中，始终都是用下面这样的代码导入Couner：</p>
+<hr/>
+<pre class="ziti1">import Counter from './Counter';
+</pre>
+<hr/>
+<p class="ziti">在RxCounter类中，我们定义了构造函数constructor，每一个RxCounter的组件实例被创建的时候都会执行constructor中的代码。</p>
+<p class="ziti">constructor中第一条指令是super（…arguments），用当前构造函数的参数去调用父类，也就是React.Component的构造函数，这是一个标准做法，确保RxCounter具备React组件提供的一切默认功能。</p>
+<p class="ziti">在之前的例子中，组件state的初始化直接以类的属性形式存在，在这里我们使用的是另一种方式，在constructor中给this.state赋值，两种方式的效果是一模一样的。</p>
+<p class="ziti">接下来是最关键的部分，如何把RxJS的数据流和React的状态管理关联起来。</p>
+<p class="ziti">要驱动React组件的重新渲染，要么改变prop，要么改变state；要从一个组件内部驱动自己重新渲染，就只能改变state，所以，我们还是让RxCounter有一个自己的state。</p>
+<p class="ziti">同时，传递给傻瓜组件CounterView的prop并不会有变化，两个关键的prop、onIncrement和onDecrement都是函数类型，也和RxJS的数据流Observable没有关系。实际上，我们应该让傻瓜组件中立，尽量减少对外部的依赖，所以，虽然我们喜欢RxJS，但是也的确不应该让傻瓜组件的prop和特定于RxJS的数据结构有什么瓜葛。</p>
+<p class="ziti">于是，我们就要解决如下两个问题：</p>
+<p class="ziti6">·把onIncrement和onDecrement的函数调用转化为数据流中的数据。</p>
+<p class="ziti6">·把数据流中的数据改变转变为对组件状态的修改。</p>
+<p class="ziti">第一个问题，需要的是一个Observable的功能；第二个问题，需要的是一个Observer的功能。</p>
+<p class="ziti">在RxJS中谁能既扮演Observable又扮演Observer的角色？就是Subject，这就是我们要导入Subject类的原因。</p>
+<p class="ziti">在constructor中，我们创造了一个Subject对象，赋值给this.counter，这个对象就是连接RxJS和React的纽带。</p>
+<p class="ziti">从Observable的角度，我们将this.counter代表的Observable定位成所有加减数字的数据流。当需要加1时，往this.counter里推送一个数字1；当需要减1时，往this.counter里推送一个数字-1。很明显，如果有需求改变想要加减其他的数值，那我们也只需要往this.counter里推送对应的正数或者负数就可以了。</p>
+<p class="ziti">不过，this.counter作为Observable吐出的数字并不能直接用于修改RxCounter组件的state，修改state的结果应该是this.counter中所有数据的累计值。在RxJS中，对于上游每个数据都产生一个累计结果的操作符是scan，非常适合于这个场景。</p>
+<p class="ziti">所以，在constructor中，我们构建this.counter为Subject对象，利用scan累计this.counter中所有数据的总和，然后，scan产生的Observable对象吐出的每个数据都通过this.setState来修改当前组件的状态就可以，如下所示：</p>
+<hr/>
+<pre class="ziti1">this.counter = new Subject();
+const observer = value =&gt; this.setState({count: value});
+this.counter.scan((result, inc) =&gt; result + inc, 0)
+  .subscribe(observer);
+</pre>
+<hr/>
+<p class="ziti">接下来，在render函数中，传递给CounterView的两个函数类型prop就只要给this.counter恰当的数值就可以，对于onIncrement就是给this.counter一个正数1，对于onDecrement就是给this.counter一个负数-1，如下所示：</p>
+<hr/>
+<pre class="ziti1">onIncrement={()=&gt; this.counter.next(1)}
+onDecrement={()=&gt; this.counter.next(-1)}
+</pre>
+<hr/>
+<p class="ziti">在网页中检查这个应用，你可以看到效果和之前的一模一样。</p>
+<p class="ziti">恭喜你，你完成了RxJS和React的集成！</p>
+</body>
+</html>

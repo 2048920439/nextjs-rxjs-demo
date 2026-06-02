@@ -1,0 +1,11 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">14.1　Redux简介</h2>
+<p class="ziti">在上一章中，我们介绍了React，即使不使用RxJS，React也足够来实现独立的用户界面功能，不过，当一个应用中存在很多组件，而且这些组件之间需要互相通信的时候，React完全依靠prop来传递信息的方式就显得不合适了。</p>
+<p class="ziti">假设两个React组件A和B需要互相通信，如果A和B是父子关系，那通过prop通信就足够，但是，A和B可能处在组件结构中完全不相关的两个地方，那么想要让A把消息传递给B就不容易了。当然，我们可以使用一个RxJS的Subject实例来连接这两个组件，不过，一个应用中可能存在很多这样的A和B，如果为每一对需要通信的组件建立一个Subject对象，开发者很快就发现代码重复而且繁杂，在这里，我们介绍另一种管理应用状态的方法，也就是Redux框架。</p>
+<p class="ziti">在笔者的另一本书《深入浅出React和Redux》中对Redux的原理和用法有详细介绍，在这里只做简单介绍。</p>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">11.4.1　创造类和合并类操作符</h3>
+<p class="ziti">在RxJS中，创建类操作符通常都包含一个scheduler参数，因为创建类操作符作为数据流的源头，可以指定产生数据的节奏是很自然的事情。</p>
+<p class="ziti">支持scheduler的创建类操作符包括：</p>
+<p class="ziti6">·bindCallback</p>
+<p class="ziti6">·bindNodeCallback</p>
+<p class="ziti6">·empty</p>
+<p class="ziti6">·from</p>
+<p class="ziti6">·fromPromise</p>
+<p class="ziti6">·interval</p>
+<p class="ziti6">·of</p>
+<p class="ziti6">·range</p>
+<p class="ziti6">·throw</p>
+<p class="ziti6">·timer</p>
+<p class="ziti">除了创建类操作符，还有一些合并类操作符也支持scheduler参数，如果把合并类操作符理解为将多个数据流合并来创建新的数据流的话，那功能上和创建类操作符很相似，所以支持scheduler参数也很好理解。</p>
+<p class="ziti">下面这些合并类操作符支持scheduler参数：</p>
+<p class="ziti6">·concat</p>
+<p class="ziti6">·merge</p>
+<p class="ziti">下面是一个对合并类操作符merge使用指定scheduler的代码示例：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+import 'rxjs/add/observable/merge';
+import {asap} from 'rxjs/scheduler/asap';
+
+const source1$ = Observable.range(1, 3);
+const source2$ = Observable.range(10, 3);
+const source$ = Observable.merge(source1$, source2$, 2, asap);
+
+console.log('before subscribe');
+source$.subscribe(
+  value =&gt; console.log('data: ', value),
+  error =&gt; console.log('error: ', error),
+  () =&gt; console.log('complete')
+);
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">对于range没有指定Scheduler，但是在用merge合并两个range产生的数据流source1$和source2$时，使用了asap这个scheduler，最终合并产生的数据流一样由asap来控制节奏。</p>
+<p class="ziti">程序运行的结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+after subscribe
+data:  1
+data:  2
+data:  3
+data:  10
+data:  11
+data:  12
+complete
+</pre>
+<hr/>
+<p class="ziti">值得一提的是，merge中使用了asap，只影响merge所产生的Observable对象的数据生成节奏，并不影响上游range产生的Observable的生成节奏，因为所有的操作符都不会改变上游Observable对象。</p>
+</body>
+</html>

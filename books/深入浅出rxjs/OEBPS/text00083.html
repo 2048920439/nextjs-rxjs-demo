@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">6.2.3　isEmpty</h3>
+<p class="ziti">isEmpty用于检查一个上游Observable对象是不是“空的”，所谓“空的”Observable是指没有吐出任何数据就完结的Observable对象。</p>
+<p class="ziti">比如，interval产生的Observable对象就绝对不是空的，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/isEmpty';
+
+const source$ = Observable.interval(1000);
+const isEmpty$ = source$.isEmpty();</pre>
+<hr/>
+<p class="ziti">其中，isEmpty$会在source$吐出第一个数据时吐出一个true，然后完结。</p>
+<p class="ziti">我们已经知道创建类操作符中有三个看起来没啥用的empty、throw和never，现在，这三个操作符至少可以用来验证isEmpty的行为。</p>
+<p class="ziti">将empty产生的Observable对象作为isEmpty的上游，得到的会是true，代码如下：</p>
+<hr/>
+<pre class="ziti1">import 'rxjs/add/observable/empty';
+import 'rxjs/add/operator/isEmpty';
+
+const source$ = Observable.empty();
+const isEmpty$ = source$.isEmpty();</pre>
+<hr/>
+<p class="ziti">然而对于throw，就是上游Observable直接吐出error的情况，isEmpty并不会处理error，而是直接把这个error丢给了下游。</p>
+<p class="ziti">对于never产生的上游Observable对象，isEmpty将不会产生任何结果，因为它的上游Observable对象既不会吐出任何数据证明它不是“空的”，也不会完结，所以isEmpty也就会一直等待下去。</p>
+<p class="ziti">值得注意的是，只有上游Observable对象吐出一个数据的时候，isEmpty才能知道它“不空”，所以isEmpty产生的Observable对象吐出true的时机，要延迟到上游吐出数据的时刻，比如下面的代码：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.create(observer =&gt; {
+  setTimeout(() =&gt; observer.complete(1), 1000);
+});
+const isEmpty$ = source$.isEmpty();</pre>
+<hr/>
+<p class="ziti">其中，isEmpty$不会立刻吐出true，而是要等到1秒钟之后。</p>
+</body>
+</html>

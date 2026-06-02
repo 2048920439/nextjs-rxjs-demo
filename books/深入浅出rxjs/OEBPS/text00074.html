@@ -1,0 +1,11 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">5.3　本章小结</h2>
+<p class="ziti">本章介绍了RxJS中合并多个Observable对象的方法。不同合并方法的区别在于用何种策略把上游多个Observable对象中数据转手给下游，例如，concat的策略是让上游Observable对象的数据依次首尾相连，merge是任何数据先来先进入下游，zip则要保证所有上游Observable对象公平，数据要一一对应。</p>
+<p class="ziti">本章涉及了combineLatest的glitch问题，但是这个问题可以通过使用withLatest-From克服。</p>
+<p class="ziti">产生的数据依然是Observable对象的Observable，称为高阶Observable，RxJS提供了合并高阶Observable对象中数据的操作符，实际上只是把多个Observable对象参数改成了一个高阶Observable对象。</p>
+</body>
+</html>

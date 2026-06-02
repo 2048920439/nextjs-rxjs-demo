@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">14.2　用RxJS实现Redux</h2>
+<p class="ziti">对Redux有了初步了解之后，读者可能好奇Redux如何实现的，Redux的源代码并不多，读者有兴趣可以直接去阅读源代码。不过，现在你已经了解了RxJS，只需要知道Redux库的主要功能用RxJS只需要一行就可以实现，如下所示：</p>
+<hr/>
+<pre class="ziti1">action$.scan(reducer, initialState).subscribe(renderView);</pre>
+<hr/>
+<p class="ziti">action$是一个Observable对象，里面的数据就是action对象，一个action对象进入action$之后，就会经过scan操作符的处理。在前面的例子中我们已经知道scan非常适合管理应用的状态，每一个action对象都会引起应用状态的改变，scan可以调用规约函数reducer，同时还能记住每一次规约的结果。最后，只需要订阅scan的输出，就能够得到应用的当前状态，renderView就可以根据应用状态渲染用户界面。</p>
+<p class="ziti">当然，上面只是一个极简的实现方式，真正实现Redux的功能还是需要一些代码量的。</p>
+<p class="ziti">Redux主要的功能就体现在createStore上，调用createStore需要返回一个对象，这个对象具备三个函数dispatch、getState和subscribe，如果我们用RxJS实现这样类似createStore的功能，才算真正用RxJS实现了Redux的功能。</p>
+<p class="p6">提示</p>
+<p class="ziti6">对应的代码在本书配套的GitHub代码库的chapter-14/redux-rxjs/reactive-store目录下。</p>
+<p class="ziti">这个目录下的文件和之前的Redux实例一样，区别只是在src/Store.js中，代码如下：</p>
+<hr/>
+<pre class="ziti1">import createReactiveStore from './createReactiveStore';
+import reducer from './Reducer.js';
+
+const initValues = {
+  count: 0
+};
+const store = createReactiveStore(reducer, initValues);
+export default store;
+</pre>
+<hr/>
+<p class="ziti">和之前的区别，就是不使用Redux的createStore来创造Store对象，而是使用我们自己定制的createReactiveStore，这个函数在src/createReactiveStore中定义，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Subject} from 'rxjs/Subject';
+import 'rxjs/add/operator/scan';
+import 'rxjs/add/operator/startWith';
+import 'rxjs/add/operator/do';
+const createReactiveStore = (reducer, initialState) =&gt; {
+  const action$ = new Subject();
+  let currentState = initialState;
+
+  const store$ = action$.startWith(initialState).scan(reducer).do(state =&gt; {
+    currentState = state
+  });
+
+  return {
+    dispatch: (action) =&gt; {
+      return action$.next(action)
+    },
+    getState: () =&gt; currentState,
+    subscribe: (func) =&gt; {
+      store$.subscribe(func);
+    }
+  }
+}
+
+export default createReactiveStore;
+</pre>
+<hr/>
+<p class="ziti">为了支持dispatch，需要一个能够接受action对象的数据流，很自然，我们使用一个Subject对象来代表所有action对象，也就是action$，dispatch要做的就是调用action$.next，传入下一个action就可以了。</p>
+<p class="ziti">为了支持getState，要获得scan保存的当前状态，可惜scan也没有暴露任何API来访问这个状态，所以只好用最野蛮的方法，既然scan肯定要向下游传递当前状态，那就用do来把这个状态记录下来。</p>
+<p class="ziti">通过scan产生的数据流就是store$，subscribe这个Store对象，其实就只需要subscribe这个store$。</p>
+<p class="ziti">把createStore替换成我们自制的createReactiveStore之后，其余代码完全不需要改变，功能和之前用redux库一模一样，甚至连react-redux库也可以正常运行，因为我们的createReactiveStore函数返回的对象和createStore返回的结果表现完全一样，足够把react-redux骗过去，让它以为还是在和Redux Store交互。</p>
+<p class="ziti">不过，createReactiveStore和createStore还是有一点小小的功能差异，因为createReactiveStore依赖于RxJS的数据流，而数据流如果不被订阅的话，整个管道上每个环节的操作是不会运行的。假设，在调用createReactiveStore产生的Store对象的subscribe之前，先利用这个Store的dispatch函数派送了action对象，是不会引起数据流操作的，所以对应的currentState也不会发生改变，这样，当晚些时候调用Store的subscribe时候，得到的状态就不是正确的结果。</p>
+<p class="ziti">为了克服这个问题，一定要保证createReactiveStore产生的Store对象第一时间被订阅，这并不是什么困难的事情，react-redux的connect函数实际上就替我们做了对Store的订阅。</p>
+</body>
+</html>

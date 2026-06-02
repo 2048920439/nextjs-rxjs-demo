@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">11.1　Scheduler的调度作用</h2>
+<p class="ziti">Scheduler可以翻译成“调度器”，用于控制RxJS数据流中数据消息的推送节奏。</p>
+<p class="ziti">到目前为止，本书还没有提到过RxJS中的Scheduler，然而，实际上我们已经和Scheduler多次擦肩而过。</p>
+<p class="ziti">在RxJS提供的很多操作符中都带有Scheduler类型的参数，在之前的章节中，为了简化问题，我们有意不提这些参数，不过，现在是时候来研究一下Scheduler参数的作用了。</p>
+<p class="ziti">以创建类操作符的代表range为例，之前我们只说range的函数声明是下面这样：</p>
+<hr/>
+<pre class="ziti1">function range(start, count) {
+}</pre>
+<hr/>
+<p class="ziti">实际上，range的函数声明是这样：</p>
+<hr/>
+<pre class="ziti1">function range(start, count, scheduler) {
+}</pre>
+<hr/>
+<p class="ziti">第三个参数，也就是最后一个参数就是scheduler，实际上，因为scheduler不经常使用，所以scheduler总是一个可选参数，如果一个操作符有scheduler参数，那么这个参数也肯定是最后一个参数。</p>
+<p class="ziti">如果使用操作符的时候不传递scheduler参数，那么RxJS就会使用默认的Scheduler实现。</p>
+<p class="ziti">在看干巴巴的Scheduler定义之前，我们先用代码来体会一下在创建Observable的时候使用Scheduler和不使用Scheduler的区别。</p>
+<p class="ziti">我们使用range来产生Observable对象，如果不指定Scheduler对象，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+
+const source$ = Observable.range(1, 3);
+
+console.log('before subscribe');
+source$.subscribe(
+  value =&gt; console.log('data: ', value),
+  error =&gt; console.log('error: ', error),
+  () =&gt; console.log('complete')
+);
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">这段代码的执行结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+data:  1
+data:  2
+data:  3
+complete
+after subscribe
+</pre>
+<hr/>
+<p class="ziti">这样的执行结果应该没有任何意外，JavaScript就是按照指令顺序来执行的，首先利用range这个操作符产生一个Observable对象source$，不过我们都知道Observable对象是“懒执行”的，没有Observer，source$这个数据源并不会被发动。</p>
+<p class="ziti">然后，第一个console.log语句输出了before subscribe。</p>
+<p class="ziti">接着给source$添加Observer，这时候source$被退订，于是开始吐出数据，从1到3，每一个数据都会引发Observer的输出，在吐出最后一个数据3之后，source$完结，引发Observer输出一个complete字符串。</p>
+<p class="ziti">当source$的所有操作都结束之后，最后一行console.log被执行，输出after subscribe。</p>
+<p class="ziti">因为range是同步输出数据，所有当Observer添加之后，会一口气把所有数据全部吐出，所以上面的代码也是完全同步执行的。</p>
+<p class="ziti">现在对上面的代码稍作修改，给range传递一个Scheduler对象，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/range';
+import {asap} from 'rxjs/scheduler/asap';
+
+const source$ = Observable.range(1, 3, asap);
+
+console.log('before subscribe');
+source$.subscribe(
+  value =&gt; console.log('data: ', value),
+  error =&gt; console.log('error: ', error),
+  () =&gt; console.log('complete')
+);
+console.log('after subscribe');
+</pre>
+<hr/>
+<p class="ziti">这段代码从rxjs/scheduler/asap中导入了一个叫asap的对象，asap就是As Soon As Possible的缩写，代表“能有多快就多快”。</p>
+<p class="ziti">其余部分代码完全没有变化，然后修改后的代码执行结果如下：</p>
+<hr/>
+<pre class="ziti1">before subscribe
+after subscribe
+data:  1
+data:  2
+data:  3
+complete
+</pre>
+<hr/>
+<p class="ziti">可以看到，很有意思的是，after subscribe这个字符串的输出抢在Observer输出第一个数据之前了，也就是说，在这段代码中，并没有在subscribe这个语句上同步等待source$吐出全部结果，而是直接继续执行，执行了最后一行console.log之后，Observer才有机会获得source$吐出的数据。</p>
+<p class="ziti">很明显，使用了这个叫asap的Scheduler，改变了Observable对象的数据产生方式。</p>
+<p class="ziti">现在，我们看一下Scheduler的官方定义，包含如下三个方面：</p>
+<p class="ziti6">·Scheduler是一种数据结构；</p>
+<p class="ziti6">·Scheduler是一个执行环境；</p>
+<p class="ziti6">·Scheduler拥有一个虚拟时钟（virtual clock）。</p>
+<p class="ziti">所谓Scheduer是一种数据结构，指的是Scheduler对象可以根据优先级或者其他某种条件来安排任务执行队列。</p>
+<p class="ziti">Scheduler可以指定一个任务何时何地执行，所以它是一个执行环境。在上面使用asap的例子中，asap决定了数据推送任务不是同步执行，而是用其他节奏来执行。</p>
+<p class="ziti">可以这么看待Scheduler和数据流的关系，当数据流吐出数据的时候，需要知道当前的时间，对于一些和时间相关的操作符这一点十分明显，比如interval这个操作符产生的Observable对象，每隔指定时间吐出一个数据，那就要确定是不是到了指定的时间点，那么怎么确定时间呢？由Scheduler来提供时间。</p>
+<p class="ziti">在RxJS的数据流世界里，Scheduler说现在是几点几分几秒，那现在就是几点几分几秒，Scheduler就像是这个世界中的权威标准时钟。</p>
+<p class="ziti">Scheduler提供的时钟可以是准确的现实世界的时间，也可以是一个扭曲的时间。正因为Scheduler提供的虚拟时钟可以被操纵，我们可以利用Scheduler来控制数据流中数据的流动节奏。在接下来的章节中会介绍利用Scheduer虚拟时钟特性的TestScheduler，TestScheduler可以伪造时钟，方便我们对RxJS数据流进行单元测试。</p>
+</body>
+</html>

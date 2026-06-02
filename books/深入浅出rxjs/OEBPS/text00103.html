@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">7.3.3　single</h3>
+<p class="ziti">single这个操作符用来检查上游是否只有一个满足对应条件的数据，如果答案为“是”，就向下游传递这个数据；如果答案为“否”，就向下游传递一个异常。</p>
+<p class="ziti">下面是使用single的示例代码：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.interval(1000).take(2);
+const result$ = source$.single(x =&gt; x % 2 === 0);</pre>
+<hr/>
+<p class="ziti">对于这个例子，因为source$只产生0和1两个数据，所以result会找到唯一满足偶数条件的数据0。</p>
+<p class="ziti">对于下面的例子：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.interval(1000);
+const result$ = source$.single(x =&gt; x % 2 === 0);</pre>
+<hr/>
+<p class="ziti">source$会持续产生递增整数，当source$产生数据2时，single就发现source$中产生了两个偶数，这时候就会立刻向下游传递下面的错误：</p>
+<hr/>
+<pre class="ziti1">Sequence contains more than one element</pre>
+<hr/>
+</body>
+</html>

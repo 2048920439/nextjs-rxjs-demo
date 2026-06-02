@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.3.5　window和buffer</h3>
+<p class="ziti">如果能够理解前面的无损回压控制操作符，那么理解window应该就不成问题，因为相对于windowToggle和windowWhen，window还是很简单的，它只支持一个Observable类型的参数，称为notifier$，每当notifer$产生一个数据，既是前一个缓存窗口的结束，也是后一个缓存窗口的开始。</p>
+<p class="ziti">使用window的示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.timer(0, 100);
+const notifer$ = Observable.timer(400, 400);
+const result$ = source$.window(notifer$);
+</pre>
+<hr/>
+<p class="ziti">其中，window的参数notifier$每隔400毫秒产生一个数据，也就是每400毫秒一个缓存窗口，对应的弹珠图如图8-9所示。</p>
+<div class="pic"><img alt="" src="Image00081.jpg" />
+</div>
+<p class="middle-img">图8-9　window的弹珠图</p>
+<p class="ziti">上面的例子中notifer$是一个永不完结的数据流，如果notifier$会完结，那会怎样呢？修改上面的代码如下：</p>
+<hr/>
+<pre class="ziti1">const notifer$ = Observable.timer(400); //400毫秒后产生一个数据之后完结</pre>
+<hr/>
+<p class="ziti">对应的弹珠就会是图8-10这样。</p>
+<div class="pic"><img alt="" src="Image00082.jpg" />
+</div>
+<p class="middle-img">图8-10　notifer$会完结的window弹珠图</p>
+<p class="ziti">可以看到，notifer$产生唯一的数据之后立刻完结，会导致window产生的第二个内部Observable对象立刻完结，同时window产生的高阶Observable对象也会完结。</p>
+<p class="ziti">buffer有类似行为，对应于上面的例子，notfier$完结时，buffer产生的Observable对象会立刻完结。</p>
+</body>
+</html>

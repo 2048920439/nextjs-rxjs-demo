@@ -1,0 +1,14 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">2.7　本章小结</h2>
+<p class="ziti">在这一章中我们了解了RxJS的基本概念，RxJS可以通过npm方式获取，或者在网页中通过script标签导入。</p>
+<p class="ziti">Observable和Observer是RxJS的两大主角，这两者的关系是观察者模式和迭代器模式的结合，通过Observable对象的subscribe函数，可以让一个Observer对象订阅某个Observable对象的推送内容，可以通过unsubsribe函数退订内容。</p>
+<p class="ziti">在Observable和Observer两者的关系里，Observer处于被动地位，代码中可能并看不到一个Observer对象，而只看到分别代表next、error和complete的函数。</p>
+<p class="ziti">Observable对象可以看作一个数据集合，但这个数据集合可以不是一次产生，而是在一个时间段上逐个产生每个数据，因为这个特性，一个Observable对象即使产生超庞大的数据，依然不会消耗很多内存，因为每次只产生一个，吐出来之后再产生另一个，不会积压。</p>
+<p class="ziti">Observable分Hot和Cold两种，到底使用那种Observable完全根据实际场景来判断。</p>
+<p class="ziti">在后续章节，我们将深入介绍Observable的使用方式，也会利用“弹珠图”这种形象的方式来描述操作符的功能。</p>
+</body>
+</html>

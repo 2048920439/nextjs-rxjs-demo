@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.2.2　mapTo</h3>
+<p class="ziti">mapTo在本书前面的章节中也多次用到，mapTo这个函数完全可以用map来实现，如下所示：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.mapTo = function (value) {
+  return this.map(x =&gt; value);
+};
+</pre>
+<hr/>
+<p class="ziti">如果不嫌麻烦，可以不用mapTo而直接使用map，就像下面这样把上游所有数据都映射为A：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.map(() =&gt; 'A');
+</pre>
+<hr/>
+<p class="ziti">如果觉得这样不大好看，就像下面这样用mapTo：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.mapTo('A');
+</pre>
+<hr/>
+<p class="ziti">无论上游产生什么数据，传给下游的都是同样的数据，RxJS保留了mapTo这样一个单独的操作符，当然是因为相信实际工作中这样的场景不少。</p>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">8.7　本章小结</h2>
+<p class="ziti">本章介绍了用RxJS对数据进行转化的方法，除了数据流的合并和过滤，数据转化也是数据管道中最重要的操作之一。</p>
+<p class="ziti">最简单的数据转化只是把上游的某个数据转化为对应的一个下游数据，但是数据转化不限于单个数据的转化，还包括把上游的多个数据合并为一个数据传给下游。这种合并转化操作不同于合并类操作符的操作，因为合并类操作符只是搬运上游数据，并不会改变数据自身。</p>
+<p class="ziti">转化类操作符也可以用来控制回压，这是一种无损的回压控制方法，本质上是把如何过滤掉无关信息的决策权交给了下游。</p>
+<p class="ziti">本章还介绍了转化类操作符对高阶Observable的支持，本质上，可以认为是map和某个合并类操作符的组合，比如concatMap就是map和concatAll的组合。</p>
+</body>
+</html>

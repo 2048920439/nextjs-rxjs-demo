@@ -1,0 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.4.4　exhaustMap</h3>
+<p class="ziti">exhaustMap对数据的处理策略和switchMap正好相反，先产生的内部Observable优先级总是更高，后产生的内部Observable对象被利用的唯一机会，就是之前的内部Observable对象已经完结。</p>
+<p class="ziti">需要注意的是，exhaustMap的实现是，前一次project调用返回的内部Observable对象完结之前，上游推送下来一个数据，这时候exhaustMap根本不会去调用project函数，因为project会同步产生Observable对象，既然这时候exhaustMap根本不会订阅这个Observable对象，干脆根本不去调用project函数。</p>
+<p class="ziti">特定于网页中AJAX请求这种场景，如果某种AJAX请求要维持现存的AJAX请求，那就用得上exhaustMap，这种喜欢“旧”请求胜过“新”请求的例子不多，但并不是不存在。比如，如果利用AJAX建立服务器和浏览器之间的长连接，让服务器可以沿着AJAX通道推送消息下来，那么只要有这样长连接的AJAX存在，就没有必要建立新的AJAX连接，exhaustMap适合这样的场景。</p>
+<p class="p6">提示</p>
+<p class="ziti6">在RxJS v4中，没有exhaustMap，有一个叫flatMapFirst的操作符具备同样的功能，在RxJS v5中用exhaustMap取代了flatMapFirst，在v5中不能再使用flatMapFirst。</p>
+</body>
+</html>

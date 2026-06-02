@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">9.1　异常处理不可避免</h2>
+<p class="ziti">本书到目前为止，讨论的大部分场景中数据流转没有错误异常发生，也就是数据在管道中从上游流到下游，期间经过各种操作符的过滤或者转换，最后触发Observer的next方法，整个过程一帆风顺。然而，在真实的应用中，数据的流转未必就这么顺利，异常错误往往是不可避免的。</p>
+<p class="ziti">产生错误异常的一个典型因素就是外界环境。程序自身的代码在我们的控制中，程序的运行过程也可以把控，但是，和程序相关的外界环境因素不在我们的控制范围之内，这些外界环境可能由于各种各样的原因产生错误异常，从而导致程序运行时产生异常错误。</p>
+<p class="ziti">最常见的外界环境导致程序异常错误的例子就是输入输出操作，例如，一个写入文件的操作，即使只是写入一个字节的操作，也可能在写到一半的时候硬盘的磁道坏了，或者硬盘满了，这个写入操作就会出错。</p>
+<p class="ziti">对于网页应用，由于浏览器的限制，JavaScript代码不能读取本地文件，所以输入输出操作往往是通过AJAX请求访问服务器资源。一个最简单的AJAX请求也很有可能会失败，导致失败的原因很多，可能浏览器一端的网络突然中断，可能是运营商的路由器着火了，可能是目标服务器的机房突然断电，可能是服务器上运行的代码有bug，也可能是机房的网线被一个工程师不小心踢断了……这一切都可能发生，而且对于我们写程序的人来说，完全不能阻止这些异常事故的发生。</p>
+<p class="ziti">而且，这些异常错误可能发生在任何一个时间，可能创建TCP连接的时候就失败，可能读取了HTTP响应的报文头部却没有内容，可能数据读取了一半的时候连接中断……正常的情况也许只有一种，但是异常的情况却千奇百怪。</p>
+<p class="ziti">所以说，程序之外的一切都不是百分之百靠得住，开发者的责任之一，就是要预料到这些异常可能发生，在代码中做出对应的预防措施。</p>
+<p class="ziti">程序中产生异常还有可能是代码自身造成的，比如访问一个可能是null或者undefined的对象的属性，就会导致一个异常发生。如下面的代码：</p>
+<hr/>
+<pre class="ziti1">Const x = getSomeValue();
+cosole.log(x.noSuchProp);</pre>
+<hr/>
+<p class="ziti">这段代码看似没什么问题，但是如果getSomeValue函数返回一个null，那么运行时，第二行就会抛出一个TypeError异常：</p>
+<hr/>
+<pre class="ziti1">TypeError: Cannot read property ‘noSuchProp’ of null</pre>
+<hr/>
+<p class="ziti">如果你是一个有经验的开发者，相信你一定遇到过类似上面的问题。</p>
+<p class="ziti">这些代码导致的异常往往间接和外部环境有关，在大部分情况下不会暴露出来，但是，当外界环境变化时，就会触发对应的异常。</p>
+<p class="ziti">例如，下面直接利用XmlHttpRequest调用API的代码：</p>
+<hr/>
+<pre class="ziti1">Const req = new XMLHttpRequest();
+req.onload = function(){
+  const data = JSON.parse(this.responseText);
+  console.log(data);
+}
+req.open('get', 'https://api.github.com/repos/ReactiveX/rxjs', true);
+req.send();
+</pre>
+<hr/>
+<p class="ziti">这段代码通过XMLHttpRequest调用GitHub的API，获取RxJS这个代码库的基本信息，正常情况下，返回的结果，也就是this.responseText会是一个JSON格式的字符串，通过JSON.parse函数可以解析为一个JavaScript对象。</p>
+<p class="ziti">但是，如果因为某种原因，最后this.responseText得到的并不是一个JSON格式的对象，比如因为服务器的原因，返回的结果只是一个字符串Not Found，那么JSON.parse调用就会抛出一个SyntaxError异常：</p>
+<hr/>
+<pre class="ziti1">SyntaxError: Unexpected token N in JSON at position 0</pre>
+<hr/>
+<p class="ziti">所以，要对这些可能抛出异常的API调用进行特殊处理，JavaScript中处理异常的方式就是try/catch。</p>
+<p class="ziti">上面的代码可以改进为如下这样：</p>
+<hr/>
+<pre class="ziti1">Req.onload = function(){
+  try {
+    const data = JSON.parse(this.responseText);
+    console.log(data);
+  } catch (error) {
+    console.log(‘访问API失败’);
+  }
+}
+</pre>
+<hr/>
+<p class="ziti">当服务器返回的结果不正确时，JSON.parse虽然依然会抛出异常错误，但是，因为这个指令存在于try区块，所以抛出的异常错误会被随后的catch区块捕获，在catch区块中可以用代码来尽力弥补由于异常造成的麻烦。</p>
+<p class="ziti">在上面的代码中，我们对异常错误的处理只是简单地在console中输出提示，实际应用中，在界面上显示一个用户能够看到的提示，比如“网络故障，请重试”，让用户知道发生了什么状况，要比出错后没有任何解释的用户体验要强，这也就是处理错误异常的意义。</p>
+<p class="ziti">在浏览器中的JavaScript程序，如果没有捕获到异常，那么对应的事件处理就会中断，之后的指令不会执行；对于在Node.js环境中运行的JavaScript程序，如果异常没有被捕获，那么默认情况下会让Node.js应用崩溃退出。可见，异常处理是真实应用开发中必须要考虑的方面。</p>
+</body>
+</html>

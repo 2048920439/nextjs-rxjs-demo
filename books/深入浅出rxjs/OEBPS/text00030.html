@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">3.1　为什么要有操作符</h2>
+<p class="ziti">任何一种Reactive Extension的实现，都包含一个操作符的集合，这是Reactive Extension的重要组成部分，RxJS作为JavaScript语言的Reactive Extension实现，当然也不例外。</p>
+<p class="ziti">如果要给操作符一个定义，可以这么描述：一个操作符是返回一个Observable对象的函数，不过，有的操作符是根据其他Observable对象产生返回的Observable对象，有的操作符则是利用其他类型输入产生返回的Observable对象，还有一些操作符不需要输入就可以凭空创造一个Observable对象。</p>
+<p class="p6">注意</p>
+<p class="ziti6">RxJS中的“操作符”是由英文operator直译过来的，可是operator并不是一个字符，而是函数。另外原生JavaScript也有operator的概念，可以翻译为“运算符”，请读者区分这两者的区别。</p>
+<p class="ziti">很明显，操作符很多，是一个大家庭，在这个大家庭中，返回一个Observable对象是所有成员的共同特征。接下来我们用具体实例来介绍操作符，这样更加直观，也更加方便。</p>
+<p class="ziti">在所有操作符中最容易理解的可能就是map和filter，因为JavaScript的数组对象就有这样两个同名的函数map和filter，对比这两个函数在数组和RxJS中的用法就能够理解二者的联系和区别。</p>
+<p class="ziti">利用数组的map和filter来解决一个问题，代码如下：</p>
+<hr/>
+<pre class="ziti1">const source = [1, 2, 3, 4];
+const result = source.filter(x =&gt; x % 2 === 0).map(x =&gt; x * 2);
+console.log(result);</pre>
+<hr/>
+<p class="ziti">在上面的代码中，对于数组source，利用filter筛选出除以2余数为0的数，也就是偶数，因为filter函数返回的依然是一个数组，所以可以接着调用数组的map函数，把每个元素乘以2，map返回的依然是一个数组，最后程序的输出是这样：</p>
+<hr/>
+<pre class="ziti1">[ 4, 8 ]</pre>
+<hr/>
+<p class="ziti">这段代码展示了几个关键点：</p>
+<p class="ziti6">·filter和map都是数组对象的成员函数。</p>
+<p class="ziti6">·filter和map的返回结果依然是数组对象。</p>
+<p class="ziti6">·filter和map不会改变原本的数组对象。</p>
+<p class="ziti">因为上面的特点，filter和map可以链式调用，也就是用一个逗点操作符一个接一个地连续调用，这样写代码的好处不言自明，一个复杂的功能可以分解为多个小任务来完成，每个小任务只需要关注问题的一个方面。此外，因为数组对象本身不会被修改，小任务之间的耦合度很低，这样的代码就更容易维护。</p>
+<p class="ziti">上面介绍的是数组对象中的filter和map，现在把“数组对象”这个词换成“Observable对象”，来看一看结果如何。</p>
+<p class="ziti">同样逻辑的代码，把数组对象source换成Observable对象source$，代码如下：</p>
+<hr/>
+<pre class="ziti1">const result$ = source$.filter(x =&gt; x % 2 === 0).map(x =&gt; x * 2);
+result$.subscribe(console.log);</pre>
+<hr/>
+<p class="ziti">可以注意到，filter和map的使用方式和数组中对应方法几乎一模一样，不同之处是代码中的标识符带$后缀，代表这是一些Observable对象。此外，输出Observable对象中的数据不能直接用console.log，而是使用subscribe来接受推送，程序运行的结果如下：</p>
+<hr/>
+<pre class="ziti1">4
+8</pre>
+<hr/>
+<p class="ziti">对Observable对象能够链式调用filter和map，是因为：</p>
+<p class="ziti6">·filter和map都是Observable对象的成员函数。</p>
+<p class="ziti6">·filter和map的返回结果依然是Observable对象。</p>
+<p class="ziti6">·filter和map不会改变原本的Observable对象。</p>
+<p class="ziti">上面“Observable对象”的特点和“数组对象”如出一辙。</p>
+<p class="p6">提示</p>
+<p class="ziti6">如果你惊叹于数组对象和Observable对象的相似性，那是因为这两个东西在数学概念上都是Functor，Functor属于数学范畴论（Category Functor），满足Functor的类型就会具备一些共同的特质，比如链式调用。本书不会详细介绍Functor，这并不影响学习RxJS，享用数学理论的精妙成果并不需要精通数学理论，就像不需要学懂日文才能制作寿司一样。从使用RxJS的角度，读者只需要了解，数组和Observeable都是Functor就足够了。</p>
+<p class="ziti">在RxJS的世界中，filter和map这样的函数就是操作符，每个操作符提供的只是一些通用的简单功能，但通过链式调用，这些小功能可以组合在一起，用来解决复杂的问题。</p>
+<p class="ziti">filter和map只是最普通的两个操作符，RxJS自带很多核心操作符，本书接下来会逐一介绍。</p>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">10.2　Hot和Cold数据流差异</h2>
+<p class="ziti">在第2章2.4节中介绍过，所谓Cold Observable，就是每次被subscribe都产生一个全新的数据序列的数据流。</p>
+<p class="ziti">在第3章中，介绍了RxJS中的创建类操作符，其中绝大部分创建的都是Cold Observable对象，有代表性的有下面这些。</p>
+<p class="ziti">interval，每隔指定时间吐出递增整数数据，从上面的例子我们也领教到了，对interval产生的Observable对象每subscribe一次，都会产生一个全新的递增整数序列。</p>
+<p class="ziti">range，这个比较容易理解，因为range是一次同步吐出一个范围内的数值，每次被subscribe都生成全新的序列。</p>
+<p class="ziti">上面的代码虽然对一个Observable做了多次subscribe，但是对于每一个Observer，其实都有一个独立的数据流在喂着，数据并不是真正来自同一个源头。</p>
+<p class="ziti">在RxJS的创建类操作符中，下面几个产生的是Hot Observable：</p>
+<p class="ziti6">·fromPromise</p>
+<p class="ziti6">·fromEvent</p>
+<p class="ziti6">·fromEventPattern</p>
+<p class="ziti">不难看出，这些产生Hot Observable对象的操作符数据源都在外部，或者是来自于Promise，或者是来自于DOM，或者是来自于Event Emitter，真正的数据源和有没有Observer没有任何关系。</p>
+<p class="ziti">真正的多播，必定是无论有多少Observer来subscribe，推给Observer的都是一样的数据源，满足这种条件的，就是Hot Observable，因为Hot Observable中的内容创建和订阅者无关。</p>
+<p class="ziti">满足Hot Observable的现实例子也不少，比如浏览器中鼠标的移动事件、点击事件，浏览器中的滚动事件，来自WebSocket的推送消息，还有Node.js支持的EventEmitter对象消息。</p>
+<p class="ziti">Hot和Cold Observable都具有“懒”的特质，不过Cold更“懒”一些，两者的数据管道内逻辑都是只有存在订阅者存在才执行，Cold Observable更“懒”体现在，如果没有订阅者，连数据都不会真正产生，对于Hot Observable，没有订阅者的情况下，数据依然会产生，只不过不传入数据管道。</p>
+<p class="ziti">所以，Cold Observable实现的是单播，Hot Observable实现的多播。</p>
+<p class="ziti">可是，有时候，我们也希望对Cold Observable实现多播。</p>
+<p class="ziti">举一个十分现实的例子，假如用RxJS实现“超级马里奥”（也有习惯叫做“超级玛丽”）这个游戏，游戏中需要实现动画，随着时间推进，马里奥、蘑菇、乌龟这些不同游戏元素需要移动，如图10-2所示。</p>
+<div class="pic"><img alt="" src="Image00094.jpg" />
+</div>
+<p class="middle-img">图10-2　超级马里奥游戏中有很多元素需要时钟控制移动</p>
+<p class="ziti">为了达到游戏的动画效果，一个很直观的方法就是用interval构建一个每隔10毫秒发出信号的Observable对象，这样每个部件只要subscribe这个Observable对象，就能够每10毫秒获得一个信号，根据这个信号的节奏来计算和移动自己的位置。</p>
+<p class="ziti">展示上述功能的代码样例如下：</p>
+<hr/>
+<pre class="ziti1">const tick$ = Observable.interval(10);
+
+tick$.subscribe(moveMario);
+tick$.subscribe(moveTurtule);
+tick$.subscribe(moveMushroom);</pre>
+<hr/>
+<p class="ziti">可是，上面已经说过，interval产生的是Cold Observable，即使所有部件都去subscrible同一个interval产生的Observable对象，最后得到的也是不同的数据序列，所以上面的代码实际上是不严谨的。</p>
+<p class="ziti">假如某个游戏元素创建得晚，那么就会出现节奏不一致的问题。比如，游戏中的最终大Boss的出场肯定无法确定什么时刻，当大Boss出现时，调用下面的语句：</p>
+<hr/>
+<pre class="ziti1">tick$.subscribe(moveBigBoss);</pre>
+<hr/>
+<p class="ziti">这个时候，tick$依然会产生一个全新的数据序列，而这个序列很有可能和马里奥等其他游戏元素的数据序列不一致，这些游戏元素的移动就会不一致。</p>
+<p class="ziti">很显然，我们希望创建这样一种tick$，它是由interval产生的，但是它又是一个Hot Observable，能够给所有Observer提供单一的数据源。</p>
+<p class="ziti">既然interval产生的是Cold Observable，那么接下来的问题就是：如何把Cold Observable变成Hot Observable呢？</p>
+<p class="ziti">答案就是要使用RxJS中的Subject。</p>
+</body>
+</html>

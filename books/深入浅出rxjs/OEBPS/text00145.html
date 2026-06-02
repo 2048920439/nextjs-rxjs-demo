@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">10.3　Subject</h2>
+<p class="ziti">我们知道，在函数式编程的世界里，有一个要求是保持“不可变性”（Immutable），所以，要把一个Cold Observable对象转换成一个Hot Observable对象，并不是去改变这个Cold Observable对象本身，而是产生一个新的Observable对象，包装之前Cold Observable对象，这样在数据流管道中，新的Observable对象就成为了下游，想要Hot数据源的Observer要订阅的是这个作为下游的Observable对象。</p>
+<p class="ziti">要实现这个转化，很明显需要一个“中间人”做串接的事情，这个中间人有两个职责：</p>
+<p class="ziti6">·中间人要提供subscribe方法，让其他人能够订阅自己的数据源。</p>
+<p class="ziti6">·中间人要能够有办法接受推送的数据，包括Cold Observable推送的数据。</p>
+<p class="ziti">上面所说的第一个职责，相当于一个Observable，第二个工作，相当于一个Observer。</p>
+<p class="ziti">在RxJS中，提供了名为Subject的类型，一个Subject既有Observable的接口，也具有Observer的接口，一个Subject就具备上述的两个职责。</p>
+<p class="p6">提示</p>
+<p class="ziti6">还记得第2章介绍的观察者模式吗？如果按照书本上的传统说法，被观察者被叫做“主体”（Subject），但是为了避免混淆，我们把被观察者称为“发布者”（Publisher），现在你知道RxJS中真正的Subject是什么了。</p>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">9.3.3　retryWhen</h3>
+<p class="ziti">retryWhen接受一个函数作为参数，这个参数称为notifer，用于控制“重试”的节奏和次数，这比retry单纯只能控制重试次数要前进一步。</p>
+<p class="ziti">控制“重试”的节奏和次数的方式也非常符合RxJS的风格，notifer有一个参数名为error$，注意这个参数名后面有一个$，表示它实际上代表的不是一个错误，而是由一组错误组成的Observable对象；notifer返回一个Observable对象，当上游扔下来错误的时候，retryWhen就会调用notifer，然后根据notifer返回的Observable对象来决定何时重试，这个返回的Observable就是一个“节奏控制器”，“节奏控制器”每吐出一个数据，就会进行一次重试。</p>
+<p class="ziti">当“节奏控制器”完结的时候，retryWhen返回的Observable对象也会立刻完结。</p>
+<p class="ziti">用一个例子来看retryWhen如何使用，代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 5);
+const error$ = source$.map(throwOnUnluckyNumber);
+const retryWhen$ = error$.retryWhen(err$ =&gt; Observable.interval(1000));</pre>
+<hr/>
+<p class="ziti">retryWhen的参数函数返回一个interval产生的Observable对象，每隔一秒钟吐出一个数据，于是，当error$第一次抛出异常时，会等待一秒钟才开始重试，这样就可以控制住节奏，避免每次重试都是立即发生。</p>
+<p class="ziti">在上面的例子中，并没有用到notifer函数的err$参数，读者可能会觉得奇怪，为什么err$是一个Observable对象，而不是像catch这个操作符一样，是一个单独的错误对象？</p>
+<p class="ziti">这是因为，retryWhen最多只会调用notifier一次，当上游第一次抛下错误的时候调用notifer一次，之后的重试过程中如果还有错误抛下来，就不会再调用notifer了，所以，为了访问到所有重试可能产生的错误，notifer的第一个参数是一个err$而不是err。</p>
+<p class="ziti">retryWhen拥有比retry更强大的定制功能，可以实现各种复杂的控制。</p>
+<p class="ziti">
+<span class="yanse">1.延时重试</span>
+</p>
+<p class="ziti">利用err$是Observable的特性，我们可以很容易实现延时重试，代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 5);
+const error$ = source$.map(throwOnUnluckyNumber);
+const retry$ = error$.retryWhen(err$ =&gt; err$.delay(1000));</pre>
+<hr/>
+<p class="ziti">在上面的代码中，retryWhen的函数参数返回的是err$.delay（1000），借助delay，每一次出错，都在1000毫秒之后触发重试，达到了延时的目的。</p>
+<p class="ziti">
+<span class="yanse">2.用retryWhen实现retry</span>
+</p>
+<p class="ziti">实际上，可以利用retryWhen来实现retry一样的功能，代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.retryCount = function (maxCount) {
+  return this.retryWhen(err$ =&gt; {
+    return err$.scan((errorCount, err) =&gt; {
+      if (errorCount &gt;= maxCount) {
+        throw err;
+      }
+      return errorCount + 1;
+    }, 0)
+  });
+};
+</pre>
+<hr/>
+<p class="ziti">在上面的例子中，巧妙使用了notifer的err$参数，因为err$代表上游抛出的所有错误的Observable对象，所以，只需要统计err$中吐出的数据个数，就知道已经重试了多少次，如果已经达到重试上限，把这个错误抛出来就行，RxJS会把错误传递给下游。</p>
+<p class="ziti">为了满足上面的要求，scan操作符是一个很好的选择，对于err$中吐出的所有错误对象，scan可以累积错误对象个数。</p>
+<p class="ziti">
+<span class="yanse">3.延时并有上限的重试</span>
+</p>
+<p class="ziti">我们已经知道如何用retryWhen实现延时重试，也知道如何用retryWhen控制重试次数，接下来可以把两者结合在一起同时限制次数和控制节奏，下面是实现这个功能的操作符代码，这个新的操作符名为retryWithDelay：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.retryWithDelay = function(maxCount, delayMilliseconds) {
+  return this.retryWhen(err$ =&gt; {
+    return err$.scan((errorCount, err) =&gt; {
+      if (errorCount &gt;= maxCount) {
+        throw err;
+      }
+      return errorCount + 1;
+    }, 0).delay(delayMilliseconds);
+  });
+};
+</pre>
+<hr/>
+<p class="ziti">在retryWithDelay中，我们依然使用scan来统计出错的次数，不过在scan之后接上了一个delay，每当一个错误发生，err$就会吐出一个数据给scan，scan统计完错误之后也会立即吐出结果，但是，delay的存在会让scan吐出的结果延时往下游传递，延时时间由参数delayMilliseconds来决定。</p>
+<p class="ziti">使用retryWithDelay的代码如下：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.range(1, 10);
+const error$ = source$.map(throwOnUnluckyNumber);
+const retry$ = error$.retryWithDelay(2, 1000);
+</pre>
+<hr/>
+<p class="ziti">在上面的代码中，retry$会先吐出1、2、3序列，等待一秒钟之后重试，然后再次吐出1、2、3序列，然后又等待一秒钟之后重试，在重试2次之后抛出错误。</p>
+<p class="ziti">
+<span class="yanse">4.递增延时重试</span>
+</p>
+<p class="ziti">我们已经实现了有延时并且有次数上限的“重试”方法，但这还不是最精妙的方法，更精妙的重试策略每次重试之间的延时间隔不是固定的，这样更加科学。</p>
+<p class="ziti">比如，访问某个服务器API，第一次失败，可以等100毫秒之后再尝试，结果又失败了，这时候一个比较经验性的做法不是再等100毫秒之后重试，过去的100毫秒服务器没有恢复，那估计再等100毫秒恢复的概率也不高，而且访问太频繁对服务器造成压力也不大好，所以，可以选择200毫秒之后重试，如果再失败，就进一步增加重试延迟，400毫秒之后重试，然后800毫秒后重试，以每次失败选择2n×100毫秒的延时，n为失败次数。</p>
+<p class="ziti">根据上面的策略，可以实现一个对应的操作符，名为retryWithExpotentialDelay，代码如下：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.retryWithExpotentialDelay = function (maxRetry, initialDelay) {
+  return this.retryWhen(
+    err$ =&gt; {
+      return err$.scan((errorCount, err) =&gt; {
+        if (errorCount &gt;= maxRetry) {
+          throw err;
+        }
+        return errorCount + 1;
+      }, 0)
+      .delayWhen(errorCount =&gt; {
+        const delayTime = Math.pow(2, errorCount - 1) * initialDelay;
+        return Observable.timer(delayTime);
+      });
+    });
+};
+</pre>
+<hr/>
+<p class="ziti">在retryWithExpotentialDelay中，我们使用了delayWhen这个操作符，就和retryWhen利用Observable然后能力比retry强大很多一样，delayWhen利用Observable所以能力也比delay强大很多。</p>
+<p class="ziti">delayWhen从上游scan得到的数据是重试的次数，根据重试次数计算出延时时间，这样就让重试延时不局限于一个固定时间。</p>
+</body>
+</html>

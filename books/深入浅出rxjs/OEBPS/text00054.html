@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">4.3.5　fromEventPattern</h3>
+<p class="ziti">fromEvent能够从事件源产生Observable，但是要求数据源表现得像是浏览器的DOM或者Node.js的EventEmitter，在某些情况下，事件源可能并不按照这样的方式产生数据，对于这种情况，就需要用一个灵活度更高的操作符叫做fromEventPattern。</p>
+<p class="ziti">fromEventPattern接受两个函数参数，分别对应产生的Observable对象被订阅和退订时的动作，因为这两个参数是函数，具体的动作可以任意定义，所以可以非常灵活。</p>
+<p class="ziti">下面是一段使用fromEventPattern的示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import EventEmitter from 'events';
+import 'rxjs/add/observable/fromEventPattern';
+
+const emitter = new EventEmitter();
+
+const addHandler = (handler) =&gt; {
+  emitter.addListener('msg', handler);
+};
+const removeHandler = (handler) =&gt; {
+  emitter.removeListener('msg', handler);
+}
+const source$ = Observable.fromEventPattern(addHandler, removeHandler);
+
+const subscription = source$.subscribe(
+  console.log,
+  error =&gt; console.log('catch', error),
+  () =&gt; console.log('complete')
+);
+
+emitter.emit('msg', 'hello');
+emitter.emit('msg', 'world');
+
+subscription.unsubscribe();
+emitter.emit('msg', 'end');
+</pre>
+<hr/>
+<p class="ziti">代码运行结果如下：</p>
+<hr/>
+<pre class="ziti1">hello
+world
+</pre>
+<hr/>
+<p class="ziti">fromEventPattern提供的就是一种模式，不管数据源是怎样的行为，最后的产出都是一个Observable对象，对一个Observable对象交互的两个重要操作就是subscribe和unsubscribe，所以，fromEventPattern设计为这样，当Observable对象被subscribe时第一个函数参数被调用，被unsubscribe时第二个函数参数被调用。在上面的例子中，两个函数参数分别为addHandler和removeHandler。</p>
+<p class="ziti">addHandler和removeHandler被调用时，都有一个参数handler，如果调用这个handler，相当于调用产生Observable的next。</p>
+<p class="ziti">在上面的代码中，数据源实际上是一个Node.js的EventEmitter实例，addHandler做的事情就是去监听EventEmitter实例的msg事件，因为addListener的回调函数在事件发生时会被调用，所以可以直接把handler传递给addListener。</p>
+<p class="ziti">removeHandler所做的事情正相反，把handler参数通过removeListener从Event-Emitter实例中删除掉就可以了。正因为如此，代码中最后一个end事件是不会出现在Observable对象中的，因为在此之前，unsubscribe被调用了，引发了removeHandler被调用。</p>
+<p class="ziti">fromEventPattern并不是一个常用的操作符，实际上，它的功能也并不完备。在上面的例子中，通过调用addHandler的参数handler，可以触发对应Observable对象的next，可是，有没有办法触发对应Observable对象的error或者complete呢？</p>
+<p class="ziti">很遗憾，fromEventPattern并不支持这种功能，到RxJS v5.5.0为止，没有任何办法可以通过fromEventPattern这个操作符给产生的Observable对象传递一个error或者complete事件。也许将来会增加这个功能，但是如果这个操作符使用率依然不高的话，自然不会有很强烈的增加功能的需求。</p>
+</body>
+</html>

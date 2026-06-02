@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h2 class="p2">14.4　Redux-Observable：Redux和RxJS的结合</h2>
+<p class="ziti">Redux-Observable是Netflix工程师贡献的一个开源项目，在GitHub上可以看到全部源代码<sup>
+<a id="ch1" href="text00203.html#ch1_back">[1]</a>
+</sup>
+ <span>，Redux-Observable作为Redux的中间件（middleware）存在。所谓中间件，就是把一些功能插入到Redux处理action的流程之中，这样就能在Redux默认功能的基础上增加一些更多的功能，而Redux-Observable增加的功能借助RxJS实现对异步操作的支持。</span>
+</p>
+<p class="ziti">在前面的部分，我们已经体会到了Redux管理应用状态的优势，但是Redux有一个问题并没有很好地解决，就是异步操作。Redux很擅长同步操作，每一个action被派送出去，会让Redux同步调用reducer，并把更新的状态推送到相关的组件，但是，如果涉及类似AJAX请求的异步操作，单独使用Redux就不好搞了。比如，当用户点击一个按钮之后需要发送一个AJAX请求出去，然后根据AJAX请求的返回结果更新网页内容，问题是，AJAX请求是一个异步操作，完全无法预料会花费多少时间才能获得结果，这种异步操作Redux本身是不能解决的。</p>
+<p class="ziti">为了支持异步操作，最简单的方式是使用redux-thunk<sup>
+<a id="ch2" href="text00203.html#ch2_back">[2]</a>
+</sup>
+ <span>，redux-thunk也是以Redux的中间件形式存在，但是redux-thunk功能简单，对于复杂的操作支持不够友好。Redux库自身没有提供异步操作支持，就连作者自己实现的redux-thunk也是另一个独立的库，其实就是让开发者自己选择合适的异步解决方案。</span>
+</p>
+<p class="ziti">除了redux-thunk，Redux-Observable也是异步处理方案，但不是唯一方案。实际上，相对于其他各种异步方案，Redux-Observable可能是学习门槛最高的方案，因为前提是开发者需要了解RxJS，而RxJS本身的学习曲线就够陡峭的了。</p>
+<p class="ziti">不过，本书读者既然已经看到了这里，肯定对RxJS已经有了充分的认识，所以，学习Redux-Observable已经不是问题，接下来我们就看如何用Redux-Observable来解决问题。</p>
+<p class="p6">使用Redux-Observable</p>
+<p class="ziti">在前面章节利用create-react-app创建的Counter应用基础上，我们已经添加了Redux和RxJS，现在还需要在项目目录下安装redux-observable库，如下所示：</p>
+<hr/>
+<pre class="ziti1">npm install --save redux-observable</pre>
+<hr/>
+<p class="ziti">现在，我们给Counter应用程序增加一个功能，当用户点击“+”按钮或者“-”按钮之后，在1秒钟之后会做逆向操作，也就是说，点击“+”按钮让Counter计数增加1，在1秒之后会自动做减1的操作，如果想让Counter的计数比较高，只能在1秒钟之内连续点击“+”按钮。</p>
+<p class="ziti">这个功能没有什么实际意义，但是足够来展示redux-observable的使用方式。</p>
+<p class="ziti">
+<span class="yanse">1.理解epic</span>
+</p>
+<p class="ziti">在redux-observable中有一个核心概念叫做epic（epic的英文含义是“传奇”或者“史诗”，当然也没有必要把epic的用法和这么酷的英文含义挂钩），epic就是一个普通的纯函数，它和reducer类似，接受两个参数，返回一个结果，只不过epic的两个参数分别是Observable对象和Redux的store对象。epic返回的也是一个Observable对象，所以在epic函数体中可以使用RxJS的一切操作符来操作数据，也就可以发挥RxJS所具备的一切威力。</p>
+<p class="ziti">一个epic函数的示例代码如下：</p>
+<hr/>
+<pre class="ziti1">const epic = (action$, store) =&gt; {
+  //返回一个新的action构成的Observable对象
+};
+</pre>
+<hr/>
+<p class="ziti">epic的第一参数是action$，也就是由派送给Store的所有action对象组成的Obser-vable对象；第二个参数就是Store本身。所以，在epic里面可以访问到所有的action对象，也可以通过store的getState方法获得最新状态，还可以通过store的dispatch方法派送出新的action对象。只不过通常不需要在epic函数调用dispatch，因为epic函数返回的也是另一个Observable对象，其中的数据就是action对象，Redux会订阅epic函数返回的Observable对象，并且对产生的所有action对象做dispatch的动作，因此一般没必要让epic函数直接调用dispatch。</p>
+<p class="ziti">如果你还记得第13章中单元测试的内容，看到epic函数应该会觉得眼熟，没错，在介绍如何让使用RxJS的代码更加容易进行单元测试的技巧时，就说过可以利用一个函数接受Observable对象参数然后返回一个新的Observable对象结果，这样可以把一些外部的逻辑隔离在这个函数之外，这是一种模式，业界有人就把这种模式称为epic模式。</p>
+<p class="ziti">每dispatch一个action对象都会调用reducer，不过，Redux只会在启动的时候调用epic一次，之后只会持续给参数action$推送action对象，然后把epic返回的Observable对象中每个数据做dispatch操作。当一个action对象被送到action$中，到底是立刻让epic返回的Observable对象产生一个新的action对象，还是延时一段时间再产生action对象，亦或是调用AJAX请求获得结果之后再产生action对象，完全看epic函数如何实现，正因为如此，epic给予了Redux中数据管理最大的灵活性。</p>
+<p class="ziti">一定要注意，千万不要让epic直接返回action$，就像下面这样：</p>
+<hr/>
+<pre class="ziti1">const epic = (action$, store) =&gt; action$;</pre>
+<hr/>
+<p class="ziti">如果是这样，那么每一个action对象都会原封不动地被Redux再次dispatch，这样就会形成一个死循环，epic应该要对action$进行筛选，只对满足条件的action才产生新的action对象。</p>
+<p class="ziti">
+<span class="yanse">2.实现异步操作</span>
+</p>
+<p class="ziti">接下来我们利用redux-observable来实现异步的功能。在Counter应用中，每当“+”按钮或者“-”按钮点击之后，1秒钟会做逆向的减一加一操作，我们需要改造的只有Store.js文件，然后需要添加一个Epic.js。</p>
+<p class="p6">提示</p>
+<p class="ziti6">对应的源代码可以在本书配套的GitHub代码库的chapter-14/redux-rxjs/observable目录下找到。</p>
+<p class="ziti">首先来看src/Epic.js，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {createStore, applyMiddleware} from 'redux';
+import {createEpicMiddleware} from 'redux-observable';
+import reducer from './Reducer';
+import epic from './Epic';
+
+const epicMiddleware = createEpicMiddleware(epic);
+const initValues = {
+  count: 0
+};
+const store = createStore(
+  reducer,
+  initValues,
+  applyMiddleware(epicMiddleware)
+);
+
+export default store;
+</pre>
+<hr/>
+<p class="ziti">Redux的createStore函数其实还支持第三个参数，第三个参数是Store Enhancer，顾名思义，Enhancer就是“增强器”，能够增强Redux Store的功能，中间件是Enhancer的一种，关于Store Enhancer的更详细介绍可以参考《深入浅出React和Redux》，在这里，我们只需要知道通过redux提供的applyMiddleware函数就可以根据中间件产生Store Enhancer。</p>
+<p class="ziti">applyMiddleware的参数是Redux的中间件，它可以包含多个参数，从而引入多个中间件，在这个简单的例子中，只有一个中间件epicMiddleware。</p>
+<p class="ziti">epicMiddleware通过redux-observable提供的createEpicMiddleware函数创建，参数就是我们将会编写的epic函数。</p>
+<p class="ziti">在Store.js中的代码基本上都是套路，根据createEpicMiddleware创建一个中间件，然后作为参数传递给applyMiddleware，返回的结果再传给createStore，每一个使用redux-observable的应用都要使用这样的模式。</p>
+<p class="ziti">当这样使用epic函数之后，对应产生的Store对象就会具备以前不具有的增强功能，Store会在创建时调用epic函数，传递action$对象参数给epic函数，同时订阅epic函数返回的Observable对象。可以想象，redux-observable肯定是会为action$创造一个Subject类型的对象，之后，每一个action对象被dispatch时，首先会走一遍正常的调用reducer的流程，然后，会调用action$.next，把这个action对象丢给epic产生的数据管道处理，如果这个数据管道会产生新的action对象，这个action对象会被dispatch。</p>
+<p class="ziti">接下来看src/Epic.js文件中如何实现epic函数，代码如下：</p>
+<hr/>
+<pre class="ziti1">import {increment, decrement} from './Actions';
+import * as ActionTypes from './ActionTypes';
+import 'rxjs/add/operator/delay';
+import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/map';
+
+const epic = (action$, store) =&gt; {
+  return action$
+    .filter(
+      action =&gt; (action.type === ActionTypes.DECREMENT ||
+        action.type === ActionTypes.INCREMENT)
+    )
+    .delay(1000)
+    .map(action =&gt; {
+      const count = store.getState().count;
+      if (count&gt; 0) {
+        return decrement()
+      } else if (count &lt; 0){
+        return increment()
+      } else {
+        return {type: 'no-op'};
+      }
+    });
+};
+
+export default epic;
+</pre>
+<hr/>
+<p class="ziti">再次强调epic肯定不能直接把参数action$返回，因为会造成死循环；同样，epic一般也不会把action$中每一个action对象都对应产生一个新的action对象，如果那样的话，任何一个action对象都会引发无限多的action对象，依然是爆炸性的效果。所以，epic函数中通常需要使用过滤类操作符来过滤掉不相关的action对象。</p>
+<p class="ziti">在上面的代码中，我们只对INCREMENT和DECREMENT类型的action对象感兴趣，所以首先使用filter，把不相关的action对象过滤掉。然后，对任何一个INCREMENT和DECREMENT类型的action，我们需要做点什么，也就是要产生新的action对象，但是产生的时机并不是立刻发生，我们希望1秒钟之后再做，所以使用了delay。</p>
+<p class="ziti">既然可以在这里使用delay，当然可以使用任何其他延时产生数据的操作符，包括回压控制类操作符（例如throttle和window），也包括可以调用AJAX请求的操作符（例如mergeMap和switchMap），总之，因为使用了RxJS，使得可以用同步的代码来处理异步的操作。</p>
+<p class="ziti">最后，为了做逆向操作，我们还是要通过increment或者decrement来产生action对象，当然，一种方式是根据数据源最初的action.type来决定产生调用哪个action creator，不过，在这里我们用了另一种方法，通过访问store.getState（）来获得当前count的数据，如果count大于0则调用decrement，如果小于0就调用increment。</p>
+<p class="ziti">注意，当count为0时，产生了一个type为no-op的action对象（no-op代表no-operation，意思即使“没有操作”），因为我们的reducer函数中没有处理type为no-op的action对象，产生这样的action对象代表什么都不想发生，但是在map中必须要返回一个action对象，所以就返回这样type为no-op的action对象。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00203.html#ch1">[1]</a>
+ 参见https://github.com/redux-observable/redux-observable。</p>
+<p class="fnote">
+<a id="ch2_back" href="text00203.html#ch2">[2]</a>
+ 参见https://github.com/gaearon/redux-thunk。</p>
+</body>
+</html>

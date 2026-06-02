@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">7.1.5　计时的点击计数网页程序</h3>
+<p class="ziti">在介绍fromEvent的时候，我们利用fromEvent来统计用户鼠标点击网页元素的数量，如果增加一个需求，只统计5秒之内的鼠标点击次数，问题就更加复杂了。</p>
+<p class="ziti">最直观的方法就是用setTimeout在5秒之后利用unsubsribe断开事件源（一个Observable对象）和Observer（更新点击计数到DOM上）的联系，或者，让事件源完结。因为类似的应用场景在现实中太多了，完全应该利用一个通用模式来解决，RxJS提供的takeUntil就是这样一种模式，可以解决所有类似问题。</p>
+<p class="ziti">用takeUntil来控制点击计数时间的代码如下：</p>
+<hr/>
+<pre class="ziti1">let clickCount = 0;
+const event$ = Rx.Observable.fromEvent(document.querySelector('#clickMe'), 'click');
+const countDown$ = Rx.Observable.timer(5000);
+const filtered$ = event$.takeUntil(countDown$);
+
+const showEnd = () =&gt; {
+  document.querySelector('#end').innerText = '时间结束';
+};
+const updateCount = () =&gt; {
+  document.querySelector('#text').innerText = ++clickCount
+};
+
+countDown$.subscribe(showEnd);
+filtered$.subscribe(updateCount);
+</pre>
+<hr/>
+<p class="ziti">在这个例子中，countDown$扮演两个角色，首先，它是一个Observable对象，有自己的Observer名为showEnd，当5秒钟之后吐出数据时，showEnd被调用，在网页中显示“时间结束”；其次，countDown$的第二个角色也是takeUntil的参数，在5秒钟时，完结了filtered$。</p>
+<p class="ziti">在后面的例子中，我们会继续了解takeUntil的应用实例。</p>
+</body>
+</html>

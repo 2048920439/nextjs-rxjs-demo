@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.2.1　map</h3>
+<p class="ziti">这是最简单的一个转化类操作符，JavaScript的数组类型就包含同名的这个函数，同样也是接受一个函数作为参数，这个函数通常称为project，指定了数据映射的逻辑。</p>
+<p class="ziti">在RxJS中，不同之处是map这个操作符可以映射一段时间上异步产生的数据。因为RxJS的数据处理方式是“推”，每当上游推下来一个数据，map就把这个数据作为参数传给map的参数函数，然后再把函数执行的返回值推给下游。</p>
+<p class="ziti">在本书前面章节的示例代码中，已经多次使用了map，在这里唯一需要多介绍的就是，map除了必须要有的函数参数project，还有一个可选参数thisArg，用于指定函数project执行时的this值，下面是示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/map';
+
+const source$ = Observable.of(3, 1, 4);
+const mapFunc = function(value, index) {
+  return `${value} ${this.separator} ${index}`;
+};
+const context = {separator: ':'};
+const result$ = source$.map(mapFunc, context);
+result$.subscribe(
+  console.log,
+  null,
+  () =&gt; console.log('complete')
+);
+</pre>
+<hr/>
+<p class="ziti">其中，mapFunc这个函数是map的第一个参数，充当project的功能，同时，map还有第二个参数context对象，如果用上这个参数，那么mapFunc在每次执行的时候，this就是map的这个参数context，所以，在mapFunc中this.separator的值就是冒号（：）。</p>
+<p class="p6">注意</p>
+<p class="ziti6">mapFunc的定义使用了不同的函数表达式，而不是箭头形式的函数定义，因为箭头形式的函数定义里，this是绑定于定义环境的，map的第二个参数也就不会起到任何作用。</p>
+<p class="ziti">上面的代码执行结果如下：</p>
+<hr/>
+<pre class="ziti1">3 : 0
+1 : 1
+4 : 2
+complete</pre>
+<hr/>
+<p class="ziti">这是map的一个小的功能细节，但是，并不建议使用，因为按照函数式编程的原则，应该尽量让函数成为纯函数，如果一个函数的执行依赖于this，那么就难以预料这个函数的执行结果，并不是什么好事。所以，虽然我们知道map有这个功能，但要尽量避免使用它。实际上，几乎所有需要用上thisArg的场合都可以用其他方式解决，比如上面代码可以改成这样：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.of(3, 1, 4);
+const context = {separator: ':'};
+const mapFunc = (function (separator) {
+  return function(value, index) {
+    return `${value} ${separator} ${index}`;
+  };
+})(context.separator)
+const result$ = source$.map(mapFunc);
+</pre>
+<hr/>
+<p class="ziti">利用一个立即执行的函数产生一个新的函数mapFunc，这样既定制了mapFunc中使用的separator，又保持了函数体内代码的纯洁。</p>
+<p class="ziti">map是映射操作之母，下面介绍的mapTo和pluck都可以基于map实现。</p>
+</body>
+</html>

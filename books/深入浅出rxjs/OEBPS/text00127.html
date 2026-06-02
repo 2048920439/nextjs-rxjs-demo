@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">8.6.2　mergeScan</h3>
+<p class="ziti">mergeScan类似于scan，不过规约函数返回的是Observable对象而不是一个数据，官方文档对mergeScan的介绍极少，也没有举出像样的用例，以至于有人提议删除掉这个操作符得了<sup>
+<a id="ch1" href="text00127.html#ch1_back">[1]</a>
+</sup>
+ <span>。在将来的RxJS版本中，可能mergeScan这个操作符真的会被删除，但是，至少在v5版本中这个操作符会还保留着。</span>
+</p>
+<p class="ziti">下面是使用mergeScan的示例代码：</p>
+<hr/>
+<pre class="ziti1">import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/mergeScan';
+
+const source$ = Observable.interval(1000);
+const result$ = source$.mergeScan((accumulation, value) =&gt; {
+  return Observable.of(accumulation + value);
+},
+0); // mergeScan必须要有seed参数
+</pre>
+<hr/>
+<p class="ziti">可以看到，如果mergeScan的函数参数用of来返回只包含一个数据的Observable对象，真的看不出使用mergeScan有啥意义，上面的代码完全可以用scan来实现。而且，mergeScan要求必须包含第二个seed参数，使用scan可以省略这个参数，如果省略seed参数，那么上游的第一个数据就是seed，mergeScan不能省略seed参数，用来实现这样的功能实在显得没有任何必要。</p>
+<p class="ziti">在官方文档中，对mergeScan的功能也缺乏详细明确的描述，如果要使用mergeScan，有两个问题首先要搞清楚：</p>
+<p class="ziti6">·规约函数返回的Observable对象如果返回多个数据如何处理？</p>
+<p class="ziti6">·规约函数的accumulation参数会是什么值？</p>
+<p class="ziti">实际上，mergeScan的功能可以这样描述：每当上游推送一个数据下来，mergeScan就调用一次规约函数，并且订阅返回的Observable对象，之后，这个Observable对象返回的任何数据都会传给下游。mergeScan会记住传给下游的最后一个数据，当上游再次推送数据下来的时候，就把最后一次传递给下游的数据作为规约函数的accumulation参数。</p>
+<p class="ziti">因为规约函数返回的Observable对象可能在上游再次推送数据下来的时候还没有完结，而mergeScan以类似merge的方式组合所有的Observable对象，导致各个Observable对象的数据可能会交叉传递给下游。这种交叉情况发生的时候，到底哪个Observable对象的数据是“最后一次传递给下游的数据”很难确定，所以下一次调用规约函数的accumulation参数也很难确定。因此，最好不要让mergeScan的规约函数返回包含多个数据的Observable对象，不然很容易失控。</p>
+<p class="ziti">如果涉及多个AJAX请求之间的依赖关系，比如第一个AJAX请求的结果决定第二个AJAX请求的参数，那么mergeScan可能帮得上忙，在这个场景下，mergeScan的规约函数会返回Observable对象，但是这个Observable对象也最好只包含一个数据。</p>
+<p class="ziti">能够想象得到的最适合mergeScan的应用场景就是无限向下扩展功能，类似于微博和Twitter的界面，当用户滚动到网页底部，网页会发送一个AJAX请求获取更多的内容，从而让网页中的内容向下扩展，下面是示例代码：</p>
+<hr/>
+<pre class="ziti1">const result$ = throttledScrollToEnd$.mergeScan((allTweets, value) =&gt; {
+  return getTweets(allTweets[allTweets.length-1]).map(
+     newTweets =&gt; allTweets.concat(newTweets)
+  );
+}, []);
+</pre>
+<hr/>
+<p class="ziti">其中，throttleScrollToEnd$是一个使用回压控制处理过的滚动到网页底部的事件数据流，每当用户界面滚动到底部，mergeScan就产生作用。每一次规约，都会通过getTweets函数发送一个AJAX请求，为了获得向下扩展的内容，需要知道当前获得的最后一条tweet，所以要把allTweets最后一个元素作为参数传递给getTweets，getTweets也应该返回一个Observable对象元素，内容是从服务器端获得的新内容newTweets，通过map，把allTweets和newTweets合并，就是mergeScan规约的结果。</p>
+<p class="ziti">总之，实际应用中如果使用mergeScan，最好让规约函数返回的Observable对象不要太复杂，即最好只包含一个数据，如果只是要维持应用状态，绝大部分情况使用scan就足够。</p>
+<p class="fnote">
+<a id="ch1_back" href="text00127.html#ch1">[1]</a>
+ https://github.com/ReactiveX/rxjs/issues/2737。</p>
+</body>
+</html>

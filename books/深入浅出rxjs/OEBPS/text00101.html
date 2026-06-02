@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">7.3.1　ignoreElements</h3>
+<p class="ziti">顾名思义，ignoreElments就是要忽略所有的元素，这里的元素是指上游产生的数据，忽略所有上游数据，只关心complete和error事件。下面是使用ignoreElements的示例代码：</p>
+<hr/>
+<pre class="ziti1">const source$ = Observable.interval(1000).take(5);
+const result$ = source$.ignoreElements();</pre>
+<hr/>
+<p class="ziti">对应的弹珠图如图7-22所示。</p>
+<div class="pic"><img alt="" src="Image00071.jpg" />
+</div>
+<p class="middle-img">图7-22　ignoreElements的弹珠图</p>
+<p class="ziti">在RxJS中，Observable中的数据是关键，只有对于不关心数据只关心Observable完结和出错的场景，ignoreElements才有意义，实话说这样的场景还真不多。</p>
+<p class="ziti">其实，ignoreElments完全可以用filter来实现，如下所示：</p>
+<hr/>
+<pre class="ziti1">Observable.prototype.ignoreElements = function() {
+   return this.filter(x =&gt; false);
+};</pre>
+<hr/>
+<p class="ziti">在将来的RxJS版本中，很可能ignoreElments也会像distinctKey一样被删除掉。</p>
+</body>
+</html>

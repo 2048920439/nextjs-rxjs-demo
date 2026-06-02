@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title></title>
+<link href="flow0001.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h3 class="p3">10.3.6　Subject的错误处理</h3>
+<p class="ziti">Subject可以把上游数据传递给下游的Observer，同样也可以把自己上游的错误传递给下游的Observer。</p>
+<p class="ziti">有意思的是Subject有多个Observer的场景，如果Subject的某个下游数据流产生了一个错误异常，而且这个错误异常没有被Observer处理，那这个Subject其他的Observer都会失败。</p>
+<p class="ziti">直观上，我们会觉得Subject对象的各个Observer是相互独立的，一个Observer没有处理错误异常，不应该影响其他的Observer，但是，实际上并不是如此。</p>
+<p class="ziti">下面是一段展示这个问题的代码：</p>
+<hr/>
+<pre class="ziti1">const tick$ = Observable.interval(1000).take(10);
+const subject = new Subject();
+
+tick$.subscribe(subject);
+
+subject.map(throwOnUnluckyNumber).subscribe(
+  value =&gt; console.log('observer 1: ' + value)
+);
+
+subject.subscribe(
+  value =&gt; console.log('observer 2: ' + value),
+  err =&gt; console.log('observer 2 on error: ', err.message)
+);
+</pre>
+<hr/>
+<p class="ziti">其中，Cold数据源是由interval和take产生的tick$，每隔一秒钟产生一个递增的整数，通过Subject，我们得到了一个Hot Observable，然后这个Hot Observable有两个Observer，2号Observer直接输出结果，1号Observer虽然也居于Subject对象的下游，但是中间经过了map操作，map使用的是前面章节定义的throwOnUnluckyNumber函数，对于参数4会抛出错误异常。</p>
+<p class="ziti">所以，2号Observer不会遇到任何异常，但是1号Observer却会在Subject对象吐出4的时候，遇到一个错误异常。</p>
+<p class="ziti">很可惜，1号Observer并没有错误处理，而且1号所订阅的上游Observable经过map之后，已经出错，不可能再通过next接收到数据，1号Observer死得其所，问题是，很无辜的2号Observer，因为1号Observer没有优雅地处理错误，也被牵连，虽然它的上游并没有错误，却一样不会再收到next推送数据，因为Subject对象犹豫下游1号Observer没有处理错误被破坏了。</p>
+<p class="ziti">其实这点不难理解，可以想象，Subject中为了给所有Observer推送数据，会有类似下面这样的代码：</p>
+<hr/>
+<pre class="ziti1">for (let observer of allObservers) {
+  observer.next(data);
+}</pre>
+<hr/>
+<p class="ziti">如果某个observer.next函数调用抛出错误异常怎么办呢？</p>
+<p class="ziti">结果当然是其他的Observer也会受到牵连，无法接收到数据。</p>
+<p class="p6">提示</p>
+<p class="ziti6">上面代码中使用了for…of语法，这种语法的意思是产生一个循环变量，遍历一个可遍历的对象，比如数组类型。</p>
+<p class="ziti">为了解决这个问题，方法很简单，就是让Subject的所有Observer都具备对异常错误的处理，这样就避免异常错误的散弹枪效果，代码如下：</p>
+<hr/>
+<pre class="ziti1">const tick$ = Observable.interval(1000).take(10);
+const subject = new Subject();
+
+tick$.subscribe(subject);
+
+subject.map(throwOnUnluckyNumber).subscribe(
+  value =&gt; console.log('observer 1: ' + value),
+  err =&gt; console.log('observer 1 on error: ', err.message)
+);
+subject.subscribe(
+  value =&gt; console.log('observer 2: ' + value),
+  err =&gt; console.log('observer 2 on error: ', err.message)
+);
+</pre>
+<hr/>
+<p class="ziti">其中，1号和2号Observer都增加了对错误的处理，程序运行中，任何一个Observer接收到错误信息都会把错误信息“吞”掉，这样就解决了这个问题。</p>
+</body>
+</html>
