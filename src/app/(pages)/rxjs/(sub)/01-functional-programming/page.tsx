@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
+
 import CodeBlock from "@/app/(components)/code-block";
 
 import ImperativeHoldTimer from "./_components/imperative-hold-timer";
 import ReactiveHoldTimer from "./_components/reactive-hold-timer";
 import styles from "./page.module.scss";
+
+export const metadata: Metadata = {
+  title: "1.1 一个简单的RxJS例子",
+};
 
 const BOOK_CODE = `// fromEvent(target, eventName) → Observable
 // 将 DOM 事件转化为 Observable 数据流，事件变为"可订阅的数据源"

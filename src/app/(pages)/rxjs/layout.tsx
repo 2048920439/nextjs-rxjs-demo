@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import Link from "next/link";
 import { join } from "path";
 import type { PropsWithChildren, ReactNode } from "react";
@@ -6,6 +6,14 @@ import type { PropsWithChildren, ReactNode } from "react";
 import styles from "./layout.module.scss";
 
 // ====== 类型定义 ======
+
+/** 页面元数据：由各 page.tsx 导出，用于侧边栏展示章节序号与中文标题 */
+interface PageMeta {
+  /** 章节号，如 "1.1"、"2.3.1" */
+  chapter: string;
+  /** 中文标题 */
+  chapterTitle: string;
+}
 
 interface PageNode {
   /** 目录名（URL 路径段） */
@@ -16,13 +24,39 @@ interface PageNode {
   path: string;
   /** 子页面（递归） */
   children: PageNode[];
+  /** 页面导出的元数据（有 page.tsx 时尝试提取） */
+  meta: PageMeta | null;
 }
 
-// ====== 工具函数 ======
+// ====== 元数据提取 ======
+
+/**
+ * 从 page.tsx 中解析 export const metadata.title
+ * 约定 title 格式为 "章节号 中文标题"（如 "1.1 一个简单的RxJS例子"）
+ */
+function extractPageMeta(pageFilePath: string): PageMeta | null {
+  try {
+    const content = readFileSync(pageFilePath, "utf-8");
+    // 匹配 metadata 对象中的 title 字段
+    const titleMatch = content.match(/export\s+const\s+metadata\s*(?::\s*\w+)?\s*=\s*\{[^}]*title\s*:\s*['"]([^'"]+)['"]/);
+    if (!titleMatch) return null;
+
+    const title = titleMatch[1];
+    // "1.1 一个简单的RxJS例子" → chapter="1.1", chapterTitle="一个简单的RxJS例子"
+    const parts = title.match(/^([\d.]+)\s+(.+)/);
+    if (parts) {
+      return { chapter: parts[1], chapterTitle: parts[2] };
+    }
+  } catch {
+    // 忽略
+  }
+  return null;
+}
+
+// ====== 排序与解析 ======
 
 /** 将 slug 中的标题部分转为展示文本（不含序号） */
 function slugToText(slug: string): string {
-  // 去掉数字前缀 "01-" 后转换
   const text = slug.replace(/^\d+-/, "");
   return text
     .split(/[-_]/)
@@ -30,28 +64,7 @@ function slugToText(slug: string): string {
     .join(" ");
 }
 
-/** 将 slug 转为展示标题（数字部分按指定宽度补零） */
-function slugToTitle(slug: string, padWidth: number): string {
-  const key = extractSortKey(slug);
-  if (key.num === Infinity) return slugToText(slug);
-  return `${String(key.num).padStart(padWidth, "0")} ${slugToText(slug)}`;
-}
-
-/** 判断目录名是否为 Next.js 路由组 "(xxx)" */
-function isRouteGroup(name: string): boolean {
-  return name.startsWith("(") && name.endsWith(")");
-}
-
-/** 判断目录名是否为 Next.js 动态路由段 "[xxx]" / "[...xxx]" / "[[...xxx]]" */
-function isDynamicSegment(name: string): boolean {
-  return name.startsWith("[") && name.endsWith("]");
-}
-
-/**
- * 提取目录名的排序 key，按数字前缀数值优先排序
- * 如 "01-observable" → { num: 1, rest: "-observable" }
- * 无前缀 → { num: Infinity, rest: slug }
- */
+/** 提取目录名的数字前缀用于排序 */
 function extractSortKey(slug: string): { num: number; rest: string } {
   const match = slug.match(/^(\d+)(-.*)?$/);
   if (match) {
@@ -68,20 +81,57 @@ function compareNode(a: PageNode, b: PageNode): number {
   return ka.rest.localeCompare(kb.rest);
 }
 
+/** 判断目录名是否为 Next.js 路由组 "(xxx)" */
+function isRouteGroup(name: string): boolean {
+  return name.startsWith("(") && name.endsWith(")");
+}
+
+/** 判断目录名是否为 Next.js 动态路由段 "[xxx]" / "[...xxx]" / "[[...xxx]]" */
+function isDynamicSegment(name: string): boolean {
+  return name.startsWith("[") && name.endsWith("]");
+}
+
+// ====== 标题格式化 ======
+
+/** 将章节号字符串拆分为数字数组 */
+function parseChapter(chapter: string): number[] {
+  return chapter.split(".").map(Number);
+}
+
+/** 使用 PageMeta 生成带补零章节号的展示标题 */
+function formatMetaTitle(meta: PageMeta, padWidths: number[]): string {
+  const parts = parseChapter(meta.chapter);
+  const padded = parts.map((n, i) => String(n).padStart(padWidths[i] ?? 1, "0")).join(".");
+  return `${padded} ${meta.chapterTitle}`;
+}
+
 /**
- * 统一格式化本层所有节点的标题序号宽度
- * 如节点编号 1~12 → 全部补零到 2 位（01, 02, ..., 12）
+ * 统一格式化本层节点的标题
+ * 优先使用 pageMeta 的章节号 + 中文标题；
+ * 无 meta 时回退到 slug 解析的文本标题。
  */
 function normalizeTitles(nodes: PageNode[]): void {
-  // 计算最大序号位数
-  const nums = nodes.map((n) => extractSortKey(n.slug).num).filter((n) => n !== Infinity);
-  if (nums.length === 0) return;
+  // 收集所有 meta 的章节号，计算每级补零宽度
+  const chapters = nodes
+    .map((n) => n.meta?.chapter)
+    .filter((c): c is string => !!c)
+    .map(parseChapter);
 
-  const maxNum = Math.max(...nums);
-  const width = String(maxNum).length;
+  const padWidths: number[] = [];
+  if (chapters.length > 0) {
+    const maxParts = Math.max(...chapters.map((p) => p.length));
+    for (let i = 0; i < maxParts; i++) {
+      const maxVal = Math.max(...chapters.map((p) => p[i] ?? 0));
+      padWidths.push(String(maxVal).length);
+    }
+  }
 
   for (const node of nodes) {
-    node.title = slugToTitle(node.slug, width);
+    if (node.meta) {
+      node.title = formatMetaTitle(node.meta, padWidths);
+    } else {
+      node.title = slugToText(node.slug);
+    }
     // 递归处理子层
     if (node.children.length > 0) {
       normalizeTitles(node.children);
@@ -122,17 +172,20 @@ function scanPages(dirPath: string, urlPath: string): PageNode[] {
     }
 
     const subDir = join(dirPath, name);
-    const hasPage = existsSync(join(subDir, "page.tsx"));
+    const pageFilePath = join(subDir, "page.tsx");
+    const hasPage = existsSync(pageFilePath);
     const childUrlPath = urlPath ? `${urlPath}/${name}` : `/${name}`;
 
-    // 有 page.tsx → 是页面节点，继续扫描其下的子页面
+    // 有 page.tsx → 是页面节点，尝试提取 pageMeta
     if (hasPage) {
       const children = scanPages(subDir, childUrlPath);
+      const meta = extractPageMeta(pageFilePath);
       nodes.push({
         slug: name,
-        title: slugToText(name),
+        title: "", // 由 normalizeTitles 统一填充
         path: childUrlPath,
         children,
+        meta,
       });
     } else {
       // 无 page.tsx → 检查是否有子孙页面，有则作为分组目录
@@ -143,6 +196,7 @@ function scanPages(dirPath: string, urlPath: string): PageNode[] {
           title: slugToText(name),
           path: childUrlPath,
           children,
+          meta: null,
         });
       }
     }
@@ -151,7 +205,7 @@ function scanPages(dirPath: string, urlPath: string): PageNode[] {
   // 按数字前缀数值排序（1 < 2 < 10），无前缀的排在最后
   nodes.sort(compareNode);
 
-  // 统一格式化：计算所需补零宽度，确保序号格式一致
+  // 统一格式化标题
   normalizeTitles(nodes);
 
   return nodes;
