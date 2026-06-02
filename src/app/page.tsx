@@ -1,5 +1,9 @@
+import { HomeClient } from "./home-client";
+
 export default function Home() {
   return (
-    <h1>Hello World</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6">
+      <HomeClient />
+    </div>
   );
 }
