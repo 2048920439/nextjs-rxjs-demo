@@ -1,5 +1,5 @@
 import { compare, hash } from "bcryptjs";
-import { jwtVerify,SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 
 import { getJwtSecret } from "@/lib/jwt-secret";
@@ -14,23 +14,14 @@ export async function hashPassword(password: string): Promise<string> {
   return hash(password, SALT_ROUNDS);
 }
 
-export async function verifyPassword(
-  password: string,
-  hashed: string
-): Promise<boolean> {
+export async function verifyPassword(password: string, hashed: string): Promise<boolean> {
   return compare(password, hashed);
 }
 
 // --- JWT utilities (using jose for Edge Runtime compatibility) ---
 
-export async function generateToken(payload: {
-  userId: number;
-}): Promise<string> {
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("7d")
-    .sign(getJwtSecret());
+export async function generateToken(payload: { userId: number }): Promise<string> {
+  return new SignJWT({ ...payload }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("7d").sign(getJwtSecret());
 }
 
 export async function verifyToken(token: string) {
@@ -85,5 +76,7 @@ export async function getCurrentUser() {
     select: { id: true, email: true, name: true, createdAt: true },
   });
 
-  return user;
+  if (!user) return null;
+
+  return { ...user, createdAt: user.createdAt.getTime() };
 }

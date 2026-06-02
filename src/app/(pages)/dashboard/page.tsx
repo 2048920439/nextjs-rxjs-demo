@@ -24,8 +24,7 @@ export default async function DashboardPage() {
             <span className="font-medium">Email:</span> {user.email}
           </p>
           <p>
-            <span className="font-medium">Joined:</span>{" "}
-            {new Date(user.createdAt).toLocaleDateString("zh-CN")}
+            <span className="font-medium">Joined:</span> {new Date(user.createdAt).toLocaleDateString("zh-CN")}
           </p>
         </div>
 

@@ -21,9 +21,7 @@ async function isTokenValid(token: string): Promise<boolean> {
 }
 
 function isProtectedRoute(pathname: string): boolean {
-  return PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  return PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 function isAuthRoute(pathname: string): boolean {

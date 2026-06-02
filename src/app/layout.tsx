@@ -1,23 +1,17 @@
 import "./globals.css";
 
-import type { Metadata } from "next";
-
-import { ReactScanInit } from "./react-scan";
+import { Metadata } from "next";
+import { PropsWithChildren } from "react";
 
 export const metadata: Metadata = {
   title: "RxJS App",
   description: "RxJS Application",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="zh-CN">
       <body>
-        <ReactScanInit />
         <main>{children}</main>
       </body>
     </html>
