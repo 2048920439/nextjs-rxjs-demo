@@ -1,0 +1,2 @@
+node scripts/check-filename.mjs
+npx lint-staged
