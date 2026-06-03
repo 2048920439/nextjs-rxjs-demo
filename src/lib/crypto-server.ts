@@ -18,17 +18,17 @@ function getBox(): BoxInstance {
 }
 
 /**
- * 解密请求体中的 encrypted 字段（同步）
+ * 解密加密请求体（同步）
  *
- * 若 body 包含 encrypted 字段，解密并返回内层数据；否则原样返回。
- * 解密失败或 JSON 解析失败均抛出错误，由 Route Handler 统一 catch 处理。
+ * 严格模式：请求体必须包含 `encrypted` 字段，否则直接抛出错误。
+ * 解密失败或 JSON 解析失败同样抛出，由 Route Handler 区分处理。
  */
 export function decryptRequestBody(body: Record<string, unknown> | null): Record<string, unknown> {
-  if (body && typeof body === "object" && "encrypted" in body && typeof body.encrypted === "string") {
-    const plaintext = getBox().decrypt(body.encrypted);
-    return JSON.parse(plaintext) as Record<string, unknown>;
+  if (!body || typeof body.encrypted !== "string") {
+    throw new Error("Missing encrypted field in request body: expected { encrypted: string }");
   }
-  return (body ?? {}) as Record<string, unknown>;
+  const plaintext = getBox().decrypt(body.encrypted);
+  return JSON.parse(plaintext) as Record<string, unknown>;
 }
 
 /**

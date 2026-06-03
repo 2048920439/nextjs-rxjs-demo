@@ -135,7 +135,18 @@ export async function POST(request: Request, { params }: { params: Params }) {
       default:
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-  } catch {
+  } catch (e) {
+    // 加解密/编码相关错误 → 400（客户端传了非法数据）
+    if (
+      e instanceof Error &&
+      (e.message.includes("decryption") ||
+        e.message.includes("encrypted") ||
+        e.message.includes("encode") ||
+        e.message.includes("decode") ||
+        e.message.includes("JSON"))
+    ) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
