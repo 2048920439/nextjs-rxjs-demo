@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { deleteAuthCookie, generateToken, getCurrentUser, hashPassword, setAuthCookie, verifyPassword } from "@/lib/auth";
+import { decryptRequestBody, encryptResponseBody } from "@/lib/crypto-server";
 import { prisma } from "@/lib/prisma";
 
 // --- Schemas ---
@@ -24,7 +25,8 @@ const DUMMY_HASH = "$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW
 
 async function handleRegister(request: Request) {
   const body = await request.json();
-  const parsed = registerSchema.safeParse(body);
+  const data = decryptRequestBody(body);
+  const parsed = registerSchema.safeParse(data);
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
@@ -47,12 +49,13 @@ async function handleRegister(request: Request) {
   const token = await generateToken({ userId: user.id });
   await setAuthCookie(token);
 
-  return NextResponse.json({ user: { ...user, createdAt: user.createdAt.getTime() } }, { status: 201 });
+  return NextResponse.json({ encrypted: encryptResponseBody({ user: { ...user, createdAt: user.createdAt.getTime() } }) }, { status: 201 });
 }
 
 async function handleLogin(request: Request) {
   const body = await request.json();
-  const parsed = loginSchema.safeParse(body);
+  const data = decryptRequestBody(body);
+  const parsed = loginSchema.safeParse(data);
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
@@ -73,12 +76,14 @@ async function handleLogin(request: Request) {
   await setAuthCookie(token);
 
   return NextResponse.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: user.createdAt.getTime(),
-    },
+    encrypted: encryptResponseBody({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt.getTime(),
+      },
+    }),
   });
 }
 
