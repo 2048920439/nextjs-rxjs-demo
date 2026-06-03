@@ -1,3 +1,4 @@
+import { debounce, type DebouncedFunc } from "lodash";
 import { BehaviorSubject } from "rxjs";
 
 import type { PersistCacheOptions } from "@/service-core/core/persist-cache";
@@ -22,16 +23,18 @@ import type { Serializable } from "@/shared/utils/serializer";
  */
 export class PersistSubject<T extends Serializable> extends BehaviorSubject<T> {
   readonly cache: PersistCache<T>;
+  private readonly _debouncedPersist: DebouncedFunc<(value: T) => void>;
 
   constructor(initial: T, opt: PersistCacheOptions<T>) {
     super(initial);
     this.cache = new PersistCache<T>(opt);
+    this._debouncedPersist = debounce((value: T) => this.cache.set(value), 1000);
   }
 
-  /** 重写 next，写入值的同时自动持久化（序列化/加密由 PersistCache 内部处理） */
+  /** 重写 next，写入值的同时经 1s 防抖后持久化，避免高频同步写盘阻塞主线程 */
   override next(value: T): void {
     super.next(value);
-    this.cache.set(value);
+    this._debouncedPersist(value);
   }
 
   /** 从缓存恢复数据（序列化/反序列化 + TTL + check 校验均由 PersistCache 内部处理） */
