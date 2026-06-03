@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnmount } from "ahooks";
 import { useCallback, useRef, useState } from "react";
 import { concatMap, map, of, Subscription, timer } from "rxjs";
 
@@ -46,6 +47,11 @@ export default function ObserverDemo() {
     subscriptionRef.current = null;
     setSubscribed(false);
   }, []);
+
+  // 组件卸载时取消订阅，防止中途离开页面导致 setState 在已卸载组件上执行
+  useUnmount(() => {
+    subscriptionRef.current?.unsubscribe();
+  });
 
   return (
     <section className={styles.demo}>
