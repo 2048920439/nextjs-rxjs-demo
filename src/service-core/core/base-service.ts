@@ -1,5 +1,6 @@
-import type { PersistCacheOptions } from "./persist-cache";
-import { PersistSubject } from "./persist-subject";
+import type { PersistCacheOptions } from "@/service-core/core/persist-cache";
+import { PersistSubject } from "@/service-core/core/persist-subject";
+import type { Serializable } from "@/shared/utils/serializer";
 
 type voidFn = () => void;
 export interface LifecycleHooks {
@@ -11,7 +12,7 @@ export interface LifecycleHooks {
 }
 
 export abstract class BaseService {
-  private readonly _persistSubjects: PersistSubject<unknown>[] = [];
+  private readonly _persistSubjects: PersistSubject<Serializable>[] = [];
   private _hydrateCallbacks: (() => void)[] = [];
   private _mountCallbacks: (() => void)[] = [];
   private _unmountCallbacks: (() => void)[] = [];
@@ -35,9 +36,11 @@ export abstract class BaseService {
    * @param initial 初始值
    * @param opt 缓存配置（key 必填，ttl / check 可选）
    */
-  protected createPersistSubject<T>(initial: T, opt: PersistCacheOptions<T>): PersistSubject<T> {
+  protected createPersistSubject<T extends Serializable>(initial: T, opt: PersistCacheOptions<T>): PersistSubject<T> {
     const subject = new PersistSubject<T>(initial, opt);
-    this._persistSubjects.push(subject as PersistSubject<unknown>);
+    // _persistSubjects 仅用于批量 rehydrate()，不依赖具体 T，此处向上转型安全
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this._persistSubjects.push(subject as PersistSubject<any>);
     return subject;
   }
 

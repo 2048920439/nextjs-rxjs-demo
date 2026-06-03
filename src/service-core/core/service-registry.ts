@@ -1,5 +1,5 @@
-import type { BaseService } from "./base-service";
-import type { InjectionToken } from "./create-token";
+import type { BaseService } from "@/service-core/core/base-service";
+import type { InjectionToken } from "@/service-core/core/create-token";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Token = (abstract new (...args: any[]) => any) | symbol;

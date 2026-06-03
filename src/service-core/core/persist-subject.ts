@@ -1,7 +1,8 @@
 import { BehaviorSubject } from "rxjs";
 
-import type { PersistCacheOptions } from "./persist-cache";
-import { PersistCache } from "./persist-cache";
+import type { PersistCacheOptions } from "@/service-core/core/persist-cache";
+import { PersistCache } from "@/service-core/core/persist-cache";
+import type { Serializable } from "@/shared/utils/serializer";
 
 /**
  * 自动持久化的 BehaviorSubject
@@ -19,7 +20,7 @@ import { PersistCache } from "./persist-cache";
  * subject$.clearStorage(); // 清除缓存
  * ```
  */
-export class PersistSubject<T> extends BehaviorSubject<T> {
+export class PersistSubject<T extends Serializable> extends BehaviorSubject<T> {
   readonly cache: PersistCache<T>;
 
   constructor(initial: T, opt: PersistCacheOptions<T>) {

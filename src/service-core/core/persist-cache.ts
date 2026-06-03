@@ -1,5 +1,8 @@
+import type { Serializable } from "@/shared/utils/serializer";
+import { enhancedParse, enhancedStringify } from "@/shared/utils/serializer";
+
 /** 缓存配置 */
-export interface PersistCacheOptions<T = unknown> {
+export interface PersistCacheOptions<T extends Serializable = Serializable> {
   /** 缓存 key */
   key: string;
   /** 缓存时长（毫秒），默认 0 表示永不过期 */
@@ -13,21 +16,13 @@ export interface PersistCacheOptions<T = unknown> {
   check?: (value: T) => boolean;
 }
 
-/** 带 TTL 元信息的缓存条目 */
-interface CacheEntry {
-  /** 缓存值 */
-  v: string;
-  /** 写入时间戳（ms） */
-  t: number;
-}
-
 /**
  * 本地持久化缓存管理器
  *
  * 封装 localStorage 读写 / TTL 过期管理 / check 有效性校验，
  * 为 PersistSubject 提供底层存储能力。
  */
-export class PersistCache<T = unknown> {
+export class PersistCache<T extends Serializable = Serializable> {
   private readonly _key: string;
   private readonly _ttl: number;
   private readonly _check?: (value: T) => boolean;
@@ -52,60 +47,34 @@ export class PersistCache<T = unknown> {
 
   // ─── 公开 API ────────────────────────────────────────
 
-  /** 写入缓存（支持 TTL），接收原始值，内部统一 JSON 序列化 */
-  set(value: unknown): void {
+  /** 写入缓存，存储 { v: 值, t: 时间戳 } */
+  set(value: T): void {
     try {
-      const serialized = JSON.stringify(value);
-      const content =
-        this._ttl > 0
-          ? JSON.stringify({
-              v: serialized,
-              t: Date.now(),
-            } satisfies CacheEntry)
-          : serialized;
-
-      localStorage.setItem(this._key, content);
+      localStorage.setItem(this._key, enhancedStringify({ v: value, t: Date.now() }));
     } catch {
       // 写入失败静默忽略
     }
   }
 
-  /** 读取缓存（检查 TTL 过期 + check 有效性），返回反序列化后的原始值 */
+  /** 读取缓存（TTL 过期检查 + check 校验），返回反序列化后的原始值 */
   get(): T | null {
     try {
       const content = localStorage.getItem(this._key);
       if (content == null) return null;
 
-      let parsed: unknown;
+      const entry = enhancedParse<{ v: T; t: number }>(content);
 
-      // TTL 过期检查
-      if (this._ttl > 0) {
-        try {
-          const entry: CacheEntry = JSON.parse(content);
-          if (entry.v !== undefined && entry.t !== undefined) {
-            if (Date.now() - entry.t > this._ttl) {
-              this.remove();
-              return null;
-            }
-            parsed = JSON.parse(entry.v);
-          }
-        } catch {
-          // 非 CacheEntry 格式，向后兼容旧数据
-        }
-      }
-
-      // 无 TTL 或旧格式数据，直接反序列化
-      if (parsed === undefined) {
-        parsed = JSON.parse(content);
-      }
-
-      // check 有效性校验（与 TTL 同层级的缓存淘汰逻辑）
-      if (this._check && !this._check(parsed as T)) {
+      // TTL 过期检查（_ttl = 0 表示永不过期）
+      if (this._ttl > 0 && Date.now() - entry.t > this._ttl) {
         this.remove();
         return null;
       }
 
-      return parsed as T;
+      if (this._check && !this._check(entry.v)) {
+        this.remove();
+        return null;
+      }
+      return entry.v;
     } catch {
       return null;
     }
