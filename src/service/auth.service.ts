@@ -1,6 +1,6 @@
 import { BehaviorSubject } from "rxjs";
 
-import { getMe, login as loginApi, logout as logoutApi, register as registerApi } from "@/api-client/auth";
+import { getMe, login as loginApi, logout as logoutApi, register as registerApi } from "@/api-client";
 import { BaseService } from "@/service-core";
 import type { LoginInput, RegisterInput, User } from "@/shared/types/auth";
 

@@ -1,7 +1,6 @@
+import { apiClient } from "@/api-client/_instance/client";
+import { decryptResponseBody, encryptPayload } from "@/api-client/_utils/crypto";
 import type { LoginInput, RegisterInput, User } from "@/shared/types/auth";
-
-import { apiClient } from "./client";
-import { decryptResponseBody, encryptPayload } from "./crypto";
 
 /**
  * 登录：自动加密敏感字段后通过 API 发送
