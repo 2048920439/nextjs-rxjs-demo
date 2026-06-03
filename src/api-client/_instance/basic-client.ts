@@ -10,6 +10,7 @@ export const basicClient = withInterceptors<CryptoRequestConfig>(
   axios.create({
     baseURL: "/api",
     headers: { "Content-Type": "application/json" },
+    timeout: 10000,
     withCredentials: true, // ensure cookies are always sent (cross-origin safety)
   }),
   [cryptoInterceptor, errorInterceptor],
