@@ -1,0 +1,207 @@
+.demo {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0;
+  align-items: start;
+  padding: 24px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+}
+
+/* ========== 发布者 & 观察者 公共卡片样式 ========== */
+.publisher,
+.observer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.roleTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.sourceBox,
+.observerBox {
+  padding: 10px 18px;
+  background: #1e1e1e;
+  border-radius: 6px;
+
+  code {
+    color: #dcdcaa;
+    font-size: 14px;
+    font-family: "Fira Code", "Cascadia Code", Consolas, monospace;
+  }
+}
+
+.roleNote {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+}
+
+/* ========== 发布者 emit 队列 ========== */
+.emitQueue {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.emitDot {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f0f0f0;
+  color: #bbb;
+  transition: all 0.3s ease;
+}
+
+.dotEmitted {
+  background: #b7eb8f;
+  color: #389e0d;
+}
+
+/* ========== 订阅按钮 ========== */
+.actions {
+  margin-top: 4px;
+}
+
+.subscribeBtn,
+.unsubscribeBtn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.subscribeBtn {
+  background: #1677ff;
+  color: #fff;
+
+  &:hover {
+    background: #4096ff;
+  }
+
+  &:active {
+    background: #0958d9;
+  }
+}
+
+.unsubscribeBtn {
+  background: #ff4d4f;
+  color: #fff;
+
+  &:hover {
+    background: #ff7875;
+  }
+
+  &:active {
+    background: #d9363e;
+  }
+}
+
+/* ========== 数据流连接线 ========== */
+.connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  min-height: 100%;
+  align-self: stretch;
+}
+
+.pipe {
+  flex: 1;
+  width: 4px;
+  min-height: 40px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+.pipeActive {
+  background: #1677ff;
+  box-shadow: 0 0 8px rgba(22, 119, 255, 0.4);
+}
+
+.arrow {
+  font-size: 16px;
+  color: #ccc;
+  letter-spacing: 2px;
+  font-family: monospace;
+  transition: color 0.3s ease;
+
+  .pipeActive + & {
+    color: #1677ff;
+  }
+}
+
+/* ========== 观察者接收区域 ========== */
+.receiveArea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 14px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  border: 1px dashed #d9d9d9;
+}
+
+.placeholder {
+  margin: 0;
+  font-size: 13px;
+  color: #bbb;
+  text-align: center;
+  line-height: 60px;
+}
+
+.recordList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recordItem {
+  padding: 6px 10px;
+  background: #e6fffb;
+  border: 1px solid #87e8de;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  animation: fadeIn 0.3s ease;
+
+  strong {
+    color: #08979c;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
