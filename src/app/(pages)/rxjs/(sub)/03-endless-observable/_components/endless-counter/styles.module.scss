@@ -1,0 +1,379 @@
+.demo {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0;
+  align-items: start;
+  padding: 24px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+}
+
+/* ========== 发布者 & 观察者 公共卡片 ========== */
+.publisher,
+.observer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.roleTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.sourceBox {
+  padding: 8px 14px;
+  background: #1e1e1e;
+  border-radius: 6px;
+
+  code {
+    color: #dcdcaa;
+    font-size: 13px;
+    font-family: "Fira Code", "Cascadia Code", Consolas, monospace;
+  }
+}
+
+.roleNote {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+}
+
+/* ========== ∞ 无限标识 ========== */
+.infinityBadge {
+  font-size: 48px;
+  color: #1677ff;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.6;
+  user-select: none;
+}
+
+/* ========== 订阅按钮 ========== */
+.actions {
+  margin-top: 4px;
+}
+
+.subscribeBtn,
+.unsubscribeBtn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.subscribeBtn {
+  background: #1677ff;
+  color: #fff;
+
+  &:hover {
+    background: #4096ff;
+  }
+
+  &:active {
+    background: #0958d9;
+  }
+}
+
+.unsubscribeBtn {
+  background: #ff4d4f;
+  color: #fff;
+
+  &:hover {
+    background: #ff7875;
+  }
+
+  &:active {
+    background: #d9363e;
+  }
+}
+
+/* ========== 数据流连接线 ========== */
+.connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  align-self: stretch;
+}
+
+.pipe {
+  position: relative;
+  flex: 1;
+  width: 4px;
+  min-height: 40px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+  overflow: visible;
+}
+
+.pipeActive {
+  background: #1677ff;
+  box-shadow: 0 0 8px rgba(22, 119, 255, 0.4);
+}
+
+/* 管道错误状态 */
+.pipeError {
+  background: #ff4d4f;
+  box-shadow: 0 0 8px rgba(255, 77, 79, 0.4);
+}
+
+/* 管道中的数据流动画圆点 */
+.dot {
+  position: absolute;
+  left: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #1677ff;
+  animation: flowDown 1s infinite linear;
+}
+
+.dot1 {
+  animation-delay: 0s;
+}
+
+.dot2 {
+  animation-delay: 0.33s;
+}
+
+.dot3 {
+  animation-delay: 0.66s;
+}
+
+@keyframes flowDown {
+  0% {
+    top: 0;
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 12px);
+    opacity: 0;
+  }
+}
+
+.arrow {
+  font-size: 14px;
+  color: #ccc;
+  letter-spacing: 2px;
+  font-family: monospace;
+  transition: color 0.3s ease;
+}
+
+.arrowError {
+  color: #ff4d4f;
+}
+
+/* ========== 计数器核心区域 ========== */
+.counterWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 24px 40px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.counterActive {
+  border-color: #1677ff;
+  box-shadow: 0 0 16px rgba(22, 119, 255, 0.15);
+}
+
+.counterLabel {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.counterValue {
+  font-size: 56px;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+  animation: popIn 0.15s ease-out;
+}
+
+.counterError {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 16px rgba(255, 77, 79, 0.15);
+  background: #fff2f0;
+}
+
+.counterValueError {
+  color: #ff4d4f;
+  animation: shake 0.3s ease-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+.errorBadge {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  padding: 2px 8px;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 数值变化动画 */
+@keyframes popIn {
+  0% {
+    transform: scale(1.15);
+    color: #1677ff;
+  }
+  100% {
+    transform: scale(1);
+    color: #1a1a1a;
+  }
+}
+
+/* 跳动指示点 */
+.counterTick {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 20px;
+  color: #1677ff;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* ========== 状态栏 ========== */
+.statusBar {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #999;
+
+  strong {
+    color: #333;
+  }
+}
+
+.statusRunning {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.statusIdle {
+  color: #bbb;
+}
+
+.statusError {
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+.statusStopped {
+  color: #faad14;
+}
+
+/* ========== 历史记录 ========== */
+.historyArea {
+  width: 100%;
+}
+
+.historyTitle {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #bbb;
+  text-align: center;
+}
+
+.historyTrack {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  justify-content: flex-start;
+  min-height: 28px;
+  padding: 6px 8px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  border: 1px dashed #d9d9d9;
+  overflow-x: auto;
+}
+
+.historyEmpty {
+  font-size: 14px;
+  color: #d0d0d0;
+  line-height: 20px;
+}
+
+.historyDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.historyDotLatest {
+  color: #1677ff;
+  border-color: #1677ff;
+  background: #e6f4ff;
+}
+
+.historyDotError {
+  color: #ff4d4f;
+  border-color: #ff4d4f;
+  background: #fff2f0;
+}
