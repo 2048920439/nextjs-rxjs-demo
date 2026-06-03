@@ -28,7 +28,7 @@ export class PersistSubject<T extends Serializable> extends BehaviorSubject<T> {
     this.cache = new PersistCache<T>(opt);
   }
 
-  /** 重写 next，写入值的同时自动持久化（序列化由 PersistCache 内部处理） */
+  /** 重写 next，写入值的同时自动持久化（序列化/加密由 PersistCache 内部处理） */
   override next(value: T): void {
     super.next(value);
     this.cache.set(value);

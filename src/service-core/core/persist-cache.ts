@@ -1,5 +1,13 @@
+import { SYMMETRIC_KEY } from "@/config/crypto-client";
+import { createSymmetric } from "@/shared/crypto";
 import type { Serializable } from "@/shared/utils/serializer";
 import { enhancedParse, enhancedStringify } from "@/shared/utils/serializer";
+
+/** 延迟初始化的对称加密单例 */
+let _symmetric: ReturnType<typeof createSymmetric> | null = null;
+function getSymmetric() {
+  return (_symmetric ??= createSymmetric(SYMMETRIC_KEY));
+}
 
 /** 缓存配置 */
 export interface PersistCacheOptions<T extends Serializable = Serializable> {
@@ -14,6 +22,12 @@ export interface PersistCacheOptions<T extends Serializable = Serializable> {
    * - 不传则跳过校验
    */
   check?: (value: T) => boolean;
+  /**
+   * 是否启用对称加密（默认 false）
+   * - 启用后，localStorage 中存储的是 NaCl secretbox 密文
+   * - 密钥在 src/config/crypto.ts 中定义
+   */
+  encrypt?: boolean;
 }
 
 /**
@@ -26,11 +40,13 @@ export class PersistCache<T extends Serializable = Serializable> {
   private readonly _key: string;
   private readonly _ttl: number;
   private readonly _check?: (value: T) => boolean;
+  private readonly _encrypt: boolean;
 
   constructor(options: PersistCacheOptions<T>) {
     this._key = options.key;
     this._ttl = options.ttl ?? 0;
     this._check = options.check;
+    this._encrypt = options.encrypt ?? false;
   }
 
   // ─── key 访问 ────────────────────────────────────────
@@ -50,7 +66,9 @@ export class PersistCache<T extends Serializable = Serializable> {
   /** 写入缓存，存储 { v: 值, t: 时间戳 } */
   set(value: T): void {
     try {
-      localStorage.setItem(this._key, enhancedStringify({ v: value, t: Date.now() }));
+      const serialized = enhancedStringify({ v: value, t: Date.now() });
+      const stored = this._encrypt ? getSymmetric().encryptString(serialized) : serialized;
+      localStorage.setItem(this._key, stored);
     } catch {
       // 写入失败静默忽略
     }
@@ -62,7 +80,8 @@ export class PersistCache<T extends Serializable = Serializable> {
       const content = localStorage.getItem(this._key);
       if (content == null) return null;
 
-      const entry = enhancedParse<{ v: T; t: number }>(content);
+      const serialized = this._encrypt ? getSymmetric().decryptString(content) : content;
+      const entry = enhancedParse<{ v: T; t: number }>(serialized);
 
       // TTL 过期检查（_ttl = 0 表示永不过期）
       if (this._ttl > 0 && Date.now() - entry.t > this._ttl) {
