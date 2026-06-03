@@ -1,0 +1,247 @@
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ========== 双栏面板 ========== */
+.panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.coldPanel {
+  background: #f0f5ff;
+  border: 1px solid #adc6ff;
+  border-radius: 12px 12px 0 0;
+}
+
+.hotPanel {
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 0 0 12px 12px;
+  border-top: none;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.panelDesc {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* ========== 生产者状态栏 ========== */
+.producerBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.producerLabel {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+}
+
+.producerValue {
+  font-size: 13px;
+  color: #bbb;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.producerValueActive {
+  color: #1a1a1a;
+}
+
+/* ========== 观察者列表 ========== */
+.observerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.observerEmpty {
+  margin: 0;
+  font-size: 12px;
+  color: #ccc;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.observerCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+}
+
+.observerId {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.joinedTag {
+  font-size: 10px;
+  font-weight: 400;
+  color: #fa8c16;
+  margin-left: 4px;
+}
+
+.observerTrack {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  align-items: center;
+  overflow-x: auto;
+  flex: 1;
+  padding: 3px 2px; // 防止 scale(1.1) 缩放溢出裁切
+}
+
+.trackDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+  animation: fadeIn 0.3s ease;
+}
+
+.trackDotCold {
+  background: #f0f5ff;
+  border-color: #adc6ff;
+  color: #2f54eb;
+}
+
+.trackDotHot {
+  background: #fff7e6;
+  border-color: #ffd591;
+  color: #d46b08;
+}
+
+.trackDotLatest {
+  transform: scale(1.1);
+}
+
+.trackPending {
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* ========== 完成状态 ========== */
+.observerCardCompleted {
+  opacity: 0.65;
+  border-style: dashed;
+}
+
+.completedTag {
+  font-size: 10px;
+  font-weight: 500;
+  color: #52c41a;
+  margin-left: 6px;
+}
+
+/* ========== 按钮 ========== */
+.actionRow {
+  display: flex;
+  gap: 8px;
+}
+
+.addBtn {
+  flex: 1;
+  padding: 8px 0;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #1677ff;
+    color: #1677ff;
+  }
+}
+
+.resetPanelBtn {
+  padding: 8px 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: #ff4d4f;
+    color: #ff4d4f;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* ========== 全部重置 ========== */
+.resetBar {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 0;
+}
+
+.resetBtn {
+  padding: 6px 18px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #ff4d4f;
+    color: #ff4d4f;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
