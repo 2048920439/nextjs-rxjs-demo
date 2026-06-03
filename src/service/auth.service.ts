@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs";
 
-import { getMe, login as loginApi, logout as logoutApi, register as registerApi } from "@/api-client/auth";
+import { getMe, logout as logoutApi } from "@/api-client/auth";
+import { type AuthActionState, loginAction, registerAction } from "@/lib/auth-actions";
 import { BaseService } from "@/service-core";
 import type { LoginInput, RegisterInput, User } from "@/shared/types/auth";
 
@@ -19,7 +20,7 @@ export class AuthService extends BaseService {
   }
 
   /** 初始化 / 刷新用户状态 */
-  async fetchUser(): Promise<void> {
+  private async _fetchUser(): Promise<void> {
     try {
       const user = await getMe();
       this._user$.next(user);
@@ -28,16 +29,29 @@ export class AuthService extends BaseService {
     }
   }
 
-  async login(data: LoginInput): Promise<User> {
-    const user = await loginApi(data);
-    this._user$.next(user);
-    return user;
+  async login(data: LoginInput): Promise<void> {
+    const formData = new FormData();
+    formData.set("email", data.email);
+    formData.set("password", data.password);
+
+    const initialState: AuthActionState = { error: "", success: false };
+    const result = await loginAction(initialState, formData);
+    if (!result.success) throw new Error(result.error);
+
+    await this._fetchUser();
   }
 
-  async register(data: RegisterInput): Promise<User> {
-    const user = await registerApi(data);
-    this._user$.next(user);
-    return user;
+  async register(data: RegisterInput): Promise<void> {
+    const formData = new FormData();
+    formData.set("email", data.email);
+    formData.set("password", data.password);
+    formData.set("name", data.name);
+
+    const initialState: AuthActionState = { error: "", success: false };
+    const result = await registerAction(initialState, formData);
+    if (!result.success) throw new Error(result.error);
+
+    await this._fetchUser();
   }
 
   logout(): Promise<void> {

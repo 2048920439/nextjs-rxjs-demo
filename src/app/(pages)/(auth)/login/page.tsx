@@ -3,35 +3,36 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { loginAction } from "@/lib/auth-actions";
 import { AuthService } from "@/service/auth.service";
 import { useService } from "@/service-core";
 
 import styles from "./page.module.scss";
 
-const initialState = { error: "", success: false };
-
 export default function LoginPage() {
   const auth = useService(AuthService);
   const router = useRouter();
   const [error, setError] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    startTransition(() => {
-      loginAction(initialState, formData)
-        .then((result) => {
-          if (!result.success) return Promise.reject(result.error);
-          return auth.fetchUser().then(() => router.push("/"));
-        })
-        .catch((err) => setError(err instanceof Error ? err.message : String(err)));
-    });
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      await auth.login({ email, password });
+      router.push("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -56,8 +57,8 @@ export default function LoginPage() {
             <input id="password" name="password" type="password" required className={styles.input} placeholder="Your password" />
           </div>
 
-          <button type="submit" disabled={isPending} className={clsx(styles.submitBtn, isPending ? styles.submitBtnLoading : styles.submitBtnActive)}>
-            {isPending ? "Logging in..." : "Login"}
+          <button type="submit" disabled={loading} className={clsx(styles.submitBtn, loading ? styles.submitBtnLoading : styles.submitBtnActive)}>
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
