@@ -242,6 +242,10 @@ export default function RxjsLayout({ children }: PropsWithChildren) {
       {/* 侧边目录导航 */}
       <aside className={styles.sidebar}>
         <nav className={styles.nav}>
+          <Link href="/" className={styles.backLink}>
+            &larr; 返回首页
+          </Link>
+
           <h2 className={styles.navTitle}>
             <Link href="/rxjs" className={styles.navTitleLink}>
               RxJS 学习

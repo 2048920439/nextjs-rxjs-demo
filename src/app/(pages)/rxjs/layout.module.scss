@@ -19,6 +19,18 @@
   top: 1.5rem;
 }
 
+.backLink {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  &:hover {
+    color: #374151;
+  }
+}
+
 .navTitle {
   font-size: 1.1rem;
   font-weight: 700;

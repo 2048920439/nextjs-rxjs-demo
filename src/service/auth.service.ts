@@ -40,11 +40,8 @@ export class AuthService extends BaseService {
     return user;
   }
 
-  async logout(): Promise<void> {
-    try {
-      await logoutApi();
-    } finally {
-      this._user$.next(null);
-    }
+  logout(): Promise<void> {
+    this._user$.next(null);
+    return logoutApi();
   }
 }

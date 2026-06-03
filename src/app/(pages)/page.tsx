@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AuthService } from "@/service/auth.service";
 import { useObservableState, useService } from "@/service-core";
 
+import { LogoutButton } from "./_components/logout-button";
 import styles from "./page.module.scss";
 
 export default function Home() {
@@ -15,27 +16,39 @@ export default function Home() {
     <div className={styles.wrapper}>
       <h1 className={styles.title}>Next.js + RxJS Demo</h1>
 
-      <div className={styles.actions}>
-        {user === undefined ? (
-          <span className={styles.loadingText}>Loading...</span>
-        ) : user ? (
-          <>
-            <Link href="/dashboard" className={styles.btnBlue}>
-              Dashboard
-            </Link>
-            <span className={styles.greeting}>Hello, {user.name}</span>
-          </>
-        ) : (
-          <>
-            <Link href="/login" className={styles.btnBlue}>
-              Login
-            </Link>
-            <Link href="/register" className={styles.btnGreen}>
-              Register
-            </Link>
-          </>
-        )}
-      </div>
+      {user === undefined ? (
+        <span className={styles.loadingText}>Loading...</span>
+      ) : user ? (
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Welcome, {user.name}!</h2>
+
+          <div className={styles.info}>
+            <p>
+              <span className={styles.label}>Email:</span> {user.email}
+            </p>
+            <p>
+              <span className={styles.label}>Joined:</span> {new Date(user.createdAt).toLocaleDateString("zh-CN")}
+            </p>
+          </div>
+
+          <div className={styles.actions}>
+            <LogoutButton />
+          </div>
+        </div>
+      ) : (
+        <div className={styles.actions}>
+          <Link href="/login" className={styles.btnBlue}>
+            Login
+          </Link>
+          <Link href="/register" className={styles.btnGreen}>
+            Register
+          </Link>
+        </div>
+      )}
+
+      <Link href="/rxjs" className={styles.rxjsLink}>
+        Learn RxJS &rarr;
+      </Link>
     </div>
   );
 }
