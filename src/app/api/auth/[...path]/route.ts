@@ -99,7 +99,7 @@ async function handleMe() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  return NextResponse.json({ user });
+  return NextResponse.json({ encrypted: encryptResponseBody({ user }) });
 }
 
 // --- Route dispatcher ---
