@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 const BOOK_CODE = `// 4.3.6 ajax：将 AJAX 请求转化为 Observable
 import { ajax } from 'rxjs/ajax';
 
-// 调用项目内部 /api/utils/delay?ms=1500 接口
+// 调用项目内部 /api/mock/delay?ms=1500 接口
 // 服务端延迟 1500ms 后返回 { success: true, delay: 1500 }
-const url = '/api/utils/delay?ms=1500';
+const url = '/api/mock/delay?ms=1500';
 
 ajax.getJSON(url).subscribe(data => {
   console.log('Delay:', data.delay, 'ms');
@@ -54,7 +54,7 @@ export default function AjaxPage() {
         </ul>
       </aside>
 
-      <CodeBlock title="原书示例 — 调用内部 /api/utils/delay 接口" code={BOOK_CODE} />
+      <CodeBlock title="原书示例 — 调用内部 /api/mock/delay 接口" code={BOOK_CODE} />
     </div>
   );
 }
