@@ -1,0 +1,128 @@
+.demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 40px 32px;
+  background: #fafafa;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+}
+
+// ── 顶部提示 ──
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+  line-height: 1.6;
+
+  code {
+    padding: 1px 4px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #555;
+  }
+}
+
+// ── 数据流区域 ──
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.arrow {
+  font-size: 28px;
+  color: #bbb;
+  flex-shrink: 0;
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+}
+
+.cardLabel {
+  font-size: 13px;
+  color: #999;
+  font-weight: 500;
+}
+
+.cardValue {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardValueNegative {
+  color: #cf1322;
+}
+
+.btnReset {
+  composes: btn;
+  background: #f5f5f5;
+  color: #8c8c8c;
+  font-size: 20px;
+
+  &:hover {
+    background: #e8e8e8;
+  }
+}
+
+// ── 按钮共享 ──
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.btnPlus {
+  composes: btn;
+  background: #e6f7e6;
+  color: #389e0d;
+
+  &:hover {
+    background: #b7eb8f;
+  }
+}
+
+.btnMinus {
+  composes: btn;
+  background: #fff1f0;
+  color: #cf1322;
+
+  &:hover {
+    background: #ffccc7;
+  }
+}
