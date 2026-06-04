@@ -49,6 +49,10 @@ export default function Home() {
       <Link href="/rxjs" className={styles.rxjsLink}>
         Learn RxJS &rarr;
       </Link>
+
+      <Link href="/service-playground" className={styles.playgroundLink}>
+        Service Playground &rarr;
+      </Link>
     </div>
   );
 }

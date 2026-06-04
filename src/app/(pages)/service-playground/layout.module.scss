@@ -1,0 +1,105 @@
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* ====== 侧边栏 ====== */
+
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  border-right: 1px solid #e5e7eb;
+  background: #fafafa;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+.nav {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  &:hover {
+    color: #374151;
+  }
+}
+
+.navTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.navTitleLink {
+  color: #7c3aed;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  margin: 0;
+}
+
+.navLink {
+  display: block;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: #ede9fe;
+    color: #7c3aed;
+  }
+}
+
+/* 嵌套子列表 */
+.navSubList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.navEmpty {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+/* ====== 主内容区 ====== */
+
+.content {
+  flex: 1;
+  padding: 2rem;
+  min-width: 0;
+  overflow-y: auto;
+}
