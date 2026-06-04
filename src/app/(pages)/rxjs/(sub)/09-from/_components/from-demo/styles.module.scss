@@ -1,0 +1,80 @@
+.demo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+.cardName {
+  font-size: 13px;
+  color: #999;
+  font-family: "Menlo", "Consolas", monospace;
+}
+
+.triggers {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.triggerBtn {
+  padding: 5px 16px;
+  border: 1px solid #1677ff;
+  background: #fff;
+  color: #1677ff;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #1677ff;
+    color: #fff;
+  }
+
+  &:disabled {
+    border-color: #d9d9d9;
+    color: #d9d9d9;
+    cursor: not-allowed;
+    background: #fff;
+  }
+}
+
+.output {
+  padding: 12px;
+  background: #1e1e1e;
+  border-radius: 8px;
+  min-height: 32px;
+  font-family: "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  color: #d4d4d4;
+  line-height: 1.7;
+}
+
+.outputLabel {
+  color: #6a9955;
+}
+
+.outputValue {
+  color: #ce9178;
+}
+
+.outputComplete {
+  color: #569cd6;
+  font-style: italic;
+}

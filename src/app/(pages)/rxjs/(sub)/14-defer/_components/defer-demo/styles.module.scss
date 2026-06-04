@@ -1,0 +1,92 @@
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  align-items: center;
+}
+
+.statusBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e8e8e8;
+  min-width: 240px;
+}
+
+.statusLabel {
+  font-size: 13px;
+  color: #999;
+}
+
+.statusValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  font-family: "Menlo", "Consolas", monospace;
+}
+
+.createSubBtn {
+  padding: 12px 36px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: #52c41a;
+  &:hover {
+    background: #73d13d;
+  }
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+.output {
+  width: 100%;
+  padding: 16px;
+  background: #1e1e1e;
+  border-radius: 8px;
+  min-height: 60px;
+  font-family: "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  color: #d4d4d4;
+  line-height: 1.8;
+}
+
+.outNext {
+  color: #ce9178;
+}
+.outComplete {
+  color: #6a9955;
+}
+.outInfo {
+  color: #569cd6;
+}
+.outEmpty {
+  color: #666;
+  font-style: italic;
+}
+
+.info {
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+  code {
+    padding: 2px 6px;
+    background: #eee;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #d46b08;
+  }
+}

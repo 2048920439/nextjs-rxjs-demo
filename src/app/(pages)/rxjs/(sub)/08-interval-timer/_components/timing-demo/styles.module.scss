@@ -1,0 +1,108 @@
+.demo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  align-items: center;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.cardDesc {
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.counter {
+  font-size: 64px;
+  font-weight: 700;
+  font-family: "Menlo", "Consolas", monospace;
+  color: #1677ff;
+  line-height: 1;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+}
+
+.counterIdle {
+  color: #ccc;
+  font-size: 28px;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.startBtn {
+  padding: 8px 24px;
+  background: #1677ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover {
+    background: #4096ff;
+  }
+}
+
+.stopBtn {
+  padding: 8px 24px;
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover {
+    background: #ff7875;
+  }
+}
+
+.timerStartBtn {
+  composes: startBtn;
+  background: #52c41a;
+
+  &:hover {
+    background: #73d13d;
+  }
+}
+
+.delayInput {
+  width: 70px;
+  padding: 4px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    border-color: #1677ff;
+  }
+}
+
+.delayLabel {
+  font-size: 13px;
+  color: #666;
+}
