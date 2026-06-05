@@ -35,6 +35,7 @@ export class AuthService extends BaseService {
 
   async register(data: RegisterInput): Promise<void> {
     await registerApi(data);
+    await loginApi({ email: data.email, password: data.password });
     await this._fetchUser();
   }
 
