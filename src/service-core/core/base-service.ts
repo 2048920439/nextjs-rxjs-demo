@@ -1,6 +1,11 @@
+import type { Subscription } from "rxjs";
+
 import type { PersistCacheOptions } from "@/service-core/core/persist-cache";
 import { PersistSubject } from "@/service-core/core/persist-subject";
 import type { Serializable } from "@/shared/utils/serializer";
+
+import type { Effect } from "./effect";
+import { registerEffects } from "./effect";
 
 type voidFn = () => void;
 export interface LifecycleHooks {
@@ -16,6 +21,7 @@ export abstract class BaseService {
   private _hydrateCallbacks: (() => void)[] = [];
   private _mountCallbacks: (() => void)[] = [];
   private _unmountCallbacks: (() => void)[] = [];
+  private _subscriptions: Subscription[] = [];
 
   protected constructor() {
     this.setup({
@@ -54,8 +60,20 @@ export abstract class BaseService {
     this._mountCallbacks.forEach((fn) => fn());
   }
 
-  /** @internal 框架内部调用，执行卸载回调 */
+  /**
+   * 注册 Effects：立即启动订阅，并在 _unmount() 时自动取消。
+   *
+   * - ctx：独立的上下文对象（实现抽象接口，不暴露 Service 内部细节）
+   * - effects：纯编排函数，通过 ctx 读取命令流、写入状态
+   */
+  protected registerEffects<T>(ctx: T, effects: Effect<T>[]): void {
+    this._subscriptions.push(...registerEffects(ctx, effects));
+  }
+
+  /** @internal 框架内部调用，执行卸载回调并取消所有 effect 订阅 */
   _unmount(): void {
     this._unmountCallbacks.forEach((fn) => fn());
+    this._subscriptions.forEach((s) => s.unsubscribe());
+    this._subscriptions = [];
   }
 }
