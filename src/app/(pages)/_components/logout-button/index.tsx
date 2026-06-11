@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthService } from "@/service/auth.service";
+import { AuthService } from "@/service/auth";
 import { useService } from "@/service-core";
 
 import styles from "./logout-button.module.scss";

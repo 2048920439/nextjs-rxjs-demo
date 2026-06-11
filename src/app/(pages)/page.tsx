@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { AuthService } from "@/service/auth.service";
+import { AuthService } from "@/service/auth";
 import { useObservableState, useService } from "@/service-core";
 
 import { LogoutButton } from "./_components/logout-button";
@@ -11,12 +11,13 @@ import styles from "./page.module.scss";
 export default function Home() {
   const auth = useService(AuthService);
   const user = useObservableState(auth.user$, () => auth.user);
+  const pending = useObservableState(auth.pending$, () => auth.pending);
 
   return (
     <div className={styles.wrapper}>
       <h1 className={styles.title}>Next.js + RxJS Demo</h1>
 
-      {user === undefined ? (
+      {pending ? (
         <span className={styles.loadingText}>Loading...</span>
       ) : user ? (
         <div className={styles.card}>

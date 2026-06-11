@@ -10,7 +10,7 @@ export default async function PageLayout({ children }: PropsWithChildren) {
   return (
     <>
       <ReactScanInit />
-      <BasicServiceProvider authState={user}>{children}</BasicServiceProvider>
+      <BasicServiceProvider initUser={user}>{children}</BasicServiceProvider>
     </>
   );
 }
