@@ -2,40 +2,38 @@ import { NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
 import { z } from "zod";
 
-import { hashPassword } from "@/lib/auth";
+import { verifyPassword } from "@/lib/auth";
 import { decryptRequestBody, encryptResponseBody } from "@/lib/crypto-server";
 import { prisma } from "@/lib/prisma";
 
-const registerSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  name: z.string().min(1, "Name is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
-/** 与 NextAuth defaultCookies 保持一致：开发环境无前缀，生产环境 __Secure- */
 const COOKIE_NAME = process.env.NODE_ENV === "production" ? "__Secure-authjs.session-token" : "authjs.session-token";
-const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
+const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const data = decryptRequestBody(body);
-    const parsed = registerSchema.safeParse(data);
+    const parsed = loginSchema.safeParse(data);
 
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    const { email, password, name } = parsed.data;
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+    const { email, password } = parsed.data;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    const user = await prisma.user.create({
-      data: { email, password: await hashPassword(password), name },
-      select: { id: true, email: true, name: true, createdAt: true },
-    });
+    const passwordValid = await verifyPassword(password, user.password);
+    if (!passwordValid) {
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    }
 
     const userPayload = {
       id: user.id,
@@ -44,7 +42,6 @@ export async function POST(request: Request) {
       createdAt: user.createdAt.getTime(),
     };
 
-    // 创建 JWT session，salt 与 cookieName 一致（next-auth 约定）
     const token = await encode({
       token: {
         user: userPayload,
@@ -55,7 +52,7 @@ export async function POST(request: Request) {
       maxAge: COOKIE_MAX_AGE,
     });
 
-    const response = NextResponse.json({ encrypted: encryptResponseBody({ user: userPayload }) }, { status: 201 });
+    const response = NextResponse.json({ encrypted: encryptResponseBody({ user: userPayload }) }, { status: 200 });
 
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,

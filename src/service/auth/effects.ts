@@ -1,6 +1,6 @@
 import { catchError, EMPTY, from, switchMap, tap } from "rxjs";
 
-import { getMe, login as loginApi, logout as logoutApi, register as registerApi } from "@/api-client";
+import { login as loginApi, logout as logoutApi, register as registerApi } from "@/api-client";
 import type { Effect } from "@/service-core";
 
 import type { AuthEffectCtx } from "./types";
@@ -38,7 +38,6 @@ export const registerEffect: Effect<AuthEffectCtx> = (ctx) =>
       }),
       switchMap((data) =>
         from(registerApi(data)).pipe(
-          switchMap(() => from(loginApi({ email: data.email, password: data.password }))),
           tap((user) => ctx.setUser(user, LoginStatus.LoggedIn)),
           catchError((err: unknown) => {
             ctx.pushError(err instanceof Error ? err.message : String(err));
@@ -55,22 +54,5 @@ export const logoutEffect: Effect<AuthEffectCtx> = (ctx) =>
     .pipe(
       switchMap(() => from(logoutApi()).pipe(catchError(() => EMPTY))),
       tap(() => ctx.setUser(null, LoginStatus.LoggedOut)),
-    )
-    .subscribe();
-
-/** 刷新用户信息（SSR 水合后 / 手动触发）：成功设 LoggedIn，失败报错并回 LoggedOut */
-export const postAuthSyncEffect: Effect<AuthEffectCtx> = (ctx) =>
-  ctx.postAuthSync$
-    .pipe(
-      switchMap(() =>
-        from(getMe()).pipe(
-          tap((user) => ctx.setUser(user, LoginStatus.LoggedIn)),
-          catchError((err: unknown) => {
-            ctx.pushError(err instanceof Error ? err.message : String(err));
-            ctx.setStatus(LoginStatus.LoggedOut);
-            return EMPTY;
-          }),
-        ),
-      ),
     )
     .subscribe();

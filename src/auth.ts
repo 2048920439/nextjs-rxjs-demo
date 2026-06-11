@@ -1,15 +1,6 @@
-import { compare } from "bcryptjs";
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { z } from "zod";
 
-import { prisma } from "@/lib/prisma";
 import type { User as AppUser } from "@/shared/types/auth";
-
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
 
 declare module "next-auth" {
   interface User {
@@ -21,39 +12,13 @@ declare module "next-auth" {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.JWT_SECRET,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
-  providers: [
-    Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const parsed = credentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
-        });
-        if (!user) return null;
-
-        const passwordValid = await compare(parsed.data.password, user.password);
-        if (!passwordValid) return null;
-
-        return {
-          id: String(user.id),
-          email: user.email,
-          name: user.name,
-          createdAt: user.createdAt.getTime(),
-        };
-      },
-    }),
-  ],
+  providers: [],
   callbacks: {
     jwt({ token, user }) {
       if (user) {

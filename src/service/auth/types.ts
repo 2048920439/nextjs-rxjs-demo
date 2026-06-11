@@ -14,8 +14,6 @@ export interface AuthEffectCtx {
   login$: Observable<LoginInput>;
   register$: Observable<RegisterInput>;
   logout$: Observable<void>;
-  postAuthSync$: Observable<void>;
-  triggerPostAuthSync(): void;
   setUser(user: User | null, status: LoginStatus): void;
   setStatus(status: LoginStatus): void;
   pushError(msg: string): void;

@@ -1,28 +1,15 @@
-import { getSession, signIn, signOut } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 import type { LoginInput, RegisterInput, User } from "@/shared/types/auth";
 
 import { basicClient } from "./_instance";
 
 /**
- * 登录：加解密由拦截器自动处理，Service 层无需关心
+ * 登录：服务端 /api/auth/login 验证凭证并创建 session，客户端一次请求拿到 user
  */
 export async function login(data: LoginInput): Promise<User> {
-  const result = await signIn("credentials", {
-    email: data.email,
-    password: data.password,
-    redirect: false,
-  });
-
-  if (result?.error) {
-    throw new Error("Invalid email or password");
-  }
-
-  const user = await getMe();
-  if (!user) {
-    throw new Error("Unable to load current user");
-  }
-  return user;
+  const res = await basicClient.post<{ user: User }>("/auth/login", data, { crypto: true });
+  return res.data.user;
 }
 
 /**

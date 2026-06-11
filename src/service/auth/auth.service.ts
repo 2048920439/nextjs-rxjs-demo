@@ -3,7 +3,7 @@ import { BehaviorSubject, filter, map, pairwise, Subject } from "rxjs";
 import { BaseService } from "@/service-core";
 import type { LoginInput, RegisterInput, User } from "@/shared/types/auth";
 
-import { loginEffect, logoutEffect, postAuthSyncEffect, registerEffect } from "./effects";
+import { loginEffect, logoutEffect, registerEffect } from "./effects";
 import type { AuthEffectCtx } from "./types";
 import { LoginStatus } from "./types";
 
@@ -45,7 +45,6 @@ export class AuthService extends BaseService {
   private _loginEvent$ = new Subject<LoginInput>();
   private _registerEvent$ = new Subject<RegisterInput>();
   private _logoutEvent$ = new Subject<void>();
-  private _postAuthSync$ = new Subject<void>();
 
   constructor(private initUser: User | null = null) {
     super();
@@ -55,8 +54,6 @@ export class AuthService extends BaseService {
       login$: this._loginEvent$,
       register$: this._registerEvent$,
       logout$: this._logoutEvent$,
-      postAuthSync$: this._postAuthSync$,
-      triggerPostAuthSync: () => this._postAuthSync$.next(),
       setUser: (user, status) => {
         this._user$.next(user);
         this._loginStatus$.next(status);
@@ -67,7 +64,7 @@ export class AuthService extends BaseService {
     };
 
     // 注册副作用
-    this.registerEffects(ctx, [postAuthSyncEffect, loginEffect, registerEffect, logoutEffect]);
+    this.registerEffects(ctx, [loginEffect, registerEffect, logoutEffect]);
   }
 
   // 命令入口
