@@ -9,13 +9,18 @@ export enum LoginStatus {
   LoggedIn = 2,
 }
 
-/** Effect 统一上下文 —— 只暴露 Observable + 行动，不暴露 Subject */
+/** 认证结果 */
+export type AuthResult<T = unknown> = ({ state: "success" } & T) | { state: "failed"; msg: string };
+
+/** Effect 上下文 —— 命令流 + 原子操作，Effect 层组合调用 */
 export interface AuthEffectCtx {
   login$: Observable<LoginInput>;
   register$: Observable<RegisterInput>;
   logout$: Observable<void>;
-  setUser(user: User | null, status: LoginStatus): void;
-  setStatus(status: LoginStatus): void;
-  pushError(msg: string): void;
-  clearError(): void;
+  /** 原子操作 —— 各司其职 */
+  pushUser(user: User | null): void;
+  pushUserState(status: LoginStatus): void;
+  pushLoginState(result: AuthResult): void;
+  pushRegisterState(result: AuthResult): void;
+  pushLogoutState(result: AuthResult): void;
 }

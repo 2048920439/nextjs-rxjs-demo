@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { AuthService } from "@/service/auth";
+import { AuthService, LoginStatus } from "@/service/auth";
 import { useObservableState, useService } from "@/service-core";
 
 import { LogoutButton } from "./_components/logout-button";
@@ -11,7 +11,7 @@ import styles from "./page.module.scss";
 export default function Home() {
   const auth = useService(AuthService);
   const user = useObservableState(auth.user$, () => auth.user);
-  const pending = useObservableState(auth.pending$, () => auth.pending);
+  const pending = useObservableState(auth.userState$, () => auth.userState === LoginStatus.Loading);
 
   return (
     <div className={styles.wrapper}>

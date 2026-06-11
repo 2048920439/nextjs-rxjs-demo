@@ -6,22 +6,20 @@ import type { Effect } from "@/service-core";
 import type { AuthEffectCtx } from "./types";
 import { LoginStatus } from "./types";
 
-// 副作用编排函数
-// ==================================================
-
 export const loginEffect: Effect<AuthEffectCtx> = (ctx) =>
   ctx.login$
     .pipe(
-      tap(() => {
-        ctx.clearError();
-        ctx.setStatus(LoginStatus.Loading);
-      }),
+      tap(() => ctx.pushUserState(LoginStatus.Loading)),
       switchMap((data) =>
         from(loginApi(data)).pipe(
-          tap((user) => ctx.setUser(user, LoginStatus.LoggedIn)),
+          tap((user) => {
+            ctx.pushUser(user);
+            ctx.pushUserState(LoginStatus.LoggedIn);
+            ctx.pushLoginState({ state: "success" });
+          }),
           catchError((err: unknown) => {
-            ctx.pushError(err instanceof Error ? err.message : String(err));
-            ctx.setStatus(LoginStatus.LoggedOut);
+            ctx.pushUserState(LoginStatus.LoggedOut);
+            ctx.pushLoginState({ state: "failed", msg: err instanceof Error ? err.message : String(err) });
             return EMPTY;
           }),
         ),
@@ -32,16 +30,17 @@ export const loginEffect: Effect<AuthEffectCtx> = (ctx) =>
 export const registerEffect: Effect<AuthEffectCtx> = (ctx) =>
   ctx.register$
     .pipe(
-      tap(() => {
-        ctx.clearError();
-        ctx.setStatus(LoginStatus.Loading);
-      }),
+      tap(() => ctx.pushUserState(LoginStatus.Loading)),
       switchMap((data) =>
         from(registerApi(data)).pipe(
-          tap((user) => ctx.setUser(user, LoginStatus.LoggedIn)),
+          tap((user) => {
+            ctx.pushUser(user);
+            ctx.pushUserState(LoginStatus.LoggedIn);
+            ctx.pushRegisterState({ state: "success" });
+          }),
           catchError((err: unknown) => {
-            ctx.pushError(err instanceof Error ? err.message : String(err));
-            ctx.setStatus(LoginStatus.LoggedOut);
+            ctx.pushUserState(LoginStatus.LoggedOut);
+            ctx.pushRegisterState({ state: "failed", msg: err instanceof Error ? err.message : String(err) });
             return EMPTY;
           }),
         ),
@@ -52,7 +51,18 @@ export const registerEffect: Effect<AuthEffectCtx> = (ctx) =>
 export const logoutEffect: Effect<AuthEffectCtx> = (ctx) =>
   ctx.logout$
     .pipe(
-      switchMap(() => from(logoutApi()).pipe(catchError(() => EMPTY))),
-      tap(() => ctx.setUser(null, LoginStatus.LoggedOut)),
+      switchMap(() =>
+        from(logoutApi()).pipe(
+          tap(() => {
+            ctx.pushUser(null);
+            ctx.pushUserState(LoginStatus.LoggedOut);
+            ctx.pushLogoutState({ state: "success" });
+          }),
+          catchError((err: unknown) => {
+            ctx.pushLogoutState({ state: "failed", msg: err instanceof Error ? err.message : String(err) });
+            return EMPTY;
+          }),
+        ),
+      ),
     )
     .subscribe();

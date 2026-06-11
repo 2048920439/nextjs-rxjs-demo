@@ -3,8 +3,9 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { AuthService } from "@/service/auth";
+import { AuthService, LoginStatus } from "@/service/auth";
 import { useObservable, useObservableState, useService } from "@/service-core";
 
 import styles from "./page.module.scss";
@@ -12,8 +13,9 @@ import styles from "./page.module.scss";
 export default function LoginPage() {
   const auth = useService(AuthService);
   const router = useRouter();
-  const pending = useObservableState(auth.pending$, () => auth.pending);
-  const error = useObservableState(auth.error$, () => auth.error);
+  const pending = useObservableState(auth.userState$, () => auth.userState === LoginStatus.Loading);
+  const [error, setError] = useState("");
+  useObservable(auth.loginFailed$, (msg) => setError(msg));
 
   // 登录成功后跳转
   useObservable(auth.loginSuccess$, () => router.push("/"));
@@ -33,7 +35,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>Login</h1>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} onChange={() => error && setError("")}>
           {error && <div className={styles.error}>{error}</div>}
 
           <div>

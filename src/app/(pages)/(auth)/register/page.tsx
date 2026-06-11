@@ -3,8 +3,9 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { AuthService } from "@/service/auth";
+import { AuthService, LoginStatus } from "@/service/auth";
 import { useObservable, useObservableState, useService } from "@/service-core";
 
 import styles from "./page.module.scss";
@@ -12,11 +13,12 @@ import styles from "./page.module.scss";
 export default function RegisterPage() {
   const auth = useService(AuthService);
   const router = useRouter();
-  const pending = useObservableState(auth.pending$, () => auth.pending);
-  const error = useObservableState(auth.error$, () => auth.error);
+  const pending = useObservableState(auth.userState$, () => auth.userState === LoginStatus.Loading);
+  const [error, setError] = useState("");
+  useObservable(auth.registerFailed$, (msg) => setError(msg));
 
-  // 注册-登录成功后跳转
-  useObservable(auth.loginSuccess$, () => router.push("/"));
+  // 注册成功后跳转
+  useObservable(auth.registerSuccess$, () => router.push("/"));
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +36,7 @@ export default function RegisterPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>Register</h1>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} onChange={() => error && setError("")}>
           {error && <div className={styles.error}>{error}</div>}
 
           <div>
