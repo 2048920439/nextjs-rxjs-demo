@@ -69,11 +69,34 @@ export class AuthService extends BaseService {
       login$: this._loginEvent$,
       register$: this._registerEvent$,
       logout$: this._logoutEvent$,
-      pushUser: (user) => this._user$.next(user),
-      pushUserState: (status) => this._userState$.next(status),
-      pushLoginState: (result) => this._loginResult$.next(result),
-      pushRegisterState: (result) => this._registerResult$.next(result),
-      pushLogoutState: (result) => this._logoutResult$.next(result),
+      setLoading: () => this._userState$.next(LoginStatus.Loading),
+      loginSuccess: (user) => {
+        this._user$.next(user);
+        this._userState$.next(LoginStatus.LoggedIn);
+        this._loginResult$.next({ state: "success" });
+      },
+      loginFailed: (msg) => {
+        this._userState$.next(LoginStatus.LoggedOut);
+        this._loginResult$.next({ state: "failed", msg });
+      },
+      registerSuccess: (user) => {
+        this._user$.next(user);
+        this._userState$.next(LoginStatus.LoggedIn);
+        this._registerResult$.next({ state: "success" });
+      },
+      registerFailed: (msg) => {
+        this._userState$.next(LoginStatus.LoggedOut);
+        this._registerResult$.next({ state: "failed", msg });
+      },
+      logoutSuccess: () => {
+        this._user$.next(null);
+        this._userState$.next(LoginStatus.LoggedOut);
+        this._logoutResult$.next({ state: "success" });
+      },
+      logoutFailed: (msg) => {
+        this._userState$.next(LoginStatus.LoggedIn);
+        this._logoutResult$.next({ state: "failed", msg });
+      },
     };
 
     this.registerEffects(ctx, [loginEffect, registerEffect, logoutEffect]);

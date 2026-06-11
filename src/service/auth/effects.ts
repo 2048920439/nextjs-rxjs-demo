@@ -4,22 +4,16 @@ import { login as loginApi, logout as logoutApi, register as registerApi } from 
 import type { Effect } from "@/service-core";
 
 import type { AuthEffectCtx } from "./types";
-import { LoginStatus } from "./types";
 
 export const loginEffect: Effect<AuthEffectCtx> = (ctx) =>
   ctx.login$
     .pipe(
-      tap(() => ctx.pushUserState(LoginStatus.Loading)),
+      tap(() => ctx.setLoading()),
       switchMap((data) =>
         from(loginApi(data)).pipe(
-          tap((user) => {
-            ctx.pushUser(user);
-            ctx.pushUserState(LoginStatus.LoggedIn);
-            ctx.pushLoginState({ state: "success" });
-          }),
+          tap((user) => ctx.loginSuccess(user)),
           catchError((err: unknown) => {
-            ctx.pushUserState(LoginStatus.LoggedOut);
-            ctx.pushLoginState({ state: "failed", msg: err instanceof Error ? err.message : String(err) });
+            ctx.loginFailed(err instanceof Error ? err.message : String(err));
             return EMPTY;
           }),
         ),
@@ -30,17 +24,12 @@ export const loginEffect: Effect<AuthEffectCtx> = (ctx) =>
 export const registerEffect: Effect<AuthEffectCtx> = (ctx) =>
   ctx.register$
     .pipe(
-      tap(() => ctx.pushUserState(LoginStatus.Loading)),
+      tap(() => ctx.setLoading()),
       switchMap((data) =>
         from(registerApi(data)).pipe(
-          tap((user) => {
-            ctx.pushUser(user);
-            ctx.pushUserState(LoginStatus.LoggedIn);
-            ctx.pushRegisterState({ state: "success" });
-          }),
+          tap((user) => ctx.registerSuccess(user)),
           catchError((err: unknown) => {
-            ctx.pushUserState(LoginStatus.LoggedOut);
-            ctx.pushRegisterState({ state: "failed", msg: err instanceof Error ? err.message : String(err) });
+            ctx.registerFailed(err instanceof Error ? err.message : String(err));
             return EMPTY;
           }),
         ),
@@ -51,15 +40,12 @@ export const registerEffect: Effect<AuthEffectCtx> = (ctx) =>
 export const logoutEffect: Effect<AuthEffectCtx> = (ctx) =>
   ctx.logout$
     .pipe(
+      tap(() => ctx.setLoading()),
       switchMap(() =>
         from(logoutApi()).pipe(
-          tap(() => {
-            ctx.pushUser(null);
-            ctx.pushUserState(LoginStatus.LoggedOut);
-            ctx.pushLogoutState({ state: "success" });
-          }),
+          tap(() => ctx.logoutSuccess()),
           catchError((err: unknown) => {
-            ctx.pushLogoutState({ state: "failed", msg: err instanceof Error ? err.message : String(err) });
+            ctx.logoutFailed(err instanceof Error ? err.message : String(err));
             return EMPTY;
           }),
         ),
