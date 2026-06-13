@@ -1,103 +1,120 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { defer, of } from "rxjs";
+import { useRef, useState } from "react";
+import { defer, Observable, of, Subscription } from "rxjs";
 
 import styles from "./styles.module.scss";
+
+type Stage = "idle" | "created" | "subscribed";
 
 /**
  * 4.3.8 defer 交互演示
  *
- * defer 接受一个工厂函数，在订阅时才调用工厂创建真正的 Observable。
- * 展示"创建"与"订阅"的时机分离。
+ * 保持原来的 UI 结构，只用一条主流程：
+ * 第一次点击创建 deferred$，第二次点击订阅并执行，第三次点击重置。
  */
 export default function DeferDemo() {
-  const [createdTime, setCreatedTime] = useState<string | null>(null);
-  const [subscribedTime, setSubscribedTime] = useState<string | null>(null);
-  const [output, setOutput] = useState<{ val: string; complete: boolean }[]>([]);
-  const [hasSubscribed, setHasSubscribed] = useState(false);
+  const deferredRef = useRef<Observable<string> | null>(null);
+  const subscriptionRef = useRef<Subscription | null>(null);
 
-  const handleCreate = useCallback(() => {
-    const now = new Date().toLocaleTimeString();
-    setCreatedTime(now);
-    setHasSubscribed(false);
-    setOutput([]);
-    setSubscribedTime(null);
-  }, []);
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [factoryCount, setFactoryCount] = useState(0);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [stage, setStage] = useState<Stage>("idle");
 
-  const handleSubscribe = useCallback(() => {
-    if (!createdTime) return;
+  const createDeferred = () => {
+    const createTime = new Date().toLocaleTimeString();
+    setCreatedAt(createTime);
+    setFactoryCount(0);
+    setLogs([]);
+    setStage("created");
 
-    setOutput([]);
-
-    const source$ = defer(() => {
-      setSubscribedTime(new Date().toLocaleTimeString());
-      return of(1, 2, 3);
+    deferredRef.current = defer(() => {
+      setFactoryCount((count) => count + 1);
+      return of(new Date().toLocaleTimeString());
     });
+  };
 
-    source$.subscribe({
-      next: (v) => setOutput((prev) => [...prev, { val: String(v), complete: false }]),
-      complete: () => setOutput((prev) => [...prev, { val: "", complete: true }]),
+  const subscribeDeferred = () => {
+    if (!deferredRef.current) return;
+
+    subscriptionRef.current?.unsubscribe();
+    setLogs([]);
+
+    subscriptionRef.current = deferredRef.current.subscribe({
+      next: (value) => setLogs((prev) => [...prev, `next: ${value}`]),
+      complete: () => {
+        setLogs((prev) => [...prev, "complete"]);
+        setStage("subscribed");
+      },
+      error: (error) => {
+        setLogs((prev) => [...prev, `error: ${String(error)}`]);
+        setStage("subscribed");
+      },
     });
+  };
 
-    setHasSubscribed(true);
-  }, [createdTime]);
+  const resetAll = () => {
+    subscriptionRef.current?.unsubscribe();
+    subscriptionRef.current = null;
+    deferredRef.current = null;
+    setCreatedAt(null);
+    setFactoryCount(0);
+    setLogs([]);
+    setStage("idle");
+  };
 
-  const createTimeStr = createdTime ?? "—";
-  const subTimeStr = subscribedTime ?? (hasSubscribed ? "(同步完成)" : "—");
+  const handlePrimaryClick = () => {
+    if (stage === "idle") {
+      createDeferred();
+      return;
+    }
+
+    if (stage === "created") {
+      subscribeDeferred();
+      return;
+    }
+
+    resetAll();
+  };
+
+  const primaryLabel = stage === "idle" ? "1. 创建 deferred$" : stage === "created" ? "2. 订阅并执行" : "3. 重置";
+  const statusText = stage === "idle" ? "未创建" : stage === "created" ? "已创建 deferred$" : "已订阅执行";
 
   return (
     <section className={styles.demo}>
       <div className={styles.statusBox}>
-        <span className={styles.statusLabel}>defer 创建时间</span>
-        <span className={styles.statusValue}>{createTimeStr}</span>
+        <span className={styles.statusLabel}>创建时的时间</span>
+        <span className={styles.statusValue}>{createdAt ?? "—"}</span>
       </div>
 
       <div className={styles.statusBox}>
-        <span className={styles.statusLabel}>实际 Observable 创建（factory 调用）时间</span>
-        <span className={styles.statusValue}>{subTimeStr}</span>
+        <span className={styles.statusLabel}>factory 调用次数</span>
+        <span className={styles.statusValue}>{factoryCount}</span>
       </div>
 
-      {!createdTime ? (
-        <button className={styles.createSubBtn} onClick={handleCreate}>
-          创建 defer（不触发 factory）
+      <div className={styles.controls} style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <button className={styles.createSubBtn} type="button" onClick={handlePrimaryClick}>
+          {primaryLabel}
         </button>
-      ) : !hasSubscribed ? (
-        <button className={styles.createSubBtn} onClick={handleSubscribe}>
-          订阅（此时才调用 factory）
-        </button>
-      ) : (
-        <button className={styles.createSubBtn} onClick={handleCreate} disabled={!hasSubscribed}>
-          重新创建
-        </button>
-      )}
+      </div>
 
       <div className={styles.output}>
-        {output.length === 0 ? (
-          <span className={styles.outEmpty}>{"// 先创建 defer，再订阅，观察时间差异"}</span>
-        ) : (
-          <>
-            {output.map((item, i) =>
-              item.complete ? (
-                <div key={i} className={styles.outComplete}>
-                  {"// complete"}
-                </div>
-              ) : (
-                <div key={i} className={styles.outNext}>
-                  next: {item.val}
-                </div>
-              ),
-            )}
-          </>
-        )}
+        <div className={styles.outEmpty}>
+          <code>defer(() =&gt; of(订阅时的时间))</code>
+          <br />
+          <code>第一次点击只创建，第二次点击才执行 factory</code>
+        </div>
+
+        <div className={styles.outNext}>{logs.length === 0 ? "等待操作..." : logs.map((line, i) => <div key={i}>{line}</div>)}</div>
+
+        <div className={styles.outComplete}>{statusText}</div>
       </div>
 
       <p className={styles.info}>
-        <code>const source$ = defer(() =&gt; of(1, 2, 3))</code> — 创建时不调用 factory，
+        <code>defer</code> 的重点是把 factory 的执行延迟到订阅时刻。
         <br />
-        只有 <code>subscribe()</code> 时才创建真正的 Observable。
-        <br />
-        适用于推迟 AJAX 请求等资源占用场景。
+        React 只负责按钮点击，真正的“何时生成值”由 RxJS 决定。
       </p>
     </section>
   );

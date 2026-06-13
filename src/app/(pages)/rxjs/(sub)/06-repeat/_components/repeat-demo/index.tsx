@@ -16,8 +16,9 @@ interface LogEntry {
 /**
  * 4.2.5 repeat 交互演示
  *
- * 模拟书中示例：用定时 source$ 产生 1, 2, 3，然后用 repeat 重复 N 次。
- * 展示每次重复时的 subscribe / unsubscribe 日志。
+ * 这里尽量贴近书中的核心结构：
+ * source$ 先 complete，repeat 才会重新 subscribe 上游。
+ * 这样读者能直接看到 repeat 的真实作用，而不是只看一个“重复按钮”。
  */
 export default function RepeatDemo() {
   const [repeatCount, setRepeatCount] = useState(2);
@@ -35,52 +36,41 @@ export default function RepeatDemo() {
     setRound(0);
     setRunning(true);
 
-    // 模拟书中 timed source$：每 800ms 吐出一个值，3 个值后 complete
     const source$ = new Observable<number>((subscriber) => {
-      const roundId = Math.floor(Math.random() * 9000) + 1000;
-      addLog("sub", `[订阅 #${roundId}] on subscribe`);
-
-      let n = 0;
-      const handle = setInterval(() => {
-        n++;
-        subscriber.next(n);
-      }, 800);
-
-      // 3 个值后 complete
-      setTimeout(() => {
-        clearInterval(handle);
-        subscriber.complete();
-      }, 2600);
+      addLog("sub", "source$ subscribe");
+      subscriber.next(1);
+      subscriber.next(2);
+      subscriber.next(3);
+      subscriber.complete();
 
       return () => {
-        clearInterval(handle);
-        addLog("unsub", `[订阅 #${roundId}] on unsubscribe`);
+        addLog("unsub", "source$ unsubscribe");
       };
     });
 
     const repeated$ = source$.pipe(repeat(repeatCount));
-
     let currentRound = 0;
 
     subscriptionRef.current = repeated$.subscribe({
       next: (val) => {
         if (val === 1) {
-          currentRound++;
+          currentRound += 1;
           setRound(currentRound);
         }
-        addLog("next", `第 ${currentRound} 轮: ${val}`);
+        addLog("next", `round ${currentRound}: ${val}`);
       },
       complete: () => {
-        addLog("complete", "repeated$ complete — 所有轮次结束");
+        addLog("complete", "repeated$ complete");
         setRunning(false);
+        subscriptionRef.current = null;
       },
     });
-  }, [repeatCount, addLog]);
+  }, [addLog, repeatCount]);
 
   const handleCancel = useCallback(() => {
     subscriptionRef.current?.unsubscribe();
     subscriptionRef.current = null;
-    addLog("unsub", "手动取消订阅");
+    addLog("unsub", "manual unsubscribe");
     setRunning(false);
   }, [addLog]);
 
@@ -122,7 +112,7 @@ export default function RepeatDemo() {
         <span className={styles.logLabel}>输出日志:</span>
         <div className={styles.logArea}>
           {logs.length === 0 ? (
-            <span className={styles.logEmpty}>{"// 点击\u201C开始\u201D查看 repeat 行为"}</span>
+            <span className={styles.logEmpty}>点击“开始”查看 repeat 行为</span>
           ) : (
             logs.map((entry, i) => (
               <div

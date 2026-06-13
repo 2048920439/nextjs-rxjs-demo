@@ -21,10 +21,8 @@ source$.subscribe(console.log);`;
 /**
  * 2.2.1 观察者模式 — 《深入浅出RxJS》
  *
- * 观察者模式将逻辑分为发布者（Publisher）和观察者（Observer）：
- * - 发布者只管产生事件，通知所有注册的观察者
- * - 观察者只管接收事件后处理，不关心数据如何产生
- * - subscribe 将两者关联起来
+ * 这一页只保留最核心的关系：
+ * Observable 负责发数据，Observer 负责收数据，subscribe 负责把两者连起来。
  */
 export default function ObserverPatternPage() {
   return (
@@ -32,7 +30,7 @@ export default function ObserverPatternPage() {
       <header>
         <h1 className={styles.heading}>2.2.1 观察者模式</h1>
         <p className={styles.subtitle}>
-          将逻辑分为发布者（Publisher）和观察者（Observer）， 发布者产生数据，观察者响应数据，两者通过 <code>subscribe</code> 关联
+          发布者产生数据，观察者接收数据，二者通过 <code>subscribe</code> 连接起来
         </p>
       </header>
 
@@ -42,17 +40,16 @@ export default function ObserverPatternPage() {
       </section>
 
       <aside className={styles.description}>
-        <h3>观察者模式的三个核心问题</h3>
+        <h3>核心概念</h3>
         <ul>
           <li>
-            <strong>如何产生事件？</strong> — 发布者的责任，在 RxJS 中由 <code>Observable</code> 对象完成。例如 <code>Observable.of(1, 2, 3)</code>{" "}
-            按顺序产生三个整数。
+            <strong>发布者（Publisher）</strong> 负责产生事件，在 RxJS 中由 <code>Observable</code> 表示。
           </li>
           <li>
-            <strong>如何响应事件？</strong> — 观察者的责任，在 RxJS 中由 <code>subscribe</code> 的参数决定。例如 <code>console.log</code> 将每个值输出到控制台。
+            <strong>观察者（Observer）</strong> 负责接收事件，最常见的形式就是传给 <code>subscribe</code> 的回调。
           </li>
           <li>
-            <strong>何时关联？</strong> — 什么样的发布者关联什么样的观察者，即何时调用 <code>subscribe</code>。关联一旦建立，数据便从发布者流向观察者。
+            <strong>subscribe</strong> 把发布者和观察者连接起来，数据从此开始流动。
           </li>
         </ul>
       </aside>

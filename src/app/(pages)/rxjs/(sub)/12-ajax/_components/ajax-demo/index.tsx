@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { fromPromise } from "rxjs/internal/observable/innerFrom";
-
-import { getDelay } from "@/api-client";
+import { useUnmount } from "ahooks";
+import { useCallback, useRef, useState } from "react";
+import { Subscription } from "rxjs";
+import { ajax } from "rxjs/ajax";
 
 import styles from "./styles.module.scss";
 
@@ -15,33 +15,41 @@ interface DelayResponse {
 /**
  * 4.3.6 ajax 交互演示
  *
- * 通过 ajax 操作符调用项目内部 /api/mock/delay 接口，
- * 传入延迟参数，演示 AJAX 请求的 loading → 成功/失败状态。
+ * 直接使用 rxjs/ajax 的 getJSON 方法，请求项目内的 mock 接口。
+ * 这样读者能看到 ajax 的真实作用：把 HTTP 请求变成 Observable。
  */
 export default function AjaxDemo() {
   const [delayMs, setDelayMs] = useState(1500);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DelayResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const subscriptionRef = useRef<Subscription | null>(null);
 
   const handleFetch = useCallback(() => {
+    subscriptionRef.current?.unsubscribe();
     setLoading(true);
     setError(null);
     setResult(null);
 
-    // ajax.getJSON<DelayResponse>(`/api/mock/delay?ms=${delayMs}`).subscribe({
-    // 这里主要是为了规避在api-client以外定义接口所以使用了fromPromise，实际在当前示例中应该使用 ajax.getJSON，二者功能相同
-    fromPromise(getDelay(delayMs)).subscribe({
+    subscriptionRef.current = ajax.getJSON<DelayResponse>(`/api/mock/delay?ms=${delayMs}`).subscribe({
       next: (data) => {
         setResult(data);
-        setLoading(false);
       },
       error: (err) => {
-        setError(err.message || "请求失败");
+        setError(err?.message || "请求失败");
         setLoading(false);
+        subscriptionRef.current = null;
+      },
+      complete: () => {
+        setLoading(false);
+        subscriptionRef.current = null;
       },
     });
   }, [delayMs]);
+
+  useUnmount(() => {
+    subscriptionRef.current?.unsubscribe();
+  });
 
   return (
     <section className={styles.demo}>
@@ -62,7 +70,7 @@ export default function AjaxDemo() {
       </div>
 
       <button className={styles.fetchBtn} onClick={handleFetch} disabled={loading}>
-        {loading ? "请求中…" : `ajax.getJSON → /api/mock/delay?ms=${delayMs}`}
+        {loading ? "请求中..." : `ajax.getJSON -> /api/mock/delay?ms=${delayMs}`}
       </button>
 
       <div className={styles.result}>
@@ -70,11 +78,11 @@ export default function AjaxDemo() {
           <>
             <span className={styles.starCount}>{result.delay}ms</span>
             <span className={styles.starLabel}>
-              服务端延迟 {result.delay}ms 后返回 — {result.success ? "成功" : "失败"}
+              服务端延迟 {result.delay}ms 后返回，结果为 {result.success ? "成功" : "失败"}
             </span>
           </>
         )}
-        {loading && <span className={styles.status}>正在请求 /api/mock/delay…</span>}
+        {loading && <span className={styles.status}>正在请求 /api/mock/delay...</span>}
         {error && <span className={styles.errorMsg}>{error}</span>}
       </div>
     </section>

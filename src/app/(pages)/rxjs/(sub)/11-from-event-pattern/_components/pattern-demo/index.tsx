@@ -6,34 +6,28 @@ import { fromEventPattern, Subscription } from "rxjs";
 
 import styles from "./styles.module.scss";
 
-type LogEntry = { type: "val" | "note" };
+type LogEntry = { type: "val" | "note"; text: string };
 
 /**
  * 4.3.5 fromEventPattern 交互演示
  *
- * 模拟自定义事件源，演示 addHandler/removeHandler 模式。
- * fromEventPattern 将任意事件源包装为 Observable。
+ * 用一个最小事件总线来演示 addHandler / removeHandler 的作用：
+ * 订阅时注册回调，退订时移除回调，emit 时触发所有回调。
  */
 export default function PatternDemo() {
   const [subscribed, setSubscribed] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const subRef = useRef<Subscription | null>(null);
-  const handlerRef = useRef<((v: unknown) => void) | null>(null);
+  const listenersRef = useRef(new Set<(value: string) => void>());
 
-  // 模拟自定义数据源：用 requestAnimationFrame 定时产生 mock 数据
-  const timerRef = useRef<number>(0);
-
-  const addHandler = useCallback((handler: (v: unknown) => void) => {
-    handlerRef.current = handler;
-    // 注册一个模拟的数据源
-    setLogs((prev) => [...prev, { type: "note" }]);
-    return undefined as unknown as () => void;
+  const addHandler = useCallback((handler: (value: string) => void) => {
+    listenersRef.current.add(handler);
+    setLogs((prev) => [...prev, { type: "note", text: "addHandler" }]);
   }, []);
 
-  const removeHandler = useCallback((_handler: (v: unknown) => void, _signal?: unknown) => {
-    handlerRef.current = null;
-    cancelAnimationFrame(timerRef.current);
-    setLogs((prev) => [...prev, { type: "note" }]);
+  const removeHandler = useCallback((handler: (value: string) => void) => {
+    listenersRef.current.delete(handler);
+    setLogs((prev) => [...prev, { type: "note", text: "removeHandler" }]);
   }, []);
 
   const handleSubscribe = useCallback(() => {
@@ -41,21 +35,16 @@ export default function PatternDemo() {
     setSubscribed(true);
 
     const source$ = fromEventPattern<string>(addHandler, removeHandler);
-
     subRef.current = source$.subscribe({
-      next: (_val) => setLogs((prev) => [...prev, { type: "val" }]),
+      next: (value) => {
+        setLogs((prev) => [...prev, { type: "val", text: `next: ${value}` }]);
+      },
     });
-
-    // 添加 handler 后立即写一条日志
-    setLogs((prev) => [...prev, { type: "note" }]);
   }, [addHandler, removeHandler]);
 
   const handleEmit = useCallback(() => {
-    if (handlerRef.current) {
-      const val = `msg-${Date.now().toString().slice(-4)}`;
-      handlerRef.current(val);
-      setLogs((prev) => [...prev, { type: "val" }]);
-    }
+    const value = `msg-${Date.now().toString().slice(-4)}`;
+    listenersRef.current.forEach((listener) => listener(value));
   }, []);
 
   const handleUnsubscribe = useCallback(() => {
@@ -87,28 +76,26 @@ export default function PatternDemo() {
         )}
       </div>
 
-      {subscribed && <span className={styles.status}>已订阅 — 点击 &ldquo;发送数据&rdquo; 模拟外部事件源发送数据</span>}
+      {subscribed && <span className={styles.status}>已订阅：点击“发送数据”会触发 addHandler 注册的回调</span>}
 
       <div className={styles.logArea}>
         {logs.length === 0 ? (
-          <span className={styles.logEmpty}>{"// 点击\u201C订阅\u201D开始"}</span>
+          <span className={styles.logEmpty}>点击“订阅”开始</span>
         ) : (
           logs.map((entry, i) =>
             entry.type === "val" ? (
               <div key={i} className={styles.logVal}>
-                next: 收到数据
+                {entry.text}
               </div>
             ) : (
-              <div key={i} className={styles.logNote}>
-                {"// handler 绑定/解绑"}
-              </div>
+              <div key={i} className={styles.logNote}>{`// ${entry.text}`}</div>
             ),
           )
         )}
       </div>
 
       <p className={styles.info}>
-        <code>fromEventPattern(addHandler, removeHandler)</code> 将任意事件源包装为 Observable。
+        <code>fromEventPattern(addHandler, removeHandler)</code> 把任意事件源包装成 Observable。
         <br />
         订阅时调用 addHandler，退订时调用 removeHandler。
       </p>

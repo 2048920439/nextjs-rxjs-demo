@@ -2,32 +2,37 @@
 
 import { useUnmount } from "ahooks";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fromEvent, Subscription } from "rxjs";
+import { fromEvent, map, merge, scan, startWith, Subject, Subscription } from "rxjs";
 
 import styles from "./styles.module.scss";
 
 /**
  * 4.3.4 fromEvent 交互演示
  *
- * 将 DOM 按钮的 click 事件转化为 Observable 流，展示 Hot Observable 的特征。
+ * 用 fromEvent 把按钮点击变成 Observable，
+ * 再用 scan 负责累计和重置，让 RxJS 承担主要的数据处理逻辑。
  */
 export default function ClickCounter() {
   const btnRef = useRef<HTMLButtonElement>(null);
   const subRef = useRef<Subscription | null>(null);
+  const resetRef = useRef(new Subject<void>());
   const [count, setCount] = useState(0);
-  const [active, setActive] = useState(false);
 
   useEffect(() => {
     const el = btnRef.current;
     if (!el) return;
 
-    const click$ = fromEvent(el, "click");
-    // fromEvent 产生 Hot Observable：数据源在 RxJS 之外，订阅前的事件已丢失
+    const click$ = fromEvent(el, "click").pipe(map(() => ({ type: "inc" as const })));
+    const reset$ = resetRef.current.pipe(map(() => ({ type: "reset" as const })));
 
-    subRef.current = click$.subscribe(() => {
-      setCount((c) => c + 1);
-      setActive(true);
-    });
+    subRef.current = merge(click$, reset$)
+      .pipe(
+        scan((total, event) => (event.type === "reset" ? 0 : total + 1), 0),
+        startWith(0),
+      )
+      .subscribe((nextCount) => {
+        setCount(nextCount);
+      });
 
     return () => {
       subRef.current?.unsubscribe();
@@ -35,12 +40,12 @@ export default function ClickCounter() {
   }, []);
 
   const handleReset = useCallback(() => {
-    setCount(0);
-    setActive(false);
+    resetRef.current.next();
   }, []);
 
   useUnmount(() => {
     subRef.current?.unsubscribe();
+    resetRef.current.complete();
   });
 
   return (
@@ -56,13 +61,14 @@ export default function ClickCounter() {
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>流状态</span>
-          <span className={styles.statValue}>{active ? "●" : "○"}</span>
+          <span className={styles.statValue}>{count > 0 ? "●" : "○"}</span>
         </div>
       </div>
 
       <p className={styles.flowInfo}>
-        <code>fromEvent(btn, &apos;click&apos;)</code> 产生 <strong>Hot Observable</strong>：<br />
-        数据源（按钮点击）在 RxJS 外部，与订阅时机无关；后来 subscribe 的 Observer 只能看到之后的点击。
+        <code>fromEvent(btn, &apos;click&apos;)</code> 产生 <strong>Hot Observable</strong>。
+        <br />
+        点击和重置都进入同一条流，由 <code>scan</code> 计算当前次数。
       </p>
 
       {count > 0 && (

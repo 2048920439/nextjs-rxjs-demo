@@ -2,7 +2,7 @@
 
 import { useUnmount } from "ahooks";
 import { useCallback, useRef, useState } from "react";
-import { interval, Observable, repeatWhen, Subscription } from "rxjs";
+import { defer, finalize, interval, map, repeatWhen, Subscription, take, timer } from "rxjs";
 
 import styles from "./styles.module.scss";
 
@@ -11,7 +11,8 @@ type LogEntry = { type: "sub" | "unsub" | "next" | "complete"; text: string };
 /**
  * 4.3.7 repeatWhen 交互演示
  *
- * 用 notifier Observable 控制重新订阅的节奏（间隔 delayMs）。
+ * 用 defer + finalize 记录上游的订阅/退订，
+ * 用 repeatWhen 控制何时再次订阅上游。
  */
 export default function RepeatWhenDemo() {
   const [delay, setDelay] = useState(2000);
@@ -29,22 +30,17 @@ export default function RepeatWhenDemo() {
     setRound(0);
     setRunning(true);
 
-    const source$ = new Observable<number>((subscriber) => {
+    const source$ = defer(() => {
       addLog("sub", "on subscribe");
-      let n = 0;
-      const h = setInterval(() => subscriber.next(++n), 500);
-      setTimeout(() => {
-        clearInterval(h);
-        subscriber.complete();
-      }, 1800);
-      return () => {
-        clearInterval(h);
-        addLog("unsub", "on unsubscribe");
-      };
+
+      return timer(0, 500).pipe(
+        take(3),
+        map((index) => index + 1),
+        finalize(() => addLog("unsub", "on unsubscribe")),
+      );
     });
 
-    const notifier = () => interval(delay);
-    const repeated$ = source$.pipe(repeatWhen(notifier));
+    const repeated$ = source$.pipe(repeatWhen(() => interval(delay)));
 
     let cr = 0;
     subRef.current = repeated$.subscribe({
@@ -53,11 +49,12 @@ export default function RepeatWhenDemo() {
           cr++;
           setRound(cr);
         }
-        addLog("next", `第 ${cr} 轮: ${val}`);
+        addLog("next", `第 ${cr} 轮 ${val}`);
       },
       complete: () => {
         addLog("complete", "complete");
         setRunning(false);
+        subRef.current = null;
       },
     });
   }, [delay, addLog]);
@@ -104,7 +101,7 @@ export default function RepeatWhenDemo() {
 
       <div className={styles.logArea}>
         {logs.length === 0 ? (
-          <span className={styles.logEmpty}>{"// 点击\u201C开始\u201D查看 repeatWhen 行为"}</span>
+          <span className={styles.logEmpty}>点击“开始”查看 repeatWhen 行为</span>
         ) : (
           logs.map((entry, i) => (
             <div
