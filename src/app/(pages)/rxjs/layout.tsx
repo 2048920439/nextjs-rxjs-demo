@@ -4,6 +4,7 @@ import { join } from "path";
 import type { PropsWithChildren, ReactNode } from "react";
 
 import styles from "./layout.module.scss";
+import RxjsNavLink from "./rxjs-nav-link";
 
 // ====== 类型定义 ======
 
@@ -38,7 +39,8 @@ function extractPageMeta(pageFilePath: string): PageMeta | null {
   try {
     const content = readFileSync(pageFilePath, "utf-8");
     // 匹配 metadata 对象中的 title 字段
-    const titleMatch = content.match(/export\s+const\s+metadata\s*(?::\s*\w+)?\s*=\s*\{[^}]*title\s*:\s*['"]([^'"]+)['"]/);
+    const titleMatch =
+      content.match(/export\s+const\s+metadata\s*(?::\s*\w+)?\s*=\s*\{[^}]*title\s*:\s*['"]([^'"]+)['"]/) ?? content.match(/<h1[^>]*>\s*([^<]+?)\s*<\/h1>/);
     if (!titleMatch) return null;
 
     const title = titleMatch[1];
@@ -221,9 +223,7 @@ function NavTree({ nodes, depth = 0 }: { nodes: PageNode[]; depth?: number }): R
     <ul className={depth === 0 ? styles.navList : styles.navSubList}>
       {nodes.map((node) => (
         <li key={node.path} className={styles.navItem}>
-          <Link href={`/rxjs${node.path}`} className={styles.navLink}>
-            {node.title}
-          </Link>
+          <RxjsNavLink href={`/rxjs${node.path}`}>{node.title}</RxjsNavLink>
           {node.children.length > 0 && <NavTree nodes={node.children} depth={depth + 1} />}
         </li>
       ))}

@@ -23,6 +23,7 @@
   display: inline-block;
   margin-bottom: 0.75rem;
   color: #6b7280;
+  cursor: pointer;
   font-size: 0.85rem;
   text-decoration: none;
 
@@ -41,6 +42,7 @@
 
 .navTitleLink {
   color: #d81b60;
+  cursor: pointer;
   text-decoration: none;
 
   &:hover {
@@ -66,16 +68,26 @@
   padding: 0.45rem 0.75rem;
   border-radius: 6px;
   color: #374151;
+  cursor: pointer;
   text-decoration: none;
   font-size: 0.9rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
   transition:
     background 0.15s,
+    border-color 0.15s,
     color 0.15s;
 
   &:hover {
     background: #f3e5f5;
     color: #d81b60;
   }
+}
+
+.navLinkActive {
+  background: #fce4ec;
+  border-left-color: #d81b60;
+  color: #ad1457;
 }
 
 /* 嵌套子列表 */
