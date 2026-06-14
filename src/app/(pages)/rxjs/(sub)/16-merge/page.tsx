@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import { MergeDemoModel } from "./merge-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 5.1.2 merge：先到先得
+
 const SOURCES = [
   { key: "source1", label: "source1$", cardClass: "source1Card", interval: 500, count: 4, prefix: "A" },
   { key: "source2", label: "source2$", cardClass: "source2Card", interval: 240, count: 4, prefix: "B" },

@@ -9,6 +9,8 @@ import { useObservable, useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { WithLatestFromDemoModel } from "./with-latest-from-demo.model";
 
+// sidebar-title: 5.1.5 withLatestFrom
+
 const BOOK_CODE = `// 5.1.5 withLatestFrom
 import { timer } from "rxjs";
 import { map, withLatestFrom } from "rxjs/operators";

@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { RepeatDemoModel } from "./repeat-demo.model";
 
+// sidebar-title: 4.2.5 repeat：完成后重复订阅
+
 const BOOK_CODE = `import { Observable, repeat } from 'rxjs';
 
 source$.pipe(repeat(2)).subscribe(console.log);

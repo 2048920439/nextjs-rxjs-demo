@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { SyncDemoModel, type SyncTabKey } from "./sync-demo.model";
 
+// sidebar-title: 4.2 同步创建类 Observable
+
 const TABS: { key: SyncTabKey; label: string; hint: string }[] = [
   { key: "create", label: "create", hint: "直接调用构造函数" },
   { key: "of", label: "of", hint: "列举任意数据" },

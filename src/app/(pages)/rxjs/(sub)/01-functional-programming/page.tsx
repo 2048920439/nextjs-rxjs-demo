@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import { HoldTimerDemoModel } from "./hold-timer-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 1.1 一个简单的 RxJS 例子
+
 const BOOK_CODE = `const mouseDown$ = Rx.Observable.fromEvent(button, 'mousedown');
 const mouseUp$ = Rx.Observable.fromEvent(button, 'mouseup');
 

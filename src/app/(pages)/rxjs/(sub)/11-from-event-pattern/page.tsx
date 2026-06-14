@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { PatternDemoModel } from "./pattern-demo.model";
 
+// sidebar-title: 4.3.5 fromEventPattern：自定义事件源
+
 const BOOK_CODE = `// 4.3.5 fromEventPattern
 import { fromEventPattern } from 'rxjs';
 

@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import { AjaxDemoModel } from "./ajax-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 4.3.6 ajax：把 HTTP 请求变成 Observable
+
 const BOOK_CODE = `// 4.3.6 ajax
 import { ajax } from 'rxjs/ajax';
 

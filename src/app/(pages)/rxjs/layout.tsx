@@ -40,7 +40,8 @@ function extractPageMeta(pageFilePath: string): PageMeta | null {
     const content = readFileSync(pageFilePath, "utf-8");
     // 匹配 metadata 对象中的 title 字段
     const titleMatch =
-      content.match(/export\s+const\s+metadata\s*(?::\s*\w+)?\s*=\s*\{[^}]*title\s*:\s*['"]([^'"]+)['"]/) ?? content.match(/<h1[^>]*>\s*([^<]+?)\s*<\/h1>/);
+      content.match(/export\s+const\s+metadata\s*(?::\s*\w+)?\s*=\s*\{[^}]*title\s*:\s*['"]([^'"]+)['"]/) ??
+      content.match(/^\s*\/\/\s*sidebar-title:\s*(.+)$/m);
     if (!titleMatch) return null;
 
     const title = titleMatch[1];

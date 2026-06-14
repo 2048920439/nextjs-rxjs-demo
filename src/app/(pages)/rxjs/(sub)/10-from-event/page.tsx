@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import { ClickCounterModel } from "./click-counter.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 4.3.4 fromEvent：DOM 事件流
+
 const BOOK_CODE = `// 4.3.4 fromEvent
 import { fromEvent } from 'rxjs';
 import { map, scan } from 'rxjs/operators';

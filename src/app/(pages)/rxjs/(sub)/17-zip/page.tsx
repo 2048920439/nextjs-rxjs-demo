@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { ZipDemoModel } from "./zip-demo.model";
 
+// sidebar-title: 5.1.3 zip：拉链式配对
+
 const BOOK_CODE = `// 5.1.3 zip：拉链式配对
 import { zip, of } from 'rxjs';
 

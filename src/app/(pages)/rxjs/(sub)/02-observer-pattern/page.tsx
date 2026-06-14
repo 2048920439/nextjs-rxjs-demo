@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import { ObserverDemoModel } from "./observer-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 2.2.1 观察者模式
+
 const BOOK_CODE = `import { of } from 'rxjs';
 
 of(1, 2, 3).subscribe({

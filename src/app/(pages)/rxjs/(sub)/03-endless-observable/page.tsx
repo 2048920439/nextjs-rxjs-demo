@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import { EndlessCounterModel } from "./endless-counter.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 2.2.5 永无止境的 Observable
+
 const BOOK_CODE = `import { Observable } from 'rxjs';
 
 const source$ = new Observable((subscriber) => {

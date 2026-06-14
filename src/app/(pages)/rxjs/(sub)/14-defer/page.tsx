@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import { DeferDemoModel } from "./defer-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 4.3.8 defer：延迟创建 Observable
+
 const BOOK_CODE = `// 4.3.8 defer
 import { defer, of } from 'rxjs';
 

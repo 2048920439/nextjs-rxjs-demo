@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import { MinimalDemoModel } from "./minimal-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 4.2.6 EMPTY、NEVER、throwError
+
 const BOOK_CODE = `import { EMPTY, NEVER, throwError } from 'rxjs';
 
 EMPTY.subscribe({ complete: () => console.log('complete') });

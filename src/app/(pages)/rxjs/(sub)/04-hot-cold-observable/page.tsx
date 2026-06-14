@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import { HotColdDemoModel, type ObserverRecord } from "./hot-cold-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 2.4 Hot Observable 和 Cold Observable
+
 const BOOK_CODE = `// Cold: 每次订阅都重新执行上游
 interval(1000).subscribe(observerA);
 interval(1000).subscribe(observerB);

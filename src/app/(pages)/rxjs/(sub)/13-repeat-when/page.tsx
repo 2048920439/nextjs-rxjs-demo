@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { RepeatWhenDemoModel } from "./repeat-when-demo.model";
 
+// sidebar-title: 4.3.7 repeatWhen：由通知流控制重复
+
 const BOOK_CODE = `// 4.3.7 repeatWhen
 source$.pipe(
   repeatWhen((complete$) => complete$.pipe(delay(2000))),

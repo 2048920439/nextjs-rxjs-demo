@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import { ConcatDemoModel } from "./concat-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 5.1.1 concat：首尾相连
+
 const SOURCES = [
   { key: "source1", label: "source1$", cardClass: "source1Card", interval: 500, count: 3, prefix: "A" },
   { key: "source2", label: "source2$", cardClass: "source2Card", interval: 240, count: 3, prefix: "B" },

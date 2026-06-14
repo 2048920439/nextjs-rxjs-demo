@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import { type FromCaseKey, FromDemoModel, type OutputLine } from "./from-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 4.3.2 from：把多种输入转换成 Observable
+
 const BOOK_CODE = `import { from, of } from 'rxjs';
 
 from([1, 2, 3]).subscribe(console.log);

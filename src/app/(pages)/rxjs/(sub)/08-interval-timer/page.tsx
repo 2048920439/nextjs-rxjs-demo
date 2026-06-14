@@ -8,6 +8,8 @@ import { useObservableState } from "@/service-core";
 import styles from "./page.module.scss";
 import { TimingDemoModel } from "./timing-demo.model";
 
+// sidebar-title: 4.3.1 interval 和 timer
+
 const BOOK_CODE = `import { interval, timer } from 'rxjs';
 
 interval(1000).subscribe(console.log);

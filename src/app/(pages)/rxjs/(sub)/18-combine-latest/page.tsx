@@ -9,6 +9,8 @@ import { useObservableState } from "@/service-core";
 import { CombineLatestDemoModel } from "./combine-latest-demo.model";
 import styles from "./page.module.scss";
 
+// sidebar-title: 5.1.4 combineLatest：合并最后一个数据
+
 const BOOK_CODE = `// 5.1.4 combineLatest：合并最后一个数据
 import { combineLatest, timer } from "rxjs";
 import { map } from "rxjs/operators";
