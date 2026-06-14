@@ -1,68 +1,72 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import ImperativeHoldTimer from "./_components/imperative-hold-timer";
-import ReactiveHoldTimer from "./_components/reactive-hold-timer";
+import { HoldTimerDemoModel } from "./hold-timer-demo.model";
 import styles from "./page.module.scss";
 
-export const metadata: Metadata = {
-  title: "1.1 一个简单的RxJS例子",
-};
+const BOOK_CODE = `const mouseDown$ = Rx.Observable.fromEvent(button, 'mousedown');
+const mouseUp$ = Rx.Observable.fromEvent(button, 'mouseup');
 
-const BOOK_CODE = `// fromEvent(target, eventName) → Observable
-// 将 DOM 事件转化为 Observable 数据流，事件变为"可订阅的数据源"
-const mouseDown$ = Rx.Observable.fromEvent(document.querySelector('#hold-me'), 'mousedown');
-const mouseUp$   = Rx.Observable.fromEvent(document.querySelector('#hold-me'), 'mouseup');
-
-// .timestamp() → Observable<{ value, timestamp }>
-// 为流中每个值包裹一层时间戳，记录事件发生的精确时刻
-// .withLatestFrom(other$, projectFn) → Observable
-// 源流发出值时取另一个流的最新值进行组合。此处 mouseUp 触发时取最新 mouseDown
-// 的时间戳，天然保证"必须先按下才能算时长"
 const holdTime$ = mouseUp$
   .timestamp()
-  .withLatestFrom(mouseDown$.timestamp(), (mouseUpEvent, mouseDownEvent) => {
-    return mouseUpEvent.timestamp - mouseDownEvent.timestamp;
+  .withLatestFrom(mouseDown$.timestamp(), (up, down) => {
+    return up.timestamp - down.timestamp;
   });
 
-// .subscribe(nextFn) → Subscription
-// 启动整个流水线。Observable 是惰性的，没人订阅不会执行
 holdTime$.subscribe(ms => {
   document.querySelector('#hold-time').innerText = ms;
-});
+});`;
 
-// .flatMap(projectFn) → Observable
-// 将流中每个值映射为新 Observable 并自动展平。此处把时长映射为 AJAX 请求流
-// （RxJS 7 中改名为 mergeMap）
-// .map(projectFn) → Observable
-// 纯函数变换，从此处 AJAX 响应中提取 .response 剥离 HTTP 元信息
-holdTime$
-  .flatMap(ms => Rx.Observable.ajax('https://timing-sense-score-board.herokuapp.com/score/' + ms))
-  .map(e => e.response)
-  .subscribe(res => {
-    document.querySelector('#rank').innerText = '你超过了' + res.rank + '% 的用户';
-  });`;
-
-/**
- * 1.1 一个简单的RxJS例子 — 《深入浅出RxJS》
- *
- * 对比命令式编程与响应式编程两种范式：
- * 通过&ldquo;按住按钮计时&rdquo;这个需求，展示同一功能在两种范式下的实现差异。
- */
 export default function FunctionalProgrammingPage() {
+  const [demo] = useState(() => new HoldTimerDemoModel());
+  const state = useObservableState(demo.state$, () => demo.state);
+
+  useEffect(() => () => demo.dispose(), [demo]);
+
+  const imperativeDown = useCallback(() => demo.imperativeDown(), [demo]);
+  const imperativeUp = useCallback(() => demo.imperativeUp(), [demo]);
+  const reactiveDown = useCallback(() => demo.reactiveDown(), [demo]);
+  const reactiveUp = useCallback(() => demo.reactiveUp(), [demo]);
+
   return (
     <div className={styles.page}>
       <header>
-        <h1 className={styles.heading}>1.1 一个简单的RxJS例子</h1>
-        <p className={styles.subtitle}>按住按钮计时：对比&ldquo;命令式&rdquo;与&ldquo;响应式&rdquo;两种编程范式</p>
+        <h1 className={styles.heading}>1.1 一个简单的 RxJS 例子</h1>
+        <p className={styles.subtitle}>按住按钮计时：对比“命令式”和“响应式”两种编程范式。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>React 实现对比</h2>
         <div className={styles.grid}>
-          <ImperativeHoldTimer />
-          <ReactiveHoldTimer />
+          <section className={styles.card}>
+            <h3 className={styles.title}>命令式 Imperative</h3>
+            <button className={styles.holdBtn} onMouseDown={imperativeDown} onMouseUp={imperativeUp} onMouseLeave={imperativeUp}>
+              按住我，松手计时
+            </button>
+            <p className={styles.time}>
+              按住时长：<span className={styles.value}>{state.imperativeMs}</span> ms
+            </p>
+            <p className={styles.note}>
+              手动记录 <code>startTime</code>，在 mouseup 回调里计算差值。
+            </p>
+          </section>
+
+          <section className={styles.card}>
+            <h3 className={styles.title}>响应式 Reactive</h3>
+            <button className={styles.holdBtn} onMouseDown={reactiveDown} onMouseUp={reactiveUp} onMouseLeave={reactiveUp}>
+              按住我，松手计时
+            </button>
+            <p className={styles.time}>
+              按住时长：<span className={styles.value}>{state.reactiveMs}</span> ms
+            </p>
+            <p className={styles.note}>
+              事件进入 Observable，通过 <code>timestamp + withLatestFrom</code> 声明式计算时长。
+            </p>
+          </section>
         </div>
       </section>
 
@@ -70,11 +74,10 @@ export default function FunctionalProgrammingPage() {
         <h3>核心差异</h3>
         <ul>
           <li>
-            <strong>命令式</strong>：关注 <code>How</code> &mdash; 手动监听 mousedown/mouseup，在回调中计算时长。 每一步&ldquo;怎么做&rdquo;都显式编写。
+            <strong>命令式</strong>：关注 How，手动管理事件监听、临时变量和 DOM 更新顺序。
           </li>
           <li>
-            <strong>响应式</strong>：关注 <code>What</code> &mdash; 用 <code>fromEvent</code> 将事件转为 Observable 流， 通过{" "}
-            <code>timestamp + withLatestFrom</code> 声明时长计算规则。 代码描述&ldquo;数据该如何流转、变换&rdquo;。
+            <strong>响应式</strong>：关注 What，把事件看成数据流，再用操作符描述变换关系。
           </li>
         </ul>
       </aside>

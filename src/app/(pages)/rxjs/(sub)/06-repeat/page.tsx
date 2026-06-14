@@ -1,75 +1,98 @@
-import type { Metadata } from "next";
+"use client";
+
+import clsx from "clsx";
+import { useCallback, useEffect, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import RepeatDemo from "./_components/repeat-demo";
 import styles from "./page.module.scss";
+import { RepeatDemoModel } from "./repeat-demo.model";
 
-export const metadata: Metadata = {
-  title: "4.2.5 repeat：重复数据流",
-};
+const BOOK_CODE = `import { Observable, repeat } from 'rxjs';
 
-const BOOK_CODE = `// 4.2.5 repeat：重复上游 Observable 的数据若干次
-import { of } from 'rxjs';
-import { repeat } from 'rxjs/operators';
+source$.pipe(repeat(2)).subscribe(console.log);
+// 上游 complete 后，repeat 才会重新订阅`;
 
-const source$ = of(1, 2, 3);
-const repeated$ = source$.pipe(repeat(10));
-// 输出：1, 2, 3, 1, 2, 3, ... 共 30 个数据`;
-
-const BOOK_CODE_TIMED = `// 带延时的 repeat 示例（展示 subscribe / unsubscribe 日志）
-const source$ = new Observable(observer => {
-  console.log('on subscribe');
-  setTimeout(() => observer.next(1), 1000);
-  setTimeout(() => observer.next(2), 2000);
-  setTimeout(() => observer.next(3), 3000);
-  setTimeout(() => observer.complete(), 4000);
-
-  return {
-    unsubscribe: () => console.log('on unsubscribe')
-  };
-});
-
-const repeated$ = source$.pipe(repeat(2));
-// 输出：on subscribe → 1 → 2 → 3 → on unsubscribe
-//       on subscribe → 1 → 2 → 3 → complete → on unsubscribe`;
-
-/**
- * 4.2.5 repeat — 《深入浅出RxJS》
- *
- * repeat 的关键是：上游 complete 之后，重新订阅上游。
- * 所以这一页重点展示“重复订阅”这件事，而不是单纯重复输出文本。
- */
 export default function RepeatPage() {
+  const [demo] = useState(() => new RepeatDemoModel());
+  const state = useObservableState(demo.state$, () => demo.state);
+
+  useEffect(() => () => demo.dispose(), [demo]);
+
+  const start = useCallback(() => demo.start(), [demo]);
+  const cancel = useCallback(() => demo.cancel(), [demo]);
+
   return (
     <div className={styles.page}>
       <header>
-        <h1 className={styles.heading}>4.2.5 repeat：重复数据流</h1>
-        <p className={styles.subtitle}>上游 complete 之后才会再次订阅，repeat 关注的是“重新订阅”而不是简单复制结果</p>
+        <h1 className={styles.heading}>4.2.5 repeat：完成后重复订阅</h1>
+        <p className={styles.subtitle}>repeat 的关键不是重复 next，而是在上游 complete 后重新订阅整个上游 Observable。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>交互演示</h2>
-        <RepeatDemo />
+        <section className={styles.demo}>
+          <div className={styles.header}>
+            <p className={styles.summary}>
+              当前轮次：{state.round || "-"} / {state.repeatCount}
+            </p>
+            <div className={styles.actions}>
+              <label className={styles.field}>
+                <span>重复次数</span>
+                <input
+                  type="number"
+                  className={styles.input}
+                  value={state.repeatCount}
+                  min={1}
+                  max={10}
+                  onChange={(event) => demo.setRepeatCount(Number(event.target.value) || 2)}
+                  disabled={state.running}
+                />
+              </label>
+              {state.running ? (
+                <button className={styles.secondaryBtn} onClick={cancel}>
+                  取消
+                </button>
+              ) : (
+                <button className={styles.primaryBtn} onClick={start}>
+                  开始
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.output}>
+            <div className={styles.outputHeader}>
+              <span className={styles.outputTitle}>repeat 日志</span>
+              <span className={styles.outputMeta}>subscribe / unsubscribe / next</span>
+            </div>
+            {state.logs.length === 0 ? (
+              <p className={styles.placeholder}>点击“开始”查看 repeat 行为</p>
+            ) : (
+              state.logs.map((entry, index) => (
+                <div key={`${entry.type}-${index}`} className={clsx(styles.outputLine, styles[entry.type])}>
+                  {entry.text}
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </section>
 
       <aside className={styles.description}>
         <h3>核心要点</h3>
         <ul>
           <li>
-            <strong>实例操作符</strong> repeat 通过 <code>.pipe(repeat(n))</code> 使用。
+            <strong>依赖 complete</strong>：只有上游完成，repeat 才会重新订阅。
           </li>
           <li>
-            <strong>依赖 complete</strong> 只有上游结束后，repeat 才会再次订阅。
-          </li>
-          <li>
-            <strong>每次重复都是新订阅</strong> 你会看到上游的 subscribe / unsubscribe 被反复触发。
+            <strong>重复的是订阅过程</strong>：副作用也会随每轮订阅重新执行。
           </li>
         </ul>
       </aside>
 
-      <CodeBlock title="原书示例 - 同步 source$" code={BOOK_CODE} />
-      <CodeBlock title="原书示例 - 带日志的 source$" code={BOOK_CODE_TIMED} />
+      <CodeBlock title="原书示例" code={BOOK_CODE} />
     </div>
   );
 }

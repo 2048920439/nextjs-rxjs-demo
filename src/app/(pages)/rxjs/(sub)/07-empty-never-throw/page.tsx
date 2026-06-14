@@ -1,76 +1,92 @@
-import type { Metadata } from "next";
+"use client";
+
+import clsx from "clsx";
+import { useCallback, useEffect, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import MinimalDemo from "./_components/minimal-demo";
+import { MinimalDemoModel } from "./minimal-demo.model";
 import styles from "./page.module.scss";
 
-export const metadata: Metadata = {
-  title: "4.2.6 极简操作符：empty、never与throw",
-};
+const BOOK_CODE = `import { EMPTY, NEVER, throwError } from 'rxjs';
 
-const BOOK_CODE = `// 4.2.6 empty、never、throw — 三个极简操作符
-import { EMPTY, NEVER, throwError } from 'rxjs';
+EMPTY.subscribe({ complete: () => console.log('complete') });
+NEVER.subscribe(); // no next, no complete, no error
+throwError(() => new Error('Oops')).subscribe({ error: console.error });`;
 
-// empty：不产数据，直接 complete
-const empty$ = EMPTY;           // 直接完结
-
-// throwError：不产数据，直接 error
-const error$ = throwError(      // 立即抛出错误
-  () => new Error('Oops')
-);
-
-// never：什么都不做，永远不动
-const never$ = NEVER;           // 永不完结`;
-
-const BOOK_CODE_USAGE = `// 配合 concat 条件使用
-import { concatWith, EMPTY, throwError } from 'rxjs';
-
-const shouldEndWell = true;
-const result$ = source$.pipe(
-  concatWith(shouldEndWell ? EMPTY : throwError(() => new Error()))
-);`;
-
-/**
- * 4.2.6 empty、never、throw — 《深入浅出RxJS》
- *
- * 三个极简操作符，单独使用无意义，但在组合 Observable 时非常有用：
- * 作为默认值、占位符或条件分支中的终结点。
- */
 export default function EmptyNeverThrowPage() {
+  const [demo] = useState(() => new MinimalDemoModel());
+  const state = useObservableState(demo.state$, () => demo.state);
+
+  useEffect(() => () => demo.dispose(), [demo]);
+
+  const subscribeEmpty = useCallback(() => demo.subscribeEmpty(), [demo]);
+  const subscribeNever = useCallback(() => demo.subscribeNever(), [demo]);
+  const cancelNever = useCallback(() => demo.cancelNever(), [demo]);
+  const subscribeThrow = useCallback(() => demo.subscribeThrow(), [demo]);
+
   return (
     <div className={styles.page}>
       <header>
-        <h1 className={styles.heading}>4.2.6 极简操作符：empty、never 与 throwError</h1>
-        <p className={styles.subtitle}>不产数据的特殊 Observable — 分别立即完结、永远等待、立即出错</p>
+        <h1 className={styles.heading}>4.2.6 EMPTY、NEVER、throwError</h1>
+        <p className={styles.subtitle}>这三个创建类 Observable 都不产生普通数据，但它们分别代表立即完成、永不结束、立即出错。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>交互演示</h2>
-        <MinimalDemo />
+        <section className={styles.demo}>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>EMPTY</h3>
+            <p className={styles.cardDesc}>不产生数据，直接 complete。</p>
+            <button className={styles.primaryBtn} onClick={subscribeEmpty}>
+              订阅 EMPTY
+            </button>
+            <div className={clsx(styles.result, styles[state.empty.result])}>{state.empty.message}</div>
+          </article>
+
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>NEVER</h3>
+            <p className={styles.cardDesc}>不产生数据、不结束、不出错。</p>
+            {state.never.result === "waiting" ? (
+              <button className={styles.secondaryBtn} onClick={cancelNever}>
+                取消订阅
+              </button>
+            ) : (
+              <button className={styles.primaryBtn} onClick={subscribeNever}>
+                订阅 NEVER
+              </button>
+            )}
+            <div className={clsx(styles.result, styles[state.never.result])}>{state.never.message}</div>
+          </article>
+
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>throwError</h3>
+            <p className={styles.cardDesc}>不产生数据，直接 error。</p>
+            <button className={styles.primaryBtn} onClick={subscribeThrow}>
+              订阅 throwError
+            </button>
+            <div className={clsx(styles.result, styles[state.thrown.result])}>{state.thrown.message}</div>
+          </article>
+        </section>
       </section>
 
       <aside className={styles.description}>
         <h3>核心要点</h3>
         <ul>
           <li>
-            <strong>EMPTY</strong> — 订阅后立即触发 <code>complete</code>，不吐出任何数据。 弹珠图：一条竖线，无数据点。
+            <strong>EMPTY</strong>：立刻 complete。
           </li>
           <li>
-            <strong>NEVER</strong> — 什么都不做：不 next、不 complete、不 error。直到取消订阅， 否则永远等待。常用于测试或占位。
+            <strong>NEVER</strong>：既不发值，也不结束。
           </li>
           <li>
-            <strong>throwError</strong> — 订阅后立即触发 <code>error</code>，参数为错误对象。 因 <code>throw</code> 是 JS 关键字，独立导入时使用{" "}
-            <code>throwError</code>。
-          </li>
-          <li>
-            <strong>应用场景</strong> — 在组合 Observable 时作为条件分支的终结点， 如 <code>concatWith(condition ? EMPTY : throwError(...))</code>。
+            <strong>throwError</strong>：立刻进入 error 分支。
           </li>
         </ul>
       </aside>
 
-      <CodeBlock title="原书示例 — 三个极简操作符" code={BOOK_CODE} />
-      <CodeBlock title="应用示例 — 配合 concat 条件使用" code={BOOK_CODE_USAGE} />
+      <CodeBlock title="原书示例" code={BOOK_CODE} />
     </div>
   );
 }

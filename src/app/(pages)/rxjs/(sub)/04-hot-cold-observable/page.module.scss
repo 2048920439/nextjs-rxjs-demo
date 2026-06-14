@@ -61,3 +61,159 @@
     }
   }
 }
+
+.demo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.coldPanel {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.hotPanel {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.panelTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.panelDesc {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.producerBar {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #334155;
+  font-size: 13px;
+}
+
+.observerList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 180px;
+}
+
+.observerCard {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.observerCardCompleted {
+  opacity: 0.7;
+}
+
+.observerId {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.joinedTag,
+.completedTag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.1);
+  color: #334155;
+  font-size: 11px;
+}
+
+.track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.trackDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.coldDot {
+  background: #2563eb;
+}
+
+.hotDot {
+  background: #ea580c;
+}
+
+.trackPending,
+.placeholder {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.resetBtn {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  color: #fff;
+  background: #2563eb;
+}
+
+.secondaryBtn,
+.resetBtn {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+.resetBtn {
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .demo {
+    grid-template-columns: 1fr;
+  }
+}

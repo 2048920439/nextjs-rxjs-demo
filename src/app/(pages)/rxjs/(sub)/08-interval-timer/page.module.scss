@@ -61,3 +61,89 @@
     }
   }
 }
+
+.demo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  background: #f5f3ff;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cardDesc {
+  margin: 0;
+  min-height: 44px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 86px;
+  border-radius: 12px;
+  background: #1e1b4b;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.input {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  color: #fff;
+  background: #7c3aed;
+}
+
+.secondaryBtn {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+@media (max-width: 900px) {
+  .demo {
+    grid-template-columns: 1fr;
+  }
+}

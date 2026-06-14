@@ -1,62 +1,100 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useMemo, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import FromDemo from "./_components/from-demo";
+import { type FromCaseKey, FromDemoModel, type OutputLine } from "./from-demo.model";
 import styles from "./page.module.scss";
 
-export const metadata: Metadata = {
-  title: "4.3.2 from：万物转 Observable",
-};
+const BOOK_CODE = `import { from, of } from 'rxjs';
 
-const BOOK_CODE = `// 4.3.2 from：可以把一切转化为 Observable
-import { from } from 'rxjs';
+from([1, 2, 3]).subscribe(console.log);
+from('abc').subscribe(console.log);
+from(Promise.resolve('good')).subscribe(console.log);
+from(of(1, 2, 3)).subscribe(console.log);`;
 
-// 数组
-const arr$ = from([1, 2, 3]);
+function Output({ lines }: { lines: OutputLine[] }) {
+  return (
+    <div className={styles.output}>
+      {lines.map((line, index) =>
+        line.complete ? (
+          <div key={index} className={styles.complete}>
+            {"// complete - 数据流完结"}
+          </div>
+        ) : (
+          <div key={index} className={styles.outputLine}>
+            <span className={styles.outputLabel}>{line.label}</span>
+            {line.value && <span className={styles.outputValue}>{line.value}</span>}
+          </div>
+        ),
+      )}
+    </div>
+  );
+}
 
-// 字符串（每个字符都会作为一个值吐出）
-const str$ = from('abc');  // 吐出 'a', 'b', 'c'
-
-// Promise
-const promise$ = from(Promise.resolve('good'));
-
-// 已有 Observable
-const another$ = from(of(1, 2, 3));`;
-
-/**
- * 4.3.2 from — 《深入浅出RxJS》
- *
- * from 的核心就是：把数组、字符串、Promise、Generator、甚至已有 Observable
- * 统一变成 Observable，方便进入同一套数据流处理链路。
- */
 export default function FromPage() {
+  const [demo] = useState(() => new FromDemoModel());
+  const state = useObservableState(demo.state$, () => demo.state);
+
+  const cards = useMemo(
+    () =>
+      [
+        { key: "array", title: "数组", code: "from([1, 2, 3])", buttons: [{ label: "执行", action: () => demo.runArray() }] },
+        { key: "string", title: "字符串", code: "from('abc')", buttons: [{ label: "执行", action: () => demo.runString() }] },
+        {
+          key: "promise",
+          title: "Promise",
+          code: "from(Promise.resolve('good'))",
+          buttons: [
+            { label: "resolve", action: () => demo.resolvePromise() },
+            { label: "reject", action: () => demo.rejectPromise() },
+          ],
+        },
+        { key: "observable", title: "已有 Observable", code: "from(of(1, 2, 3))", buttons: [{ label: "执行", action: () => demo.runObservable() }] },
+      ] satisfies { key: FromCaseKey; title: string; code: string; buttons: { label: string; action: () => void }[] }[],
+    [demo],
+  );
+
   return (
     <div className={styles.page}>
       <header>
-        <h1 className={styles.heading}>4.3.2 from：万物转 Observable</h1>
-        <p className={styles.subtitle}>把不同数据源统一包装成 Observable，进入同一套 RxJS 数据流</p>
+        <h1 className={styles.heading}>4.3.2 from：把多种输入转换成 Observable</h1>
+        <p className={styles.subtitle}>from 可以接收数组、字符串、Promise、已有 Observable 等输入，并按各自语义转成 Observable 输出。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>交互演示</h2>
-        <FromDemo />
+        <section className={styles.demo}>
+          {cards.map((card) => (
+            <article key={card.key} className={styles.card}>
+              <h3 className={styles.cardTitle}>{card.title}</h3>
+              <code className={styles.cardName}>{card.code}</code>
+              <div className={styles.triggers}>
+                {card.buttons.map((button) => (
+                  <button key={button.label} className={styles.primaryBtn} onClick={button.action} disabled={state.running}>
+                    {button.label}
+                  </button>
+                ))}
+              </div>
+              <Output lines={state.outputs[card.key]} />
+            </article>
+          ))}
+        </section>
       </section>
 
       <aside className={styles.description}>
         <h3>核心要点</h3>
         <ul>
           <li>
-            <strong>数组</strong> 每个元素依次吐出，顺序和数组一致。
+            <strong>数组/字符串</strong>：逐项同步发射。
           </li>
           <li>
-            <strong>字符串</strong> 会被当作字符序列处理，逐个字符吐出。
+            <strong>Promise</strong>：resolve 进入 next，reject 进入 error。
           </li>
           <li>
-            <strong>Promise</strong> resolve 时吐出结果并 complete，reject 时发出 error。
-          </li>
-          <li>
-            <strong>已有 Observable</strong> 也可以再次交给 from 处理，结果仍然是 Observable。
+            <strong>Observable</strong>：from 会直接接收并转发已有 Observable。
           </li>
         </ul>
       </aside>

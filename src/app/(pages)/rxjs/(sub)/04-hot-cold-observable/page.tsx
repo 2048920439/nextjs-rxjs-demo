@@ -1,61 +1,129 @@
-import type { Metadata } from "next";
+"use client";
+
+import clsx from "clsx";
+import { useCallback, useEffect, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import HotColdDemo from "./_components/hot-cold-demo";
+import { HotColdDemoModel, type ObserverRecord } from "./hot-cold-demo.model";
 import styles from "./page.module.scss";
 
-export const metadata: Metadata = {
-  title: "2.4 Hot Observable和Cold Observable",
-};
+const BOOK_CODE = `// Cold: 每次订阅都重新执行上游
+interval(1000).subscribe(observerA);
+interval(1000).subscribe(observerB);
 
-const BOOK_CODE_COLD = `// Cold Observable — 每次订阅创建一个新的"生产者"
-const cold$ = new Observable(observer => {
-  const producer = new Producer();
-  // observer 接收该 producer 的数据
-});`;
+// Hot: 多个订阅者共享同一个 Subject
+const subject = new Subject();
+interval(1000).subscribe(subject);
+subject.subscribe(observerA);
+subject.subscribe(observerB);`;
 
-const BOOK_CODE_HOT = `// Hot Observable — 生产者独立于订阅，全局共享
-const producer = new Producer();
-const hot$ = new Observable(observer => {
-  // observer 连接已存在的 producer
-});`;
+function ObserverList({ observers, hot }: { observers: ObserverRecord[]; hot?: boolean }) {
+  if (observers.length === 0) return <p className={styles.placeholder}>暂无观察者</p>;
 
-/**
- * 2.4 Hot Observable 和 Cold Observable — 《深入浅出RxJS》
- *
- * Cold：每次 subscribe 创建新的生产者，Observer 收到完整序列（如视频点播）
- * Hot：共享一个外部生产者，后来者只看得到订阅之后的数据（如电视直播）
- */
+  return observers.map((observer) => (
+    <div key={observer.id} className={clsx(styles.observerCard, observer.completed && styles.observerCardCompleted)}>
+      <span className={styles.observerId}>
+        Observer #{observer.id}
+        {hot && observer.joinedAt > 0 && <span className={styles.joinedTag}>加入于 {observer.joinedAt}</span>}
+        {observer.completed && <span className={styles.completedTag}>已完成</span>}
+      </span>
+      <div className={styles.track}>
+        {observer.values.length === 0 ? (
+          <span className={styles.trackPending}>等待数据...</span>
+        ) : (
+          observer.values.map((value, index) => (
+            <span key={`${value}-${index}`} className={clsx(styles.trackDot, hot ? styles.hotDot : styles.coldDot)}>
+              {value}
+            </span>
+          ))
+        )}
+      </div>
+    </div>
+  ));
+}
+
 export default function HotColdObservablePage() {
+  const [demo] = useState(() => new HotColdDemoModel());
+  const state = useObservableState(demo.state$, () => demo.state);
+
+  useEffect(() => () => demo.dispose(), [demo]);
+
+  const addColdObserver = useCallback(() => demo.addColdObserver(), [demo]);
+  const addHotObserver = useCallback(() => demo.addHotObserver(), [demo]);
+  const resetCold = useCallback(() => demo.resetCold(), [demo]);
+  const resetHot = useCallback(() => demo.resetHot(), [demo]);
+  const resetAll = useCallback(() => demo.resetAll(), [demo]);
+
   return (
     <div className={styles.page}>
       <header>
         <h1 className={styles.heading}>2.4 Hot Observable 和 Cold Observable</h1>
-        <p className={styles.subtitle}>同一个 Observable，多 Observer 订阅时的行为差异 — 取决于{'"生产者"'}的创建时机</p>
+        <p className={styles.subtitle}>Cold 每个订阅者独立执行上游；Hot 多个订阅者共享同一个生产者，晚来的只能收到后续值。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>交互演示</h2>
-        <HotColdDemo />
+        <section className={styles.demo}>
+          <article className={clsx(styles.panel, styles.coldPanel)}>
+            <h3 className={styles.panelTitle}>Cold Observable</h3>
+            <p className={styles.panelDesc}>每次订阅都重新创建独立数据流，从 1 开始。</p>
+            <div className={styles.producerBar}>
+              <span>生产者</span>
+              <strong>{state.coldRunning ? "每个 Observer 独立生产" : "未启动"}</strong>
+            </div>
+            <div className={styles.observerList}>
+              <ObserverList observers={state.coldObservers} />
+            </div>
+            <div className={styles.actionRow}>
+              <button className={styles.primaryBtn} onClick={addColdObserver}>
+                + 添加观察者
+              </button>
+              <button className={styles.secondaryBtn} onClick={resetCold}>
+                重置
+              </button>
+            </div>
+          </article>
+
+          <article className={clsx(styles.panel, styles.hotPanel)}>
+            <h3 className={styles.panelTitle}>Hot Observable</h3>
+            <p className={styles.panelDesc}>多个观察者共享同一个上游，晚来的只看到后续数据。</p>
+            <div className={styles.producerBar}>
+              <span>共享生产者</span>
+              <strong>{state.hotRunning ? `当前值 ${state.hotProducerValue}` : "未启动"}</strong>
+            </div>
+            <div className={styles.observerList}>
+              <ObserverList observers={state.hotObservers} hot />
+            </div>
+            <div className={styles.actionRow}>
+              <button className={styles.primaryBtn} onClick={addHotObserver}>
+                + 添加观察者
+              </button>
+              <button className={styles.secondaryBtn} onClick={resetHot}>
+                重置
+              </button>
+            </div>
+          </article>
+        </section>
+        <button className={styles.resetBtn} onClick={resetAll}>
+          全部重置
+        </button>
       </section>
 
       <aside className={styles.description}>
-        <h3>核心区别</h3>
+        <h3>核心要点</h3>
         <ul>
           <li>
-            <strong>❄️ Cold Observable</strong> — 每次 <code>subscribe</code> 都在内部创建一个新的生产者， 每个 Observer 独立收到完整的 1→2→3→4→5
-            序列。类比：视频点播，每个人从头看起。
+            <strong>Cold</strong>：订阅触发独立执行，每个观察者拿到完整序列。
           </li>
           <li>
-            <strong>🔥 Hot Observable</strong> — 生产者创建与订阅无关，所有 Observer 共享同一个数据源。
-            后来者加入时只能看到当前及之后的值，之前的已错过。类比：电视直播，换台后看不到之前的节目。
+            <strong>Hot</strong>：生产者先存在，观察者共享同一份实时数据。
           </li>
         </ul>
       </aside>
 
-      <CodeBlock title="原书示例 — Cold" code={BOOK_CODE_COLD} />
-      <CodeBlock title="原书示例 — Hot" code={BOOK_CODE_HOT} />
+      <CodeBlock title="原书示例" code={BOOK_CODE} />
     </div>
   );
 }

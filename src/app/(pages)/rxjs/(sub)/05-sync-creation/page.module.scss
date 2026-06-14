@@ -61,3 +61,98 @@
     }
   }
 }
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  padding: 8px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tabActive {
+  border-color: #2563eb;
+  color: #fff;
+  background: #2563eb;
+}
+
+.output {
+  min-height: 240px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.outputHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.outputTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.outputMeta {
+  flex: 1;
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.primaryBtn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.placeholder {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.outputLine {
+  margin-bottom: 8px;
+}
+
+.outputLabel {
+  margin-right: 8px;
+  color: #93c5fd;
+}
+
+.outputValue {
+  color: #f8fafc;
+}
+
+.complete {
+  color: #86efac;
+}
+
+.error {
+  color: #fca5a5;
+}

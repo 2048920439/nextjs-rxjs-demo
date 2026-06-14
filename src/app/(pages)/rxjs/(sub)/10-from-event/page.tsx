@@ -1,79 +1,86 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import ClickCounter from "./_components/click-counter";
+import { ClickCounterModel } from "./click-counter.model";
 import styles from "./page.module.scss";
 
-export const metadata: Metadata = {
-  title: "4.3.4 fromEvent",
-};
-
-const BOOK_CODE = `// 4.3.4 fromEvent：将 DOM 事件转化为 Observable
+const BOOK_CODE = `// 4.3.4 fromEvent
 import { fromEvent } from 'rxjs';
+import { map, scan } from 'rxjs/operators';
 
-const click$ = fromEvent(
-  document.querySelector('#clickMe'),
-  'click'
-);
+const click$ = fromEvent(button, 'click').pipe(
+  map(() => 1),
+  scan((count, value) => count + value, 0),
+);`;
 
-click$.subscribe(() => {
-  // 每次点击按钮时触发
-  document.querySelector('#text').innerText = ++clickCount;
-});`;
-
-const NODE_CODE = `// fromEvent 也支持 Node.js EventEmitter
-import { fromEvent } from 'rxjs';
-import EventEmitter from 'events';
-
-const emitter = new EventEmitter();
-const source$ = fromEvent(emitter, 'msg');
-
-source$.subscribe(console.log);
-
-emitter.emit('msg', 1);  // 输出 1
-emitter.emit('msg', 2);  // 输出 2
-emitter.emit('msg', 3);  // 输出 3`;
-
-/**
- * 4.3.4 fromEvent — 《深入浅出RxJS》
- *
- * fromEvent 是 DOM 与 RxJS 世界的桥梁。它将 DOM 事件或 Node.js EventEmitter
- * 转化为 Observable，产生的是 Hot Observable。
- */
 export default function FromEventPage() {
+  const [demo] = useState(() => new ClickCounterModel());
+  const count = useObservableState(demo.count$, () => demo.count);
+
+  useEffect(() => () => demo.dispose(), [demo]);
+
+  const click = useCallback(() => demo.click(), [demo]);
+  const reset = useCallback(() => demo.reset(), [demo]);
+
   return (
     <div className={styles.page}>
       <header>
-        <h1 className={styles.heading}>4.3.4 fromEvent</h1>
-        <p className={styles.subtitle}>
-          DOM 事件 → Observable 的桥梁 — 产生 <strong>Hot Observable</strong>，数据源在 RxJS 外部
-        </p>
+        <h1 className={styles.heading}>4.3.4 fromEvent：DOM 事件流</h1>
+        <p className={styles.subtitle}>fromEvent 可以把点击、键盘、滚动等事件包装成 Observable，再交给 RxJS 管线处理。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>交互演示</h2>
-        <ClickCounter />
+        <section className={styles.demo}>
+          <div className={styles.header}>
+            <p className={styles.summary}>点击和重置都进入同一条流，由 scan 计算当前次数。</p>
+            <div className={styles.actions}>
+              <button className={styles.primaryBtn} onClick={click}>
+                点我
+              </button>
+              <button className={styles.secondaryBtn} onClick={reset} disabled={count === 0}>
+                重置
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.grid}>
+            <article className={styles.card}>
+              <span className={styles.cardMeta}>点击次数</span>
+              <strong className={styles.cardValue}>{count}</strong>
+            </article>
+            <article className={styles.card}>
+              <span className={styles.cardMeta}>流状态</span>
+              <strong className={styles.cardValue}>{count > 0 ? "active" : "idle"}</strong>
+            </article>
+          </div>
+
+          <div className={styles.output}>
+            <code>merge(click$, reset$).pipe(scan(...))</code>
+          </div>
+        </section>
       </section>
 
       <aside className={styles.description}>
         <h3>核心要点</h3>
         <ul>
           <li>
-            <strong>Hot Observable</strong> — fromEvent 产生的数据流是 Hot 的：数据源的产生与订阅无关。 订阅之前触发的事件已丢失，Observer
-            只能看到订阅之后的事件。
+            <strong>事件即数据</strong>：每次点击都是流中的一个值。
           </li>
           <li>
-            <strong>浏览器 DOM</strong> — 第一个参数是 DOM 元素，第二个参数是事件名（如 click、mousemove）。
+            <strong>状态由流推导</strong>：scan 负责把事件序列折叠成计数。
           </li>
           <li>
-            <strong>Node.js</strong> — 支持 EventEmitter 实例，按事件名过滤。 必须在 subscribe 之后再 emit 才能收到数据。
+            <strong>热 Observable</strong>：DOM 事件源本身是持续存在的热源。
           </li>
         </ul>
       </aside>
 
-      <CodeBlock title="原书示例 — DOM 事件" code={BOOK_CODE} />
-      <CodeBlock title="原书示例 — Node.js EventEmitter" code={NODE_CODE} />
+      <CodeBlock title="原书示例" code={BOOK_CODE} />
     </div>
   );
 }

@@ -1,69 +1,103 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 
 import CodeBlock from "@/app/(components)/code-block";
+import { useObservableState } from "@/service-core";
 
-import DeferDemo from "./_components/defer-demo";
+import { DeferDemoModel } from "./defer-demo.model";
 import styles from "./page.module.scss";
 
-export const metadata: Metadata = {
-  title: "4.3.8 defer",
-};
-
-const BOOK_CODE = `// 4.3.8 defer：延迟创建真正的 Observable
+const BOOK_CODE = `// 4.3.8 defer
 import { defer, of } from 'rxjs';
 
-// 创建时只保存工厂函数，不会立刻执行
-const observableFactory = () => of(1, 2, 3);
-const source$ = defer(observableFactory);
+const source$ = defer(() => {
+  console.log('factory runs on subscribe');
+  return of(new Date());
+});
 
-// 每次订阅时才执行 factory
+// 创建 Observable 时不会执行 factory
 source$.subscribe(console.log);`;
 
-const BOOK_CODE_AJAX = `// defer 的实际用途：延迟 AJAX 请求
-import { defer } from 'rxjs';
-import { ajax } from 'rxjs/ajax';
-
-const source$ = defer(() => ajax(ajaxUrl));
-source$.subscribe(data => console.log(data));`;
-
-/**
- * 4.3.8 defer — 《深入浅出RxJS》
- *
- * defer 的核心不是“记录时间”，而是把真正的数据源创建推迟到订阅时刻。
- * 这样同一个 Observable 在不同订阅下可以得到不同的结果。
- */
 export default function DeferPage() {
+  const [demo] = useState(() => new DeferDemoModel());
+  const state = useObservableState(demo.state$, () => demo.state);
+
+  useEffect(() => () => demo.dispose(), [demo]);
+
+  const handlePrimaryClick = useCallback(() => demo.handlePrimaryClick(), [demo]);
+
   return (
     <div className={styles.page}>
       <header>
-        <h1 className={styles.heading}>4.3.8 defer</h1>
-        <p className={styles.subtitle}>
-          创建时只保存工厂函数，真正的 Observable 要等到 <strong>订阅时</strong> 才生成
-        </p>
+        <h1 className={styles.heading}>4.3.8 defer：延迟创建 Observable</h1>
+        <p className={styles.subtitle}>defer 把 Observable 的创建逻辑延迟到订阅时执行，适合把“当前时间、当前配置、当前请求参数”绑定到订阅瞬间。</p>
       </header>
 
       <section>
         <h2 className={styles.sectionTitle}>交互演示</h2>
-        <DeferDemo />
+        <section className={styles.demo}>
+          <div className={styles.header}>
+            <p className={styles.summary}>第一步只创建 deferred$，第二步订阅时才真正执行 factory。</p>
+            <div className={styles.actions}>
+              <button className={styles.primaryBtn} type="button" onClick={handlePrimaryClick}>
+                {demo.primaryLabel}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.grid}>
+            <article className={styles.card}>
+              <span className={styles.cardMeta}>创建时刻</span>
+              <strong className={styles.cardValue}>{state.createdAt ?? "-"}</strong>
+            </article>
+            <article className={styles.card}>
+              <span className={styles.cardMeta}>factory 调用次数</span>
+              <strong className={styles.cardValue}>{state.factoryCount}</strong>
+            </article>
+            <article className={styles.card}>
+              <span className={styles.cardMeta}>当前状态</span>
+              <strong className={styles.cardValue}>{demo.statusText}</strong>
+            </article>
+          </div>
+
+          <div className={styles.output}>
+            <div className={styles.outputHeader}>
+              <span className={styles.outputTitle}>defer 输出</span>
+              <span className={styles.outputMeta}>factory 只在 subscribe 时运行</span>
+            </div>
+            <p className={styles.placeholder}>
+              <code>defer(() =&gt; of(订阅时的时间))</code>
+            </p>
+            {state.logs.length === 0 ? (
+              <p className={styles.placeholder}>等待操作...</p>
+            ) : (
+              state.logs.map((line, index) => (
+                <div key={`${line}-${index}`} className={styles.outputLine}>
+                  {line}
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </section>
 
       <aside className={styles.description}>
         <h3>核心要点</h3>
         <ul>
           <li>
-            <strong>延迟执行</strong> defer 不会在创建时执行 factory，而是在订阅时调用它。
+            <strong>创建不执行</strong>：defer 返回 Observable，但不会立即运行 factory。
           </li>
           <li>
-            <strong>每次订阅都是新的结果</strong> 这就是它和普通 <code>of(...)</code> 最大的区别。
+            <strong>订阅才执行</strong>：每次 subscribe 都会重新调用 factory。
           </li>
           <li>
-            <strong>典型场景</strong> 延迟 AJAX 请求、按需创建数据源、根据最新状态生成 Observable。
+            <strong>适合动态上下文</strong>：需要订阅瞬间读取时间、配置或参数时使用。
           </li>
         </ul>
       </aside>
 
-      <CodeBlock title="原书示例 - 基本用法" code={BOOK_CODE} />
-      <CodeBlock title="原书示例 - 延迟 AJAX 请求" code={BOOK_CODE_AJAX} />
+      <CodeBlock title="原书示例" code={BOOK_CODE} />
     </div>
   );
 }

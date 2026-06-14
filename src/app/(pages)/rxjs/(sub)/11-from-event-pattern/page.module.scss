@@ -57,3 +57,113 @@
     margin-bottom: 4px;
   }
 }
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+}
+
+.summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.primaryBtn {
+  color: #fff;
+  background: #7c3aed;
+
+  &:hover {
+    background: #6d28d9;
+    transform: translateY(-1px);
+  }
+}
+
+.secondaryBtn {
+  color: #0f172a;
+  background: #e2e8f0;
+
+  &:hover {
+    background: #cbd5e1;
+    transform: translateY(-1px);
+  }
+}
+
+.output {
+  min-height: 220px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #1e1b4b;
+  color: #e2e8f0;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.outputHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.outputTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.outputMeta {
+  font-size: 12px;
+  color: #c4b5fd;
+}
+
+.placeholder {
+  margin: 0;
+  color: #c7d2fe;
+}
+
+.outputLine {
+  margin-bottom: 8px;
+}
+
+.logVal {
+  color: #86efac;
+}
+
+.logNote {
+  color: #c4b5fd;
+}
