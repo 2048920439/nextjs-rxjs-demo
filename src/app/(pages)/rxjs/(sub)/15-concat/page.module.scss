@@ -1,0 +1,59 @@
+.page {
+  padding: 32px;
+  max-width: 960px;
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.heading {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.sectionTitle {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.description {
+  padding: 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.8;
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #0369a1;
+  }
+
+  ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  strong {
+    color: #0f172a;
+  }
+}
