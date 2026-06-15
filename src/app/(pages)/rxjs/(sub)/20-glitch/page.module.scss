@@ -1,0 +1,283 @@
+.page {
+  padding: 32px;
+  max-width: 960px;
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.heading {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.sectionTitle {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.description {
+  padding: 20px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.8;
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #c2410c;
+  }
+
+  ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  strong {
+    color: #0f172a;
+  }
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff7ed 0%, #f8fafc 100%);
+}
+
+.summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.actions,
+.currentBox,
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.secondaryBtn {
+  color: #0f172a;
+  background: #e2e8f0;
+
+  &:hover {
+    background: #cbd5e1;
+    transform: translateY(-1px);
+  }
+}
+
+.clickArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  overflow: hidden;
+  border: 1px solid #fdba74;
+  border-radius: 12px;
+  background: #fff7ed;
+  cursor: crosshair;
+  user-select: none;
+}
+
+.clickGrid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(251, 146, 60, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(251, 146, 60, 0.18) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.clickHint {
+  position: relative;
+  z-index: 1;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.clickMarker {
+  position: absolute;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #0f172a;
+  border-radius: 50%;
+  background: #fed7aa;
+  box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.2);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.glitchCard {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.fixedCard {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.cardTop {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cardMeta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.output {
+  min-height: 220px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.placeholder {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.outputLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #f8fafc;
+}
+
+.staleLine {
+  color: #fed7aa;
+}
+
+.renderTag,
+.warnTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.renderTag {
+  color: #0f172a;
+  background: #cbd5e1;
+}
+
+.warnTag {
+  color: #7c2d12;
+  background: #fed7aa;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 24px 18px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    align-items: stretch;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .secondaryBtn {
+    flex: 1;
+  }
+}
