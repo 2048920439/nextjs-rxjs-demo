@@ -224,6 +224,22 @@
   }
 }
 
+.sourceOutputLine {
+  background: #dbeafe;
+
+  strong {
+    color: #1d4ed8;
+  }
+}
+
+.resultOutputLine {
+  background: #ccfbf1;
+
+  strong {
+    color: #0f766e;
+  }
+}
+
 .description {
   padding: 20px;
   border: 1px solid #bfdbfe;
